@@ -1,6 +1,5 @@
 import robin_stocks.robinhood as rh
-from robinhood_crypto_trader.crypto_trader.trader import Trader
-from robinhood_crypto_trader.crypto_trader.order import *
+from order import *
 import math
 import time as t
 
