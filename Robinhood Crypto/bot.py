@@ -122,7 +122,7 @@ class SpotGridTradingBot():
 
                 time.sleep(self.latency)
 
-                self.fetch_stats()
+                self.fetch_balances()
                 self.update_output()
             
             # Cancel all open crypto orders
@@ -162,7 +162,7 @@ class SpotGridTradingBot():
             
             raise ex
     
-    def fetch_stats(self):
+    def fetch_balances(self):
         """
         Updates available_cash, equity, holdings, bought_price, profit, and percent_change
         """
