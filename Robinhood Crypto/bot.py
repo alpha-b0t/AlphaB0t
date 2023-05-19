@@ -53,10 +53,10 @@ class SpotGridTradingBot():
             self.percent_change = 0.00
 
             assert self.available_cash >= self.cash
-        except:
+        except Exception as ex:
             self.logout()
 
-            raise Exception
+            raise ex
     
     def check_config(self, config):
         """
@@ -154,13 +154,13 @@ class SpotGridTradingBot():
             # Continue trading
             self.run()
         
-        except Exception:
+        except Exception as ex:
             print("An unexpected error occured: cancelling open orders and logging out")
             
             cancel_all_orders()
             self.logout()
             
-            raise Exception
+            raise ex
     
     def fetch_stats(self):
         """
