@@ -143,6 +143,8 @@ class SpotGridTradingBot():
                 
                 if self.mode == 'live':
                     self.fetch_balances()
+                else:
+                    self.test_fetch_balances()
                 
                 self.update_output()
 
@@ -164,6 +166,8 @@ class SpotGridTradingBot():
 
                 if self.mode == 'live':
                     self.fetch_balances()
+                else:
+                    self.test_fetch_balances()
                 
                 self.update_output()
                 
@@ -182,23 +186,6 @@ class SpotGridTradingBot():
             cancel_all_orders()
             self.logout()
         
-        except KeyError:
-            # Robinhood Internal Error
-            # 503 Service Error: Service Unavailable for url: https://api.robinhood.com/portfolios/
-            # 500 Server Error: Internal Server Error for url: https://api.robinhood.com/portfolios/
-            print("Robinhood Internal Error: KeyError: continuing trading")
-            
-            # Continue trading
-            self.run(True)
-        
-        except Exception as ex:
-            print("An unexpected error occured: cancelling open orders and logging out")
-            
-            cancel_all_orders()
-            self.logout()
-            
-            raise ex
-        """
         except TypeError:
             # Robinhood Internal Error
             # 503 Server Error: Service Unavailable for url: https://api.robinhood.com/marketdata/forex/quotes/76637d50-c702-4ed1-bcb5-5b0732a81f48/
@@ -223,7 +210,6 @@ class SpotGridTradingBot():
             self.logout()
             
             raise ex
-        """
     
     def fetch_balances(self):
         """
@@ -236,6 +222,17 @@ class SpotGridTradingBot():
         self.profit = self.available_cash + self.get_crypto_holdings_capital() - self.initial_cash - self.initial_crypto_capital
 
         self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
+    
+    def test_fetch_balances(self):
+        """
+        Updates equity, profit, and percent_change
+        """
+        _, self.equity = self.retrieve_cash_and_equity()
+        
+        self.profit = self.available_cash + self.get_crypto_holdings_capital() - self.initial_cash - self.initial_crypto_capital
+
+        self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
+        
     
     def continue_trading(self, override=None):
         """
