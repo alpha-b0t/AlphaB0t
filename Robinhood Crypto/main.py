@@ -5,16 +5,16 @@ def confirm_grids(upper_price, lower_price, level_num, cash):
     print("Please confirm you want the following:")
     for i in range(level_num-1, -1, -1):
         if i == level_num-1:
-            print("================================================================")
+            print("=============================================")
             print('grid_' + str(i) + ':')
             print('\tprice: $' + str(upper_price - (level_num-1-i)*(upper_price-lower_price)/(level_num-1)))
             print('\tcash: $' + str(cash/level_num))
-            print("================================================================")
+            print("=============================================")
         else:
             print('grid_' + str(i) + ':')
             print('\tprice: $' + str(upper_price - (level_num-1-i)*(upper_price-lower_price)/(level_num-1)))
             print('\tcash: $' + str(cash/level_num))
-            print("================================================================")
+            print("=============================================")
 
     
     response = input("Yes/Y or No/N: ")
