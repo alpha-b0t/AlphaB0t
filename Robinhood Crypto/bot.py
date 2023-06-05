@@ -58,6 +58,8 @@ class SpotGridTradingBot():
 
         self.login()
 
+        self.crypto_meta_data = rh.crypto.get_crypto_info(self.crypto)
+
         try:
             self.holdings, self.bought_price = self.get_holdings_and_bought_price()
             self.available_cash, self.equity = self.retrieve_cash_and_equity()
@@ -68,7 +70,8 @@ class SpotGridTradingBot():
             self.profit = 0.00
             self.percent_change = 0.00
 
-            assert self.available_cash >= self.cash
+            if self.mode == 'live':
+                assert self.available_cash >= self.cash
         except Exception as ex:
             self.logout()
 
@@ -271,6 +274,9 @@ class SpotGridTradingBot():
         
         print('crypto holdings:')
         print(self.display_holdings())
+
+        print('crypto average bought price:')
+        print(self.display_bought_price())
         
         print("crypto equity: $" + str(round(self.get_crypto_holdings_capital(), 2)))
         print("cash: $" + str(round(self.available_cash, 2)))
@@ -278,9 +284,9 @@ class SpotGridTradingBot():
         
         print("profit: " + self.display_profit() + " (" + self.display_percent_change() + ")")
 
-        print(self.crypto + " ask price: $" + str(round(self.crypto_quote['ask_price'], 2)))
-        print(self.crypto + " market price: $" + str(round(self.crypto_quote['mark_price'], 2)))
-        print(self.crypto + " bid price: $" + str(round(self.crypto_quote['bid_price'], 2)))
+        print(self.crypto + " ask price: $" + str(self.round_to_min_order_price_increment(self.crypto_quote['ask_price'])))
+        print(self.crypto + " market price: $" + str(self.round_to_min_order_price_increment(self.crypto_quote['mark_price'])))
+        print(self.crypto + " bid price: $" + str(self.round_to_min_order_price_increment(self.crypto_quote['bid_price'])))
 
         spread = (self.crypto_quote['ask_price'] - self.crypto_quote['bid_price']) * 100 / self.crypto_quote['mark_price']
         print(self.crypto + " spread: " + str(round(spread, 2)) + "%")
@@ -290,7 +296,7 @@ class SpotGridTradingBot():
         self.print_grids()
         print('\n')
     
-    def round_down_to_2(self, value):
+    def round_down_to_cents(self, value):
         """
         Converts a float to two decimal places and rounds down
 
@@ -303,6 +309,12 @@ class SpotGridTradingBot():
             return math.ceil(value * 100)/100.0
         else:
             return math.floor(value * 100)/100.0
+    
+    def round_to_min_order_price_increment(self, value):
+        return round(value, self.get_precision(self.crypto_meta_data['min_order_price_increment']))
+    
+    def round_to_min_order_quantity_increment(self, value):
+        return round(value, self.get_precision(self.crypto_meta_data['min_order_quantity_increment']))
     
     def get_latest_quote(self, crypto_symbol):
         """
@@ -361,11 +373,11 @@ class SpotGridTradingBot():
         """
         self.grids = {}
 
-        self.cash_per_level = self.round_down_to_2(self.cash / self.level_num)
+        self.cash_per_level = self.round_down_to_cents(self.cash / self.level_num)
 
         # Determine what the prices are at each level
         for i in range(self.level_num):
-            self.grids['order_' + str(i)] = {'price': self.round_down_to_2(self.lower_price + i*(self.upper_price - self.lower_price)/(self.level_num-1))}
+            self.grids['order_' + str(i)] = {'price': self.round_to_min_order_price_increment(self.lower_price + i*(self.upper_price - self.lower_price)/(self.level_num-1))}
 
         # Get crypto quote
         self.crypto_quote = self.get_latest_quote(self.crypto)
@@ -417,8 +429,8 @@ class SpotGridTradingBot():
 
             # Update available_cash, holdings, bought_price, profit, and percent_change to simulate the fulfillment of the limit buy order
             self.available_cash -= initial_buy_amount
-            self.holdings[self.crypto] += round(initial_buy_amount/self.crypto_quote['ask_price'], 8)
-            self.bought_price[self.crypto] = round( ((self.bought_price[self.crypto] * self.holdings[self.crypto]) + (initial_buy_amount)) / (self.holdings[self.crypto] + round(initial_buy_amount/self.crypto_quote['ask_price'], 8)), 2)
+            self.holdings[self.crypto] += self.round_to_min_order_quantity_increment(initial_buy_amount/self.crypto_quote['ask_price'])
+            self.bought_price[self.crypto] = self.round_to_min_order_price_increment( ((self.bought_price[self.crypto] * self.holdings[self.crypto]) + (initial_buy_amount)) / (self.holdings[self.crypto] + self.round_to_min_order_quantity_increment(initial_buy_amount/self.crypto_quote['ask_price'])))
             self.profit = self.available_cash + self.get_crypto_holdings_capital() - self.initial_cash - self.initial_crypto_capital
             self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
         
@@ -427,14 +439,14 @@ class SpotGridTradingBot():
             if self.grids['order_' + str(i)]['side'] == 'buy' and self.grids['order_' + str(i)]['status'] == 'active':
                 if self.mode == 'live':
                     #self.grids['order_' + str(i)]['order'] = Order(rh.orders.order_buy_crypto_limit_by_price(self.crypto, self.cash_per_level, self.grids['order_' + str(i)]['price'], timeInForce='gtc', jsonify=True))
-                    self.grids['order_' + str(i)]['order'] = Order(rh.orders.order_buy_crypto_limit(self.crypto, round(self.cash_per_level/self.grids['order_' + str(i)]['price'], 8), self.grids['order_' + str(i)]['price'], timeInForce='gtc', jsonify=True))
+                    self.grids['order_' + str(i)]['order'] = Order(rh.orders.order_buy_crypto_limit(self.crypto, self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(i)]['price']), self.grids['order_' + str(i)]['price'], timeInForce='gtc', jsonify=True))
                 else:
                     print("Placing a limit buy order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids['order_' + str(i)]['price']))
                     self.grids['order_' + str(i)]['order'] = None
             elif self.grids['order_' + str(i)]['side'] == 'sell' and self.grids['order_' + str(i)]['status'] == 'active':
                 if self.mode == 'live':
                     #self.grids['order_' + str(i)]['order'] = Order(rh.orders.order_sell_crypto_limit_by_price(self.crypto, self.cash_per_level, self.grids['order_' + str(i)]['price'], timeInForce='gtc', jsonify=True))
-                    self.grids['order_' + str(i)]['order'] = Order(rh.orders.order_sell_crypto_limit(self.crypto, round(self.cash_per_level/self.grids['order_' + str(i)]['price'], 8), self.grids['order_' + str(i)]['price'], timeInForce='gtc', jsonify=True))
+                    self.grids['order_' + str(i)]['order'] = Order(rh.orders.order_sell_crypto_limit(self.crypto, self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(i)]['price']), self.grids['order_' + str(i)]['price'], timeInForce='gtc', jsonify=True))
                 else:
                     print("Placing a limit sell order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids['order_' + str(i)]['price']))
                     self.grids['order_' + str(i)]['order'] = None
@@ -460,11 +472,11 @@ class SpotGridTradingBot():
         """
         self.grids = {}
 
-        self.cash_per_level = self.round_down_to_2(self.cash / self.level_num)
+        self.cash_per_level = self.round_down_to_cents(self.cash / self.level_num)
 
         # Determine what the prices are at each level
         for i in range(self.level_num):
-            self.grids['order_' + str(i)] = {'price': self.round_down_to_2(self.lower_price + i*(self.upper_price - self.lower_price)/(self.level_num-1))}
+            self.grids['order_' + str(i)] = {'price': self.round_to_min_order_price_increment(self.lower_price + i*(self.upper_price - self.lower_price)/(self.level_num-1))}
 
         # Get crypto quote
         self.crypto_quote = self.get_latest_quote(self.crypto)
@@ -498,7 +510,7 @@ class SpotGridTradingBot():
             if self.grids['order_' + str(i)]['side'] == 'buy' and self.grids['order_' + str(i)]['status'] == 'active':
                 if self.mode == 'live':
                     #self.grids['order_' + str(i)]['order'] = Order(rh.orders.order_buy_crypto_limit_by_price(self.crypto, self.cash_per_level, self.grids['order_' + str(i)]['price'], timeInForce='gtc', jsonify=True))
-                    self.grids['order_' + str(i)]['order'] = Order(rh.orders.order_buy_crypto_limit(self.crypto, round(self.cash_per_level/self.grids['order_' + str(i)]['price'], 8), self.grids['order_' + str(i)]['price'], timeInForce='gtc', jsonify=True))
+                    self.grids['order_' + str(i)]['order'] = Order(rh.orders.order_buy_crypto_limit(self.crypto, self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(i)]['price']), self.grids['order_' + str(i)]['price'], timeInForce='gtc', jsonify=True))
                 else:
                     print("Placing a limit buy order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids['order_' + str(i)]['price']))
                     self.grids['order_' + str(i)]['order'] = None
@@ -526,7 +538,7 @@ class SpotGridTradingBot():
                         self.grids['order_' + str(i+1)]['status'] = 'active'
 
                         #self.grids['order_' + str(i+1)]['order'] = Order(rh.orders.order_sell_crypto_limit_by_price(self.crypto, self.cash_per_level, self.grids['order_' + str(i+1)]['price'], timeInForce='gtc', jsonify=True))
-                        self.grids['order_' + str(i+1)]['order'] = Order(rh.orders.order_sell_crypto_limit(self.crypto, round(self.cash_per_level/self.grids['order_' + str(i+1)]['price'], 8), self.grids['order_' + str(i+1)]['price'], timeInForce='gtc', jsonify=True))
+                        self.grids['order_' + str(i+1)]['order'] = Order(rh.orders.order_sell_crypto_limit(self.crypto, self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(i+1)]['price']), self.grids['order_' + str(i+1)]['price'], timeInForce='gtc', jsonify=True))
                         print("Placing a limit sell order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids['order_' + str(i+1)]['price']))
                     elif self.grids['order_' + str(i)]['side'] == 'sell' and self.closest_grid == i-1:
                         # If the filled order was a sell order, place a buy order on the level below it, assuming it was previously inactive
@@ -540,7 +552,7 @@ class SpotGridTradingBot():
                         self.grids['order_' + str(i-1)]['status'] = 'active'
 
                         #self.grids['order_' + str(i-1)]['order'] = Order(rh.orders.order_buy_crypto_limit_by_price(self.crypto, self.cash_per_level, self.grids['order_' + str(i-1)]['price'], timeInForce='gtc', jsonify=True))
-                        self.grids['order_' + str(i-1)]['order'] = Order(rh.orders.order_buy_crypto_limit(self.crypto, round(self.cash_per_level/self.grids['order_' + str(i-1)]['price'], 8), self.grids['order_' + str(i-1)]['price'], timeInForce='gtc', jsonify=True))
+                        self.grids['order_' + str(i-1)]['order'] = Order(rh.orders.order_buy_crypto_limit(self.crypto, self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(i-1)]['price']), self.grids['order_' + str(i-1)]['price'], timeInForce='gtc', jsonify=True))
                         print("Placing a limit buy order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids['order_' + str(i-1)]['price']))
                     else:
                         raise Exception("Order was filled but either was not sell nor buy or ignored level was not correct or both")
@@ -567,7 +579,7 @@ class SpotGridTradingBot():
                         self.grids['order_' + str(sell_index)]['status'] = 'active'
 
                         #self.grids['order_' + str(sell_index)]['order'] = Order(rh.orders.order_sell_crypto_limit_by_price(self.crypto, self.cash_per_level, self.grids['order_' + str(sell_index)]['price'], timeInForce='gtc', jsonify=True))
-                        self.grids['order_' + str(sell_index)]['order'] = Order(rh.orders.order_sell_crypto_limit(self.crypto, round(self.cash_per_level/self.grids['order_' + str(sell_index)]['price'], 8), self.grids['order_' + str(sell_index)]['price'], timeInForce='gtc', jsonify=True))
+                        self.grids['order_' + str(sell_index)]['order'] = Order(rh.orders.order_sell_crypto_limit(self.crypto, self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(sell_index)]['price']), self.grids['order_' + str(sell_index)]['price'], timeInForce='gtc', jsonify=True))
                         print("Placing a limit sell order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids['order_' + str(sell_index)]['price']))
                     elif self.grids['order_' + str(i)]['side'] == 'sell':
                         # If the filled order was a sell order, place a buy order on the level below it, assuming it was previously inactive
@@ -582,7 +594,7 @@ class SpotGridTradingBot():
                         self.grids['order_' + str(buy_index)]['status'] = 'active'
 
                         #self.grids['order_' + str(buy_index)]['order'] = Order(rh.orders.order_buy_crypto_limit_by_price(self.crypto, self.cash_per_level, self.grids['order_' + str(buy_index)]['price'], timeInForce='gtc', jsonify=True))
-                        self.grids['order_' + str(buy_index)]['order'] = Order(rh.orders.order_buy_crypto_limit(self.crypto, round(self.cash_per_level/self.grids['order_' + str(buy_index)]['price'], 8), self.grids['order_' + str(buy_index)]['price'], timeInForce='gtc', jsonify=True))
+                        self.grids['order_' + str(buy_index)]['order'] = Order(rh.orders.order_buy_crypto_limit(self.crypto, self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(buy_index)]['price']), self.grids['order_' + str(buy_index)]['price'], timeInForce='gtc', jsonify=True))
                         print("Placing a limit buy order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids['order_' + str(buy_index)]['price']))
                     else:
                         raise Exception("Order was filled but either was not sell nor buy or ignored level was not correct or both")
@@ -651,25 +663,48 @@ class SpotGridTradingBot():
     
     def retrieve_cash_and_equity(self):
         """
-        Returns cash, equity as floats from robin_stocks.robinhood.account.build_user_profile() rounded to two decimal places
+        Returns cash, equity as floats from robin_stocks.robinhood.account.build_user_profile()
         """
         rh_cash = rh.account.build_user_profile()
         
-        cash = round(float(rh_cash['cash']), 2)
-        equity = round(float(rh_cash['equity']), 2)
+        cash = self.round_down_to_cents(float(rh_cash['cash']))
+        equity = self.round_down_to_cents(float(rh_cash['equity']))
         
         return cash, equity
     
     def get_crypto_holdings_capital(self):
         """
-        Returns the current dollar value of crypto assets rounded to two decimal places
+        Returns the current dollar value of crypto assets using the market price
         """
         capital = 0.00
         
         for crypto_name, crypto_amount in self.holdings.items():
             capital += crypto_amount * float(self.get_latest_quote(crypto_name)['mark_price'])
         
-        return round(capital, 2)
+        return self.round_down_to_cents(capital)
+    
+    def get_precision(self, text):
+        """
+        Returns the number of decimal places the number has
+        
+        text needs to contain one and only one '1' and one and only one '.'
+        
+        E.g. text: output
+        '100.000000000000': -2
+        '10.0000000000000': -1
+        '1.00000000000000': 0
+        '0.10000000000000': 1
+        '0.01000000000000': 2
+        '0.00100000000000': 3
+        '0.00010000000000': 4
+        """
+        one = text.find('1')
+        dot = text.find('.')
+        
+        if one < dot:
+            return one - dot + 1
+        else:
+            return one - dot
     
     def display_time(self, seconds, granularity=5):
         result = []
@@ -701,10 +736,19 @@ class SpotGridTradingBot():
 
         for crypto, amount in self.holdings.items():
             
-            text += '\t' + str(amount) + ' ' + crypto + " at $" + str(float(self.get_latest_quote(crypto)['mark_price'])) + '\n'
+            text += '\t' + str(amount) + ' ' + crypto + " at $" + str(float(self.get_latest_quote(crypto)['mark_price']))
         
-        text = text[:-2]
-        
+        return text
+    
+    def display_bought_price(self):
+        """
+        Returns a string listing the name of the crypto and its associated average bought price
+        """
+        text = ''
+
+        for crypto, bought_price in self.bought_price.items():
+            text += '\t' + str(bought_price) + ' ' + crypto + ' average bought price: $' + str(self.bought_price[crypto])
+
         return text
     
     def display_profit(self):
@@ -714,7 +758,7 @@ class SpotGridTradingBot():
         else:
             text = '-$'
 
-        text += str(abs(round(self.profit, 2)))
+        text += str(abs(self.round_down_to_cents(self.profit)))
 
         return text
     
@@ -769,8 +813,8 @@ class SpotGridTradingBot():
 
                         # Update available_cash, holdings, bought_price, profit, and percent_change to simulate the fulfillment of the limit buy order
                         self.available_cash -= self.cash_per_level
-                        self.holdings[self.crypto] += round(self.cash_per_level/self.grids['order_' + str(i)]['price'], 8)
-                        self.bought_price[self.crypto] = round( ((self.bought_price[self.crypto] * self.holdings[self.crypto]) + (self.cash_per_level)) / (self.holdings[self.crypto] + round(self.cash_per_level/self.grids['order_' + str(i)]['price'], 8)), 2)
+                        self.holdings[self.crypto] += self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(i)]['price'])
+                        self.bought_price[self.crypto] = self.round_to_min_order_price_increment( ((self.bought_price[self.crypto] * self.holdings[self.crypto]) + (self.cash_per_level)) / (self.holdings[self.crypto] + self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(i)]['price'])))
                         self.profit = self.available_cash + self.get_crypto_holdings_capital() - self.initial_cash - self.initial_crypto_capital
                         self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
 
@@ -784,7 +828,7 @@ class SpotGridTradingBot():
                         
                         if self.mode == 'live':
                             #self.grids['order_' + str(i+1)]['order'] = Order(rh.orders.order_sell_crypto_limit_by_price(self.crypto, self.cash_per_level, self.grids['order_' + str(i+1)]['price'], timeInForce='gtc', jsonify=True))
-                            self.grids['order_' + str(i+1)]['order'] = Order(rh.orders.order_sell_crypto_limit(self.crypto, round(self.cash_per_level/self.grids['order_' + str(i+1)]['price'], 8), self.grids['order_' + str(i+1)]['price'], timeInForce='gtc', jsonify=True))
+                            self.grids['order_' + str(i+1)]['order'] = Order(rh.orders.order_sell_crypto_limit(self.crypto, self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(i+1)]['price']), self.grids['order_' + str(i+1)]['price'], timeInForce='gtc', jsonify=True))
                         else:
                             print("Placing a limit sell order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids['order_' + str(i+1)]['price']))
                             self.grids['order_' + str(i+1)]['order'] = None
@@ -793,7 +837,7 @@ class SpotGridTradingBot():
 
                         # Update available_cash, holdings, profit, and percent_change to simulate the fulfillment of the limit sell order
                         self.available_cash += self.cash_per_level
-                        self.holdings[self.crypto] -= round(self.cash_per_level/self.grids['order_' + str(i)]['price'], 8)
+                        self.holdings[self.crypto] -= self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(i)]['price'])
                         self.profit = self.available_cash + self.get_crypto_holdings_capital() - self.initial_cash - self.initial_crypto_capital
                         self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
 
@@ -807,7 +851,7 @@ class SpotGridTradingBot():
 
                         if self.mode == 'live':
                             #self.grids['order_' + str(i-1)]['order'] = Order(rh.orders.order_buy_crypto_limit_by_price(self.crypto, self.cash_per_level, self.grids['order_' + str(i-1)]['price'], timeInForce='gtc', jsonify=True))
-                            self.grids['order_' + str(i-1)]['order'] = Order(rh.orders.order_buy_crypto_limit(self.crypto, round(self.cash_per_level/self.grids['order_' + str(i-1)]['price'], 8), self.grids['order_' + str(i-1)]['price'], timeInForce='gtc', jsonify=True))
+                            self.grids['order_' + str(i-1)]['order'] = Order(rh.orders.order_buy_crypto_limit(self.crypto, self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(i-1)]['price']), self.grids['order_' + str(i-1)]['price'], timeInForce='gtc', jsonify=True))
                         else:
                             print("Placing a limit buy order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids['order_' + str(i-1)]['price']))
                             self.grids['order_' + str(i-1)]['order'] = None
@@ -828,8 +872,8 @@ class SpotGridTradingBot():
 
                         # Update available_cash, holdings, bought_price, profit, and percent_change to simulate the fulfillment of the limit buy order
                         self.available_cash -= self.cash_per_level
-                        self.holdings[self.crypto] += round(self.cash_per_level/self.grids['order_' + str(i)]['price'], 8)
-                        self.bought_price[self.crypto] = round( ((self.bought_price[self.crypto] * self.holdings[self.crypto]) + (self.cash_per_level)) / (self.holdings[self.crypto] + round(self.cash_per_level/self.grids['order_' + str(i)]['price'], 8)), 2)
+                        self.holdings[self.crypto] += self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(i)]['price'])
+                        self.bought_price[self.crypto] = self.round_to_min_order_price_increment( ((self.bought_price[self.crypto] * self.holdings[self.crypto]) + (self.cash_per_level)) / (self.holdings[self.crypto] + self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(i)]['price'])))
                         self.profit = self.available_cash + self.get_crypto_holdings_capital() - self.initial_cash - self.initial_crypto_capital
                         self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
 
@@ -844,7 +888,7 @@ class SpotGridTradingBot():
                         
                         if self.mode == 'live':
                             #self.grids['order_' + str(sell_index)]['order'] = Order(rh.orders.order_sell_crypto_limit_by_price(self.crypto, self.cash_per_level, self.grids['order_' + str(sell_index)]['price'], timeInForce='gtc', jsonify=True))
-                            self.grids['order_' + str(sell_index)]['order'] = Order(rh.orders.order_sell_crypto_limit(self.crypto, round(self.cash_per_level/self.grids['order_' + str(sell_index)]['price'], 8), self.grids['order_' + str(sell_index)]['price'], timeInForce='gtc', jsonify=True))
+                            self.grids['order_' + str(sell_index)]['order'] = Order(rh.orders.order_sell_crypto_limit(self.crypto, self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(sell_index)]['price']), self.grids['order_' + str(sell_index)]['price'], timeInForce='gtc', jsonify=True))
                         else:
                             print("Placing a limit sell order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids['order_' + str(sell_index)]['price']))
                             self.grids['order_' + str(sell_index)]['order'] = None
@@ -853,7 +897,7 @@ class SpotGridTradingBot():
 
                         # Update available_cash, holdings, profit, and percent_change to simulate the fulfillment of the limit sell order
                         self.available_cash += self.cash_per_level
-                        self.holdings[self.crypto] -= round(self.cash_per_level/self.grids['order_' + str(i)]['price'], 8)
+                        self.holdings[self.crypto] -= self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(i)]['price'])
                         self.profit = self.available_cash + self.get_crypto_holdings_capital() - self.initial_cash - self.initial_crypto_capital
                         self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
 
@@ -868,7 +912,7 @@ class SpotGridTradingBot():
 
                         if self.mode == 'live':
                             #self.grids['order_' + str(buy_index)]['order'] = Order(rh.orders.order_buy_crypto_limit_by_price(self.crypto, self.cash_per_level, self.grids['order_' + str(buy_index)]['price'], timeInForce='gtc', jsonify=True))
-                            self.grids['order_' + str(buy_index)]['order'] = Order(rh.orders.order_buy_crypto_limit(self.crypto, round(self.cash_per_level/self.grids['order_' + str(buy_index)]['price'], 8), self.grids['order_' + str(buy_index)]['price'], timeInForce='gtc', jsonify=True))
+                            self.grids['order_' + str(buy_index)]['order'] = Order(rh.orders.order_buy_crypto_limit(self.crypto, self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(buy_index)]['price']), self.grids['order_' + str(buy_index)]['price'], timeInForce='gtc', jsonify=True))
                         else:
                             print("Placing a limit buy order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids['order_' + str(buy_index)]['price']))
                             self.grids['order_' + str(buy_index)]['order'] = None
@@ -888,14 +932,16 @@ class SpotGridTradingBot():
             message += "equity: $" + str(round(self.equity, 2)) + "\n"
             message += 'crypto holdings:\n'
             message += self.display_holdings() + '\n'
+            message += 'crypto average bought price:\n'
+            message += self.display_bought_price() + '\n'
             message += "crypto equity: $" + str(round(self.get_crypto_holdings_capital(), 2)) + '\n'
             message += "cash: $" + str(round(self.available_cash, 2)) + '\n'
             message += "crypto equity and cash: $" + str(round(self.available_cash + self.get_crypto_holdings_capital(), 2)) + '\n'
             message += "profit: " + self.display_profit() + " (" + self.display_percent_change() + ")\n"
 
-            message += self.crypto + " ask price: $" + str(round(self.crypto_quote['ask_price'], 2)) + '\n'
-            message += self.crypto + " market price: $" + str(round(self.crypto_quote['mark_price'], 2)) + '\n'
-            message += self.crypto + " bid price: $" + str(round(self.crypto_quote['bid_price'], 2)) + '\n'
+            message += self.crypto + " ask price: $" + str(self.round_to_min_order_price_increment(self.crypto_quote['ask_price'])) + '\n'
+            message += self.crypto + " market price: $" + str(self.round_to_min_order_price_increment(self.crypto_quote['mark_price'])) + '\n'
+            message += self.crypto + " bid price: $" + str(self.round_to_min_order_price_increment(self.crypto_quote['bid_price'])) + '\n'
 
             spread = (self.crypto_quote['ask_price'] - self.crypto_quote['bid_price']) * 100 / self.crypto_quote['mark_price']
             message += self.crypto + " spread: " + str(round(spread, 2)) + "%\n"

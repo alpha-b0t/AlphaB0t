@@ -28,7 +28,7 @@ def confirm_grids(upper_price, lower_price, level_num, cash):
 
 if __name__ == '__main__':
     config = {
-        'crypto': 'BTC',
+        'crypto': 'ADA',
         'days_to_run': 7,
         'mode': 'test',
         'backtest': {
@@ -36,8 +36,8 @@ if __name__ == '__main__':
             'span': '',
             'bounds': '',
         },
-        'upper_price': 27400,
-        'lower_price': 26900,
+        'upper_price': 0.3820,
+        'lower_price': 0.3450,
         'level_num': 10,
         'cash': 100,
         'loss_threshold': 10.00,
