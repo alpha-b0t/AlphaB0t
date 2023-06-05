@@ -4,8 +4,6 @@ import math
 import time
 from discord import SyncWebhook
 
-DISCORD_URL = 'https://discord.com/api/webhooks/1114803095394861096/lMqJldCxv4nOEan2QWl9TeIfJErGiUUZ9G_ujTj7pKq57tu9VpsdKawOCtkCzEF-cX8d'
-
 class SpotGridTradingBot():
     def __init__(self, config):
         """
@@ -27,7 +25,8 @@ class SpotGridTradingBot():
             'latency_in_sec': 50,
             'is_static': False,
             'send_to_discord': True,
-            'discord_latency_in_hours': 1
+            'discord_latency_in_hours': 1,
+            'discord_url': ''
         }
         """
         self.check_config(config)
@@ -52,7 +51,7 @@ class SpotGridTradingBot():
         self.send_to_discord = bool(config['send_to_discord'])
 
         if self.send_to_discord:
-            self.discord_webhook = SyncWebhook.from_url(DISCORD_URL)
+            self.discord_webhook = SyncWebhook.from_url(config['discord_url'])
             self.discord_latency_in_hours = float(config['discord_latency_in_hours'])
             self.last_discord_post = None
 
@@ -107,8 +106,11 @@ class SpotGridTradingBot():
         assert config['latency_in_sec'] > 0
         assert type(config['is_static']) == bool
         assert type(config['send_to_discord']) == bool
-        assert type(config['discord_latency_in_hours']) == float or type(config['discord_latency_in_hours']) == int
-        assert config['discord_latency_in_hours'] > 0
+        if config['send_to_discord']:
+            assert type(config['discord_latency_in_hours']) == float or type(config['discord_latency_in_hours']) == int
+            assert config['discord_latency_in_hours'] > 0
+            assert type(config['discord_url']) == str
+            assert len(config['discord_url']) > 0
 
         print("configuration test: PASSED")
     
@@ -139,6 +141,9 @@ class SpotGridTradingBot():
     def run(self, is_initialized=False):
         try:
             if not is_initialized:
+                if self.send_to_discord:
+                    self.send_start_message_to_discord()
+                
                 if self.is_static:
                     self.init_grid_static()
                 else:
@@ -177,37 +182,55 @@ class SpotGridTradingBot():
                 if self.send_to_discord:
                     self.send_message_to_discord()
             
+            if self.send_to_discord:
+                self.send_end_message_to_discord()
+
             # Cancel all open crypto orders
             cancel_all_orders()
 
             # Log out
             self.logout()
         
-        except KeyboardInterrupt:
+        except KeyboardInterrupt as ex:
             print("User ended execution of program.")
+
+            if self.send_to_discord:
+                self.send_end_message_to_discord()
+                self.send_error_message_to_discord(ex, 'KeyboardInterrupt')
+                self.discord_webhook
             
             cancel_all_orders()
             self.logout()
         
-        except TypeError:
+        except TypeError as ex:
             # Robinhood Internal Error
             # 503 Server Error: Service Unavailable for url: https://api.robinhood.com/marketdata/forex/quotes/76637d50-c702-4ed1-bcb5-5b0732a81f48/
             print("Robinhood Internal Error: TypeError: continuing trading")
+
+            if self.send_to_discord:
+                self.send_error_message_to_discord(ex, 'TypeError')
             
             # Continue trading
             self.run(True)
         
-        except KeyError:
+        except KeyError as ex:
             # Robinhood Internal Error
             # 503 Service Error: Service Unavailable for url: https://api.robinhood.com/portfolios/
             # 500 Server Error: Internal Server Error for url: https://api.robinhood.com/portfolios/
             print("Robinhood Internal Error: KeyError: continuing trading")
+
+            if self.send_to_discord:
+                self.send_error_message_to_discord(ex, 'KeyError')
             
             # Continue trading
             self.run(True)
         
         except Exception as ex:
             print("An unexpected error occured: cancelling open orders and logging out")
+
+            if self.send_to_discord:
+                self.send_end_message_to_discord()
+                self.send_error_message_to_discord(ex, 'Unknown')
             
             cancel_all_orders()
             self.logout()
@@ -972,7 +995,7 @@ class SpotGridTradingBot():
     
     def send_message_to_discord(self):
         """
-        Send out the lastest information out to the discord channel
+        Sends out the lastest information out to the discord channel
         """
         if self.last_discord_post is None or time.time() - self.last_discord_post >= self.discord_latency_in_hours * 3600:
             message = ""
@@ -1031,3 +1054,25 @@ class SpotGridTradingBot():
             self.discord_webhook.send(message)
             self.last_discord_post = time.time()
             return
+    
+    def send_start_message_to_discord(self):
+        """
+        Sends out a message to discord indicating that the spot grid trading bot has been activated
+        """
+        message = "Spot Grid Trading Bot: ACTIVATED"
+        self.discord_webhook.send(message)
+        return
+    
+    def send_end_message_to_discord(self):
+        """
+        Sends out a message to discord indicating that the spot grid trading bot has stopped
+        """
+        message = "Spot Grid Trading Bot: STOPPED"
+        self.discord_webhook.send(message)
+        return
+    
+    def send_error_message_to_discord(self, exception, error_type):
+        message = "Exception Occured: " + error_type + '\n'
+        message += str(exception)
+        self.discord_webhook.send(message)
+        return

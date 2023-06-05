@@ -45,7 +45,8 @@ if __name__ == '__main__':
         'latency_in_sec': 60,
         'is_static': False,
         'send_to_discord': True,
-        'discord_latency_in_hours': 0.25
+        'discord_latency_in_hours': 0.25,
+        'discord_url': 'https://discord.com/api/webhooks/1114803095394861096/lMqJldCxv4nOEan2QWl9TeIfJErGiUUZ9G_ujTj7pKq57tu9VpsdKawOCtkCzEF-cX8d'
     }
     
     if confirm_grids(config['upper_price'], config['lower_price'], config['level_num'], config['cash']):
