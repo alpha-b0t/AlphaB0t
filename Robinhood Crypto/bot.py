@@ -273,7 +273,7 @@ class SpotGridTradingBot():
         Prints out the lastest information out to console
         """
         
-        print("====================" + time.ctime() + "====================")
+        print("===========" + time.ctime() + "===========")
         
         print("mode: " + self.mode)
         print("is_static: " + str(self.is_static))
@@ -816,7 +816,7 @@ class SpotGridTradingBot():
     def print_grids(self):
         for i in range(len(self.grids)-1, -1, -1):
             if i == len(self.grids)-1:
-                print("================================================================")
+                print("=============================================")
                 print('grid_' + str(i))
                 print('\tprice: $' + str(self.grids['order_' + str(i)]['price']))
                 print('\tside:', self.grids['order_' + str(i)]['side'])
@@ -826,7 +826,7 @@ class SpotGridTradingBot():
                 except KeyError:
                     print('\torder:', None)
                 print('\tcash: $' + str(self.cash_per_level))
-                print("================================================================")
+                print("=============================================")
             else:
                 print('grid_' + str(i))
                 print('\tprice: $' + str(self.grids['order_' + str(i)]['price']))
@@ -837,8 +837,8 @@ class SpotGridTradingBot():
                 except KeyError:
                     print('\torder:', None)
                 print('\tcash: $' + str(self.cash_per_level))
-                print("================================================================")
-        print("================================================================")
+                print("=============================================")
+        print("=============================================")
     
     def test_update_orders(self):
         # Update each order
@@ -976,7 +976,8 @@ class SpotGridTradingBot():
         """
         if self.last_discord_post is None or time.time() - self.last_discord_post >= self.discord_latency_in_hours * 3600:
             message = ""
-            message += "====================" + time.ctime() + "====================\n"
+            message += "===========" + time.ctime() + "===========\n"
+            message += "=============================================\n"
             message += "mode: " + self.mode + "\n"
             message += "is_static: " + str(self.is_static) + "\n"
             message += "runtime: " + self.display_time(self.get_runtime()) + "\n"
@@ -1002,7 +1003,7 @@ class SpotGridTradingBot():
 
             for i in range(len(self.grids)-1, -1, -1):
                 if i == len(self.grids)-1:
-                    message += "================================================================\n"
+                    message += "=============================================\n"
                     message += 'grid_' + str(i) + '\n'
                     message += '\tprice: $' + str(self.grids['order_' + str(i)]['price']) + '\n'
                     message += '\tside: ' + self.grids['order_' + str(i)]['side'] + '\n'
@@ -1012,7 +1013,7 @@ class SpotGridTradingBot():
                     except KeyError:
                         message += '\torder: None\n'
                     message += '\tcash: $' + str(self.cash_per_level) + '\n'
-                    message += "================================================================\n"
+                    message += "=============================================\n"
                 else:
                     message += 'grid_' + str(i) + '\n'
                     message += '\tprice: $' + str(self.grids['order_' + str(i)]['price']) + '\n'
@@ -1023,8 +1024,8 @@ class SpotGridTradingBot():
                     except KeyError:
                         message += '\torder: None\n'
                     message += '\tcash: $' + str(self.cash_per_level) + '\n'
-                    message += "================================================================\n"
-            message += "================================================================\n"
+                    message += "=============================================\n"
+            message += "=============================================\n"
 
             message += '\n'
             self.discord_webhook.send(message)
