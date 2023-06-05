@@ -224,7 +224,10 @@ class SpotGridTradingBot():
 
         self.profit = self.available_cash + self.get_crypto_holdings_capital() - self.initial_cash - self.initial_crypto_capital
 
-        self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
+        try:
+            self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
+        except ZeroDivisionError:
+            self.percent_change = None
     
     def test_fetch_balances(self):
         """
@@ -234,7 +237,10 @@ class SpotGridTradingBot():
         
         self.profit = self.available_cash + self.get_crypto_holdings_capital() - self.initial_cash - self.initial_crypto_capital
 
-        self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
+        try:
+            self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
+        except ZeroDivisionError:
+            self.percent_change = None
         
     
     def continue_trading(self, override=None):
@@ -248,12 +254,15 @@ class SpotGridTradingBot():
             return override
         else:
             if self.profit >= -1 * self.loss_threshold:
-                if self.percent_change >= -1 * self.loss_percentage:
-                    return True
+                if self.percent_change is not None:
+                    if self.percent_change >= -1 * self.loss_percentage:
+                        return True
+                    else:
+                        print("Loss percentage exceeded " + str(self.loss_percentage) + "%: terminating automated trading")
+                        
+                        return False
                 else:
-                    print("Loss percentage exceeded " + str(self.loss_percentage) + "%: terminating automated trading")
-                    
-                    return False
+                    return True
             else:
                 print("Loss exceeded $" + str(self.loss_threshold) + ": terminating automated trading")
                 
@@ -432,7 +441,10 @@ class SpotGridTradingBot():
             self.holdings[self.crypto] += self.round_to_min_order_quantity_increment(initial_buy_amount/self.crypto_quote['ask_price'])
             self.bought_price[self.crypto] = self.round_to_min_order_price_increment( ((self.bought_price[self.crypto] * self.holdings[self.crypto]) + (initial_buy_amount)) / (self.holdings[self.crypto] + self.round_to_min_order_quantity_increment(initial_buy_amount/self.crypto_quote['ask_price'])))
             self.profit = self.available_cash + self.get_crypto_holdings_capital() - self.initial_cash - self.initial_crypto_capital
-            self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
+            try:
+                self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
+            except ZeroDivisionError:
+                self.percent_change = None
         
         # Place buy orders and possibly sell orders
         for i in range(len(self.grids)):
@@ -763,16 +775,18 @@ class SpotGridTradingBot():
         return text
     
     def display_percent_change(self):
+        if self.percent_change is not None:
+            if self.percent_change >= 0:
+                text = '+'
+            else:
+                text = '-'
 
-        if self.percent_change >= 0:
-            text = '+'
+            text += str(abs(round(self.percent_change, 2)))
+            text += '%'
+
+            return text
         else:
-            text = '-'
-
-        text += str(abs(round(self.percent_change, 2)))
-        text += '%'
-
-        return text
+            return 'None'
     
     def print_grids(self):
         for i in range(len(self.grids)-1, -1, -1):
@@ -816,7 +830,10 @@ class SpotGridTradingBot():
                         self.holdings[self.crypto] += self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(i)]['price'])
                         self.bought_price[self.crypto] = self.round_to_min_order_price_increment( ((self.bought_price[self.crypto] * self.holdings[self.crypto]) + (self.cash_per_level)) / (self.holdings[self.crypto] + self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(i)]['price'])))
                         self.profit = self.available_cash + self.get_crypto_holdings_capital() - self.initial_cash - self.initial_crypto_capital
-                        self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
+                        try:
+                            self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
+                        except ZeroDivisionError:
+                            self.percent_change = None
 
                         # Set the filled level to inactive and adjust the inactive index
                         self.grids['order_' + str(i)]['status'] = 'inactive'
@@ -839,7 +856,10 @@ class SpotGridTradingBot():
                         self.available_cash += self.cash_per_level
                         self.holdings[self.crypto] -= self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(i)]['price'])
                         self.profit = self.available_cash + self.get_crypto_holdings_capital() - self.initial_cash - self.initial_crypto_capital
-                        self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
+                        try:
+                            self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
+                        except ZeroDivisionError:
+                            self.percent_change = None
 
                         # Set the filled level to inactive and adjust the inactive index
                         self.grids['order_' + str(i)]['status'] = 'inactive'
@@ -875,7 +895,10 @@ class SpotGridTradingBot():
                         self.holdings[self.crypto] += self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(i)]['price'])
                         self.bought_price[self.crypto] = self.round_to_min_order_price_increment( ((self.bought_price[self.crypto] * self.holdings[self.crypto]) + (self.cash_per_level)) / (self.holdings[self.crypto] + self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(i)]['price'])))
                         self.profit = self.available_cash + self.get_crypto_holdings_capital() - self.initial_cash - self.initial_crypto_capital
-                        self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
+                        try:
+                            self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
+                        except ZeroDivisionError:
+                            self.percent_change = None
 
                         # Place a sell order on the closest sell grid line above it
                         sell_index = -1
@@ -899,7 +922,10 @@ class SpotGridTradingBot():
                         self.available_cash += self.cash_per_level
                         self.holdings[self.crypto] -= self.round_to_min_order_quantity_increment(self.cash_per_level/self.grids['order_' + str(i)]['price'])
                         self.profit = self.available_cash + self.get_crypto_holdings_capital() - self.initial_cash - self.initial_crypto_capital
-                        self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
+                        try:
+                            self.percent_change = self.profit * 100 / (self.initial_cash + self.initial_crypto_capital)
+                        except ZeroDivisionError:
+                            self.percent_change = None
 
                         # Place a buy order on the closest buy grid line below it
                         buy_index = -1
