@@ -14,9 +14,9 @@ class GridTradingBot():
         self.days_to_run = int(config['days_to_run'])
         self.mode = config['mode']
 
-        # self.backtest_interval = config['backtest']['interval']
-        # self.backtest_span = config['backtest']['span']
-        # self.backtest_bounds = config['backtest']['bounds']
+        self.backtest_interval = config['backtest']['interval']
+        self.backtest_span = config['backtest']['span']
+        self.backtest_bounds = config['backtest']['bounds']
 
         self.upper_price = float(config['upper_price'])
         self.lower_price = float(config['lower_price'])
@@ -78,9 +78,9 @@ class GridTradingBot():
         assert isinstance(config['mode'], str), 'mode should be of type str'
         assert config['mode'] in ['live', 'test']
 
-        # assert isinstance(config['backtest']['interval'], str), 'backtest.interval should be of type str'
-        # assert isinstance(config['backtest']['span'], str), 'backtest.span should be of type str'
-        # assert isinstance(config['backtest']['bounds'], str), 'backtest.bounds should be of type str'
+        assert type(config['backtest']['interval']) == str
+        assert type(config['backtest']['span']) == str
+        assert type(config['backtest']['bounds']) == str
 
         assert type(config['upper_price']) == float or type(config['upper_price']) == int
         assert config['upper_price'] > 0
