@@ -94,10 +94,10 @@ class Order():
             self.time_in_force = order_info['time_in_force']
             self.type = order_info['type']
             self.updated_at = order_info['updated_at']
-        except Exception as ex:
+        except Exception as err:
             print("order_info = " + str(order_info))
             
-            raise ex
+            raise err
     
     def __repr__(self):
         return '{order_id:' + str(self.id) + ', side:' + self.side + ', state:' + self.state + '}'

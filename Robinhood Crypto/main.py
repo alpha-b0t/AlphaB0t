@@ -7,7 +7,7 @@ from helpers import confirm_grids
 if __name__ == '__main__':
     config = Config()
     
-    if confirm_grids(config['upper_price'], config['lower_price'], config['level_num'], config['cash']):
+    if confirm_grids(config.config['upper_price'], config.config['lower_price'], config.config['level_num'], config.config['cash']):
         grid_trader = GridTradingBot(config.config)
         del config
         grid_trader.run()
