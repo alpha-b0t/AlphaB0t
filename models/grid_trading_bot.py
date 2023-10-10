@@ -1,5 +1,6 @@
 class GridTradingBot():
-    def __init__(self):
+    def __init__(self, exchange):
+        self.exchange = exchange
         return
     
     def start(self):
