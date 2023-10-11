@@ -71,6 +71,14 @@ def get_version():
     except Exception as e:
         return jsonify({"message": f"Internal Server Error: {e}", "status": "500"}), 500
 
+# Get user
+@api_bp.route("/api/user/get", methods=["GET"])
+def get_user():
+    try:
+        return jsonify({"message": "Success", "status": "200"}), 200
+    except Exception as e:
+        return jsonify({"message": f"Internal Server Error: {e}", "status": "500"}), 500
+
 # Create a grid trading bot
 @api_bp.route("/api/grid-bots/create", methods=["POST"])
 def create_grid_bot():
