@@ -8,47 +8,47 @@ import time
 
 class Exchange():
     def __init__(self):
-        return
+        pass
     
     def login(self):
-        return
+        pass
     
     def logout(self):
-        return
+        pass
     
     def get_balances(self):
-        return
+        pass
     
     def get_latest_quote(self, symbol):
-        return
+        pass
     
     def build_holdings(self):
-        return
+        pass
     
     def get_holdings_and_bought_price(self):
-        return
+        pass
     
     def get_cash_and_equity(self):
-        return
+        pass
     
     def get_crypto_holdings_capital(self):
-        return
+        pass
     
     def create_buy_order(self):
-        return
+        pass
     
     def cancel_buy_order(self):
-        return
+        pass
     
     def create_sell_order(self):
-        return
+        pass
     
     def cancel_sell_order(self):
-        return
+        pass
 
-class RobinhoodCryptoExchange():
+class RobinhoodCryptoExchange(Exchange):
     def __init__(self):
-        return
+        super().__init__()
     
     def login(self):
         """
@@ -74,17 +74,21 @@ class RobinhoodCryptoExchange():
         except:
             print('already logged out: logout() can only be called when currently logged in')
 
-class KrakenExchange():
+class KrakenExchange(Exchange):
     def __init__(self, api_key, api_sec):
+        super().__init__()
         self.api_key = api_key
         self.api_sec = api_sec
         self.base_url = "https://api.kraken.com"
     
     def login(self):
-        return
+        pass
     
     def logout(self):
-        return
+        pass
+
+    def get_latest_quote(self, symbol):
+        return self.kraken_public_request("/0/public/OHLC", query_parameters={"pair": symbol}).json()
     
     def kraken_public_request(self, uri_path, query_parameters={}):
         url = self.base_url + uri_path
@@ -116,9 +120,10 @@ class KrakenExchange():
         headers = {}
         
         headers['API-Key'] = self.api_key
-        
-        # get_kraken_signature() as defined in the 'Authentication' section
-        headers['API-Sign'] = self.get_kraken_signature(uri_path, data, self.api_sec)         
+        headers['API-Sign'] = self.get_kraken_signature(uri_path, data, self.api_sec)     
+
+        if data.get("nonce") == None:
+            data["nonce"] = self.get_nonce()
 
         req = requests.post(
             url=(self.base_url + uri_path),
