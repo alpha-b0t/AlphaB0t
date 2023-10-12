@@ -1,7 +1,6 @@
 import robin_stocks.robinhood as rh
 from order import *
 from error_queue import ErrorQueue, ErrorQueueLimitExceededError
-import math
 import time
 from discord import SyncWebhook
 from helpers import *
@@ -68,7 +67,8 @@ class GridTradingBot():
     
     def check_config(self, config):
         """
-        TO-DO: IMPLEMENT
+        Time: O(1)
+        Space: O(1)
         Assures that the configuration is as expected. Raises an exception if an error is found.
         """
         assert isinstance(config['crypto'], str), 'crypto should be of type str'
@@ -144,7 +144,7 @@ class GridTradingBot():
         except:
             print('already logged out: logout() can only be called when currently logged in')
     
-    def run(self, is_initialized=False):
+    def start(self, is_initialized=False):
         try:
             if not is_initialized:
                 if self.send_to_discord:
@@ -164,7 +164,10 @@ class GridTradingBot():
 
             # Check continue_trading
             while self.continue_trading():
+                # Get latest crypto prices
                 self.crypto_quote = self.get_latest_quote(self.crypto)
+
+                # Update the orders accordingly
                 if self.mode == 'live':
                     if self.is_static:
                         self.update_orders_static()
@@ -176,17 +179,23 @@ class GridTradingBot():
                     else:
                         self.test_update_orders()
                 
+                # Get balances
                 if self.mode == 'live':
                     self.get_balances()
                 else:
                     self.test_get_balances()
                 
+                # Update the output
                 self.update_output()
                 
+                # Update discord is necessary
                 if self.send_to_discord:
                     self.send_message_to_discord()
                 
+                # Refresh the error queue
                 self.error_queue.update()
+
+                # Wait for self.latency seconds
                 time.sleep(self.latency)
             
             if self.send_to_discord:
@@ -249,7 +258,7 @@ class GridTradingBot():
                 self.send_error_message_to_discord(e, 'TypeError')
             
             # Continue trading
-            self.run(True)
+            self.resume()
         
         except KeyError as e:
             # Robinhood Internal Error
@@ -280,7 +289,7 @@ class GridTradingBot():
                 self.send_error_message_to_discord(e, 'KeyError')
             
             # Continue trading
-            self.run(True)
+            self.resume()
         
         except Exception as e:
             print("An unexpected error occured: cancelling open orders and logging out")
@@ -299,6 +308,12 @@ class GridTradingBot():
             self.logout()
             
             raise e
+    
+    def stop(self):
+        pass
+
+    def resume(self):
+        self.start(True)
     
     def get_balances(self):
         """
@@ -322,33 +337,28 @@ class GridTradingBot():
 
         self.percent_change = self.profit * 100 / self.cash
     
-    def continue_trading(self, override=None):
+    def continue_trading(self):
         """
+        Time: O(1)
+        Space: O(1)
         Returns true if loss has not exceeded loss threshold or loss percentage threshold. If either loss threshold or loss percentage threshold have been passed then False is returned.
-        If the bool parameter override is passed into the function, then override is returned by the function.
         """
-        if override != None:
-            assert type(override) == bool
-            
-            return override
-        else:
-            if self.profit >= -1 * self.loss_threshold:
-                if self.percent_change >= -1 * self.loss_percentage:
-                    return True
-                else:
-                    print("Loss percentage exceeded " + str(self.loss_percentage) + "%: terminating automated trading")
-                    
-                    return False
+        if self.profit >= -1 * self.loss_threshold:
+            if self.percent_change >= -1 * self.loss_percentage:
+                return True
             else:
-                print("Loss exceeded $" + str(self.loss_threshold) + ": terminating automated trading")
+                print("Loss percentage exceeded " + str(self.loss_percentage) + "%: terminating automated trading")
                 
                 return False
+        else:
+            print("Loss exceeded $" + str(self.loss_threshold) + ": terminating automated trading")
+            
+            return False
     
     def update_output(self):
         """
         Prints out the lastest information out to console
         """
-        
         print(time.ctime())
         
         print("mode: " + self.mode)
@@ -358,7 +368,7 @@ class GridTradingBot():
         print("equity: $" + str(round(self.equity, 2)))
         
         print('crypto holdings:')
-        print(self.display_holdings())
+        print(display_holdings(self.holdings, [self.get_latest_quote(crypto)['mark_price'] for crypto, amount in self.holdings.items()]))
 
         print('crypto average bought price:')
         print(display_bought_price(self.bought_price))
@@ -378,39 +388,25 @@ class GridTradingBot():
 
         print("number of pending orders:", len(get_all_open_orders()))
         print("grids:")
-        self.print_grids()
+        print_grids(self.grids, self.cash_per_level)
         print('\n')
     
     def get_latest_quote(self, crypto_symbol):
         """
         Returns a dictionary of the latest quote of the cryptocurrency.
         Dictionary Keys:
-            ask_price
-            ask_source
-            bid_price
-            bid_source
-            mark_price
-            high_price
-            low_price
-            open_price
-            symbol
-            id
-            volume
+            ask_price,
+            ask_source,
+            bid_price,
+            bid_source,
+            mark_price,
+            high_price,
+            low_price,
+            open_price,
+            symbol,
+            id,
+            volume,
             updated_at
-        
-        sample_api_response = {'ask_price': '27213.3353724',
-                'ask_source': 'df727485bffb859b5a26383d2e315dc34497f50158f2391a2c4cc03e2e7b27fe',
-                'bid_price': '27016.00727763',
-                'bid_source': '9873d2c153944f73b1724c7dea2589207b0b46a177081fb8b0a7893bd480b74f',
-                'mark_price': '27114.671325015',
-                'high_price': '27343.1989937',
-                'low_price': '27028.0141418',
-                'open_price': '27151.5435720200005',
-                'symbol': 'BTCUSD',
-                'id': '3d961844-d360-45fc-989b-f6fca761d511',
-                'volume': '0',
-                'updated_at': '2023-06-03T20:30:31.058Z'
-        }
         """
         data = rh.crypto.get_crypto_quote(crypto_symbol)
         data['ask_price'] = float(data['ask_price'])
@@ -481,7 +477,7 @@ class GridTradingBot():
             if i != self.closest_grid:
                 self.grids['order_' + str(i)]['status'] = 'active'
         
-        self.print_grids()
+        print_grids(self.grids, self.cash_per_level)
 
         # Determine amount of dollars to buy initial amount of cryptocurrency
         initial_buy_amount = (len(self.grids) - 1 - self.closest_grid) * self.cash_per_level
@@ -578,7 +574,7 @@ class GridTradingBot():
             elif self.grids['order_' + str(i)]['side'] == 'sell':
                 self.grids['order_' + str(i)]['status'] = 'inactive'
         
-        self.print_grids()
+        print_grids(self.grids, self.cash_per_level)
         
         # Place buy orders
         for i in range(len(self.grids)):
@@ -688,7 +684,6 @@ class GridTradingBot():
                 'average_buy_price': '79.26',
                 }}
         """
-        
         holdings_data = rh.crypto.get_crypto_positions()
         
         build_holdings_data = dict()
@@ -732,6 +727,8 @@ class GridTradingBot():
     
     def get_runtime(self):
         """
+        Time: O(1)
+        Space: O(1)
         Returns the runtime in seconds
         """
         return time.time() - self.start_time
@@ -757,45 +754,6 @@ class GridTradingBot():
             capital += crypto_amount * float(self.get_latest_quote(crypto_name)['mark_price'])
         
         return round_down_to_cents(capital)
-    
-    def display_holdings(self):
-        """
-        Returns a string listing the amount of crypto held and the latest price to be printed out
-        """
-        text = ''
-
-        for crypto, amount in self.holdings.items():
-            
-            text += '\t' + str(amount) + ' ' + crypto + " at $" + str(float(self.get_latest_quote(crypto)['mark_price']))
-        
-        return text
-    
-    def print_grids(self):
-        for i in range(len(self.grids)-1, -1, -1):
-            if i == len(self.grids)-1:
-                print("=============================================")
-                print('grid_' + str(i))
-                print('\tprice: $' + str(self.grids['order_' + str(i)]['price']))
-                print('\tside:', self.grids['order_' + str(i)]['side'])
-                print('\tstatus:', self.grids['order_' + str(i)]['status'])
-                try:
-                    print('\torder:', self.grids['order_' + str(i)]['order'])
-                except KeyError:
-                    print('\torder:', None)
-                print('\tcash: $' + str(self.cash_per_level))
-                print("=============================================")
-            else:
-                print('grid_' + str(i))
-                print('\tprice: $' + str(self.grids['order_' + str(i)]['price']))
-                print('\tside:', self.grids['order_' + str(i)]['side'])
-                print('\tstatus:', self.grids['order_' + str(i)]['status'])
-                try:
-                    print('\torder:', self.grids['order_' + str(i)]['order'])
-                except KeyError:
-                    print('\torder:', None)
-                print('\tcash: $' + str(self.cash_per_level))
-                print("=============================================")
-        print("=============================================")
     
     def test_update_orders(self):
         # Update each order
@@ -928,7 +886,7 @@ class GridTradingBot():
             message += "runtime: " + display_time(self.get_runtime()) + "\n"
             message += "equity: $" + str(round(self.equity, 2)) + "\n"
             message += 'crypto holdings:\n'
-            message += self.display_holdings() + '\n'
+            message += display_holdings(self.holdings, [self.get_latest_quote(crypto)['mark_price'] for crypto, amount in self.holdings.items()]) + '\n'
             message += 'crypto average bought price:\n'
             message += display_bought_price(self.bought_price) + '\n'
             message += "crypto equity: $" + str(round(self.get_crypto_holdings_capital(), 2)) + '\n'
@@ -983,7 +941,6 @@ class GridTradingBot():
         """
         message = "Grid Trading Bot: ACTIVATED"
         self.discord_webhook.send(message)
-        return
     
     def send_end_message_to_discord(self):
         """
@@ -991,15 +948,12 @@ class GridTradingBot():
         """
         message = "Grid Trading Bot: STOPPED"
         self.discord_webhook.send(message)
-        return
     
     def send_error_message_to_discord(self, exception, error_type):
         message = "Exception Occured: " + error_type + '\n'
         message += str(exception)
         self.discord_webhook.send(message)
-        return
     
     def send_loss_exceeded_message_to_discord(self):
         message = "Either loss exceeded $" + str(self.loss_threshold) + " or loss percentage exceeded " + str(self.loss_percentage) + "%"
         self.discord_webhook.send(message)
-        return

@@ -147,3 +147,43 @@ def display_percent_change(percent_change):
     text += '%'
 
     return text
+
+def display_holdings(holdings, prices):
+    """
+    Returns a string listing the amount of crypto held and the latest price to be printed out
+    """
+    text = ''
+    i = 0
+
+    for crypto, amount in holdings.items():
+        text += '\t' + str(amount) + ' ' + crypto + " at $" + str(prices[i])
+        i += 1
+    
+    return text
+
+def print_grids(grids, cash_per_level):
+    for i in range(len(grids)-1, -1, -1):
+        if i == len(grids)-1:
+            print("=============================================")
+            print('grid_' + str(i))
+            print('\tprice: $' + str(grids['order_' + str(i)]['price']))
+            print('\tside:', grids['order_' + str(i)]['side'])
+            print('\tstatus:', grids['order_' + str(i)]['status'])
+            try:
+                print('\torder:', grids['order_' + str(i)]['order'])
+            except KeyError:
+                print('\torder:', None)
+            print('\tcash: $' + str(cash_per_level))
+            print("=============================================")
+        else:
+            print('grid_' + str(i))
+            print('\tprice: $' + str(grids['order_' + str(i)]['price']))
+            print('\tside:', grids['order_' + str(i)]['side'])
+            print('\tstatus:', grids['order_' + str(i)]['status'])
+            try:
+                print('\torder:', grids['order_' + str(i)]['order'])
+            except KeyError:
+                print('\torder:', None)
+            print('\tcash: $' + str(cash_per_level))
+            print("=============================================")
+    print("=============================================")
