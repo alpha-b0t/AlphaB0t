@@ -1,6 +1,6 @@
 from dotenv import dotenv_values
 
-class GridTradingBotConfig():
+class GridBotConfig():
     def __init__(self):
         env_config = dotenv_values(".env")
     
