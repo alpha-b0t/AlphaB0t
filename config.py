@@ -4,7 +4,7 @@ class AppConfig():
     def __init__(self):
         return
 
-class GridTradingBotConfig():
+class GridBotConfig():
     def __init__(self):
         env_config = dotenv_values(".env")
     

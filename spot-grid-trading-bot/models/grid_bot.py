@@ -1,4 +1,4 @@
-class GridTradingBot():
+class GridBot():
     def __init__(self, exchange):
         self.exchange = exchange
         return
