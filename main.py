@@ -11,7 +11,10 @@ if __name__ == '__main__':
         del config
 
         # grid_trader.start()
-        
-        grid_trader.backtest(grid_trader.crypto)
+
+        backtest_results = grid_trader.backtest(grid_trader.crypto)
+        print("backtesting results:")
+        print(backtest_results)
+        grid_trader.logout()
     else:
         del config

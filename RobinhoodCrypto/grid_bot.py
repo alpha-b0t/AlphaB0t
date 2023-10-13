@@ -315,6 +315,8 @@ class GridBot():
             bounds
         """
         try:
+            print("starting backtesting...")
+
             result = {
                 'initial_cash_balance': initial_cash_balance,
                 'initial_crypto_equity': 0,
@@ -334,12 +336,16 @@ class GridBot():
 
             # Get crypto historical data
             # https://robin-stocks.readthedocs.io/en/latest/robinhood.html#robin_stocks.robinhood.crypto.get_crypto_historicals
-            crypto_historical_data = rh.crypto.get_crypto_historicals(
-                symbol=crypto_symbol,
-                interval=self.backtest_interval,
-                span=self.backtest_span,
-                bounds=self.backtest_bounds
-            )
+            try:
+                crypto_historical_data = rh.crypto.get_crypto_historicals(
+                    symbol=crypto_symbol,
+                    interval=self.backtest_interval,
+                    span=self.backtest_span,
+                    bounds=self.backtest_bounds
+                )
+            except TypeError as e:
+                print(f"Failed to fetch crypto historical data for {crypto_symbol} for the following parameters: interval={self.backtest_interval}, span={self.backtest_span}, bounds={self.backtest_span}.")
+                raise e
 
             # Initialize grids
             """
@@ -375,7 +381,7 @@ class GridBot():
 
             # Mark orders as buys and sells
             for i in range(len(self.grids)):
-                if float(self.crypto_quote['ask_price']) > self.grids[f'order_{i}']['price']:
+                if float(self.crypto_quote['close_price']) > self.grids[f'order_{i}']['price']:
                     self.grids[f'order_{i}']['side'] = 'buy'
                 else:
                     self.grids[f'order_{i}']['side'] = 'sell'
@@ -385,7 +391,7 @@ class GridBot():
             self.closest_grid = -1
 
             for i in range(len(self.grids)):
-                dist = abs(self.grids[f'order_{i}']['price'] - float(self.crypto_quote['ask_price']))
+                dist = abs(self.grids[f'order_{i}']['price'] - float(self.crypto_quote['close_price']))
 
                 if dist < min_dist:
                     min_dist = dist
@@ -410,12 +416,12 @@ class GridBot():
             
             initial_buy_amount = grid_level_initial_buy_count * self.cash_per_level
 
-            print("Placing a market order for $" + str(initial_buy_amount) + " at an ask price of $" + str(self.crypto_quote['ask_price']))
+            print("Placing a market order for $" + str(initial_buy_amount) + " at an ask price of $" + str(self.crypto_quote['close_price']))
 
             # Update available_cash, holdings, bought_price, profit, and percent_change to simulate the fulfillment of the limit buy order
             result['current_cash_balance'] -= initial_buy_amount
-            result['current_crypto_equity'] += round_to_min_order_quantity_increment(initial_buy_amount/float(self.crypto_quote['ask_price']), self.crypto_meta_data['min_order_quantity_increment'])
-            result['profit'] = result['current_cash_balance'] + round_down_to_cents(result['current_crypto_equity'] * float(self.crypto_quote['mark_price'])) - result['initial_balance']
+            result['current_crypto_equity'] += round_to_min_order_quantity_increment(initial_buy_amount/float(self.crypto_quote['close_price']), self.crypto_meta_data['min_order_quantity_increment'])
+            result['profit'] = result['current_cash_balance'] + round_down_to_cents(result['current_crypto_equity'] * float(self.crypto_quote['close_price'])) - result['initial_balance']
             result['percent_change'] = result['profit'] * 100 / result['initial_balance']
 
             # Place limit buy orders and possibly limit sell orders
@@ -431,7 +437,11 @@ class GridBot():
             
             print("finished grid initalization")
 
+            print(f"1/{len(crypto_historical_data)}")
+
             for i in range(1, len(crypto_historical_data)):
+                print(f"{i+1}/{len(crypto_historical_data)}")
+
                 # Check if backtesting should continue
                 if result['profit'] >= -1 * self.loss_threshold and result['percent_change'] >= -1 * self.loss_percentage:
                     # Continue iterating
@@ -443,14 +453,14 @@ class GridBot():
                         # Ensure that there is an order and that it is active
                         if self.grids[f'order_{i}']['status'] == 'active':
                             # Check to see if either as a buy or sell order that it has been filled
-                            if (self.grids[f'order_{i}']['side'] == 'buy' and float(self.crypto_quote['ask_price']) <= self.grids[f'order_{i}']['price']) or (self.grids[f'order_{i}']['side'] == 'sell' and float(self.crypto_quote['bid_price']) >= self.grids[f'order_{i}']['price']):
+                            if (self.grids[f'order_{i}']['side'] == 'buy' and float(self.crypto_quote['close_price']) <= self.grids[f'order_{i}']['price']) or (self.grids[f'order_{i}']['side'] == 'sell' and float(self.crypto_quote['close_price']) >= self.grids[f'order_{i}']['price']):
                                 if self.grids[f'order_{i}']['side'] == 'buy' and self.closest_grid == i+1:
                                     # If the filled order was a buy order, place a sell order on the level above it, assuming it was previously inactive
 
                                     # Update available_cash, holdings, bought_price, profit, and percent_change to simulate the fulfillment of the limit buy order
                                     result['current_cash_balance'] -= self.cash_per_level
                                     result['current_crypto_equity'] += round_to_min_order_quantity_increment(self.cash_per_level/self.grids[f'order_{i}']['price'], self.crypto_meta_data['min_order_quantity_increment'])
-                                    result['profit'] = result['current_cash_balance'] + round_down_to_cents(result['current_crypto_equity'] * float(self.crypto_quote['mark_price'])) - result['initial_balance']
+                                    result['profit'] = result['current_cash_balance'] + round_down_to_cents(result['current_crypto_equity'] * float(self.crypto_quote['close_price'])) - result['initial_balance']
                                     result['percent_change'] = result['profit'] * 100 / result['initial_balance']
 
                                     # Set the filled level to inactive and adjust the inactive index
@@ -468,7 +478,7 @@ class GridBot():
                                     # Update available_cash, holdings, profit, and percent_change to simulate the fulfillment of the limit sell order
                                     result['current_cash_balance'] += self.cash_per_level
                                     result['current_crypto_equity'] -= round_to_min_order_quantity_increment(self.cash_per_level/self.grids[f'order_{i}']['price'], self.crypto_meta_data['min_order_quantity_increment'])
-                                    result['profit'] = result['current_cash_balance'] + round_down_to_cents(result['current_crypto_equity'] * float(self.crypto_quote['mark_price'])) - result['initial_balance']
+                                    result['profit'] = result['current_cash_balance'] + round_down_to_cents(result['current_crypto_equity'] * float(self.crypto_quote['close_price'])) - result['initial_balance']
                                     result['percent_change'] = result['profit'] * 100 / result['initial_balance']
 
                                     # Set the filled level to inactive and adjust the inactive index
@@ -486,6 +496,10 @@ class GridBot():
                     print("Either loss threshold or loss percentage exceeded: terminating backtesting")
                     break
 
+            result['final_cash_balance'] = result['current_cash_balance']
+            result['final_crypto_equity'] = result['current_crypto_equity']
+            result['final_balance'] = result['final_cash_balance'] + round_down_to_cents(result['final_crypto_equity'] * float(self.crypto_quote['close_price']))
+            
             return result
         except Exception as e:
             print("An unexpected error occured: logging out")
