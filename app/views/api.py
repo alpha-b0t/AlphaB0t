@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request, Blueprint
+from models.result import Result
 
 api_bp = Blueprint("api", __name__, url_prefix="/")
 
@@ -66,87 +67,106 @@ def delete_task(task_id):
 def get_version():
     """Access version id."""
     try:
-        __version__ = "VERSION"
-        return jsonify(version=__version__), 200
+        result = Result(data={"version": "VERSION"})
+        return result.to_api_response()
     except Exception as e:
-        return jsonify({"message": f"Internal Server Error: {e}", "status": "500"}), 500
+        result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
+        return result.to_api_response()
 
 # Get user
 @api_bp.route("/api/user/get", methods=["GET"])
 def get_user():
     try:
-        return jsonify({"message": "Success", "status": "200"}), 200
+        result = Result()
+        return result.to_api_response()
     except Exception as e:
-        return jsonify({"message": f"Internal Server Error: {e}", "status": "500"}), 500
+        result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
+        return result.to_api_response()
 
 # Create a grid trading bot
 @api_bp.route("/api/grid-bots/create", methods=["POST"])
 def create_grid_bot():
     """Create a Grid Trading Bot."""
     try:
-        return jsonify({"message": "Success", "status": "200"}), 200
+        result = Result()
+        return result.to_api_response()
     except Exception as e:
-        return jsonify({"message": f"Internal Server Error: {e}", "status": "500"}), 500
+        result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
+        return result.to_api_response()
 
 # Start a grid trading bot
 @api_bp.route("/api/grid-bots/start", methods=["POST"])
 def start_grid_bot():
     """Start the Grid Trading Bot."""
     try:
-        return jsonify({"message": "Success", "status": "200"}), 200
+        result = Result()
+        return result.to_api_response()
     except Exception as e:
-        return jsonify({"message": f"Internal Server Error: {e}", "status": "500"}), 500
+        result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
+        return result.to_api_response()
 
 # Pause a grid trading bot
 @api_bp.route("/api/grid-bots/pause", methods=["POST"])
 def pause_grid_bot():
     """Pause the Grid Trading Bot."""
     try:
-        return jsonify({"message": "Success", "status": "200"}), 200
+        result = Result()
+        return result.to_api_response()
     except Exception as e:
-        return jsonify({"message": f"Internal Server Error: {e}", "status": "500"}), 500
+        result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
+        return result.to_api_response()
 
 # Resume a grid trading bot
 @api_bp.route("/api/grid-bots/resume", methods=["POST"])
 def resume_grid_bot():
     """Resume the Grid Trading Bot."""
     try:
-        return jsonify({"message": "Success", "status": "200"}), 200
+        result = Result()
+        return result.to_api_response()
     except Exception as e:
-        return jsonify({"message": f"Internal Server Error: {e}", "status": "500"}), 500
+        result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
+        return result.to_api_response()
 
 # Stop a grid trading bot
 @api_bp.route("/api/grid-bots/stop", methods=["POST"])
 def stop_grid_bot():
     """Stop the Grid Trading Bot."""
     try:
-        return jsonify({"message": "Success", "status": "200"}), 200
+        result = Result()
+        return result.to_api_response()
     except Exception as e:
-        return jsonify({"message": f"Internal Server Error: {e}", "status": "500"}), 500
+        result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
+        return result.to_api_response()
 
 # Update a grid trading bot
 @api_bp.route("/api/grid-bots/update", methods=["PUT"])
 def update_grid_bot():
     """Update the Grid Trading Bot."""
     try:
-        return jsonify({"message": "Success", "status": "200"}), 200
+        result = Result()
+        return result.to_api_response()
     except Exception as e:
-        return jsonify({"message": f"Internal Server Error: {e}", "status": "500"}), 500
+        result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
+        return result.to_api_response()
 
 # Get a grid trading bot
 @api_bp.route("/api/grid-bots/get", methods=["GET"])
 def get_grid_bot():
     """Get the Grid Trading Bot."""
     try:
-        return jsonify({"message": "Success", "status": "200"}), 200
+        result = Result()
+        return result.to_api_response()
     except Exception as e:
-        return jsonify({"message": f"Internal Server Error: {e}", "status": "500"}), 500
+        result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
+        return result.to_api_response()
 
 # Remove a grid trading bot
 @api_bp.route("/api/grid-bots/remove", methods=["DELETE"])
 def remove_grid_bot():
     """Remove the Grid Trading Bot."""
     try:
-        return jsonify({"message": "Success", "status": "200"}), 200
+        result = Result()
+        return result.to_api_response()
     except Exception as e:
-        return jsonify({"message": f"Internal Server Error: {e}", "status": "500"}), 500
+        result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
+        return result.to_api_response()

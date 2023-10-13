@@ -7,12 +7,12 @@ def confirm_grids(upper_price, lower_price, level_num, cash):
             print("=============================================")
             print('grid_' + str(i) + ':')
             print('\tprice: $' + str(upper_price - (level_num-1-i)*(upper_price-lower_price)/(level_num-1)))
-            print('\tcash: $' + str(cash/level_num))
+            print('\tcash: $' + str(round_down_to_cents(cash/level_num)))
             print("=============================================")
         else:
             print('grid_' + str(i) + ':')
             print('\tprice: $' + str(upper_price - (level_num-1-i)*(upper_price-lower_price)/(level_num-1)))
-            print('\tcash: $' + str(cash/level_num))
+            print('\tcash: $' + str(round_down_to_cents(cash/level_num)))
             print("=============================================")
 
     
