@@ -491,6 +491,7 @@ class GridBot():
 
                                     print("Placing a limit buy order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids[f'order_{i-1}']['price']))
                                 else:
+                                    # TODO: Implement
                                     raise Exception("Order was filled but either was not sell nor buy or ignored level was not correct or both")
                 else:
                     print("Either loss threshold or loss percentage exceeded: terminating backtesting")
@@ -777,6 +778,7 @@ class GridBot():
 
                         print("Placing a limit buy order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids[f'order_{i-1}']['price']))
                     else:
+                        # TODO: Implement
                         raise Exception("Order was filled but either was not sell nor buy or ignored level was not correct or both")
     
     def build_holdings(self):
@@ -919,6 +921,7 @@ class GridBot():
                             print("Placing a limit buy order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids['order_' + str(i-1)]['price']))
                             self.grids['order_' + str(i-1)]['order'] = None
                     else:
+                        # TODO: Implement
                         raise Exception("Order was filled but either was not sell nor buy or ignored level was not correct or both")
     
     def send_message_to_discord(self):
