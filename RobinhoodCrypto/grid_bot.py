@@ -512,25 +512,32 @@ class GridBot():
 
             raise e
     
-    def optimize_parameters_genetic(self, level_num_values, upper_price_values, lower_price_values, population_size=50, generations=100, mutation_rate=0.1):
+    def optimize_parameters_genetic(self, level_num_values, upper_price_values, lower_price_values, population_size=50, generations=100, mutation_rate=0.1, survival_rate=0.5):
         # TODO: Need to refactor
         # Initialize a random population
         population = [(random.choice(level_num_values), random.uniform(upper_price_values[0], upper_price_values[-1]), random.uniform(lower_price_values[0], lower_price_values[-1])) for _ in range(population_size)]
+        
+        number_of_parents = int(population_size * survival_rate)
 
         # Main optimization loop
         for generation in range(generations):
             # Evaluate the fitness of each individual in the population
             fitness_scores = [self.simulate_grid_trading(*params) for params in population]
 
-            # Select the top-performing individuals
+            # TODO: Need to refactor the selection process
+            # Select the top-performing individuals to be parents
             selected_indices = sorted(range(population_size), key=lambda i: fitness_scores[i], reverse=True)
+            selected_indices = selected_indices[:number_of_parents]
             selected_population = [population[i] for i in selected_indices]
 
             # Crossover and mutation
             new_population = []
             for _ in range(population_size):
+                # Select two parents at random from the selected population to produce offspring
                 parent1, parent2 = random.choices(selected_population, k=2)
                 child = [random.choice(parent1[i], parent2[i]) for i in range(3)]
+
+                # Mutate the child and add it to the new population
                 child = self.mutate(child, level_num_values, upper_price_values, lower_price_values, mutation_rate)
                 new_population.append(child)
 
