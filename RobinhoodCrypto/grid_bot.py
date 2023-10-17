@@ -457,45 +457,50 @@ class GridBot():
                         if self.grids[f'order_{i}']['status'] == 'active':
                             # Check to see if either as a buy or sell order that it has been filled
                             if (self.grids[f'order_{i}']['side'] == 'buy' and float(self.crypto_quote['close_price']) <= self.grids[f'order_{i}']['price']) or (self.grids[f'order_{i}']['side'] == 'sell' and float(self.crypto_quote['close_price']) >= self.grids[f'order_{i}']['price']):
-                                if self.grids[f'order_{i}']['side'] == 'buy' and self.closest_grid == i+1:
-                                    # If the filled order was a buy order, place a sell order on the level above it, assuming it was previously inactive
+                                if self.grids[f'order_{i}']['side'] == 'buy':
+                                    if self.closest_grid == i+1:
+                                        # If the filled order was a buy order, place a sell order on the level above it, assuming it was previously inactive
 
-                                    # Update available_cash, holdings, bought_price, profit, and percent_change to simulate the fulfillment of the limit buy order
-                                    result['current_cash_balance'] -= self.cash_per_level
-                                    result['current_crypto_equity'] += round_to_min_order_quantity_increment(self.cash_per_level/self.grids[f'order_{i}']['price'], self.crypto_meta_data['min_order_quantity_increment'])
-                                    result['profit'] = result['current_cash_balance'] + round_down_to_cents(result['current_crypto_equity'] * float(self.crypto_quote['close_price'])) - result['initial_balance']
-                                    result['percent_change'] = result['profit'] * 100 / result['initial_balance']
+                                        # Update available_cash, holdings, bought_price, profit, and percent_change to simulate the fulfillment of the limit buy order
+                                        result['current_cash_balance'] -= self.cash_per_level
+                                        result['current_crypto_equity'] += round_to_min_order_quantity_increment(self.cash_per_level/self.grids[f'order_{i}']['price'], self.crypto_meta_data['min_order_quantity_increment'])
+                                        result['profit'] = result['current_cash_balance'] + round_down_to_cents(result['current_crypto_equity'] * float(self.crypto_quote['close_price'])) - result['initial_balance']
+                                        result['percent_change'] = result['profit'] * 100 / result['initial_balance']
 
-                                    # Set the filled level to inactive and adjust the inactive index
-                                    self.grids[f'order_{i}']['status'] = 'inactive'
-                                    self.closest_grid = i
+                                        # Set the filled level to inactive and adjust the inactive index
+                                        self.grids[f'order_{i}']['status'] = 'inactive'
+                                        self.closest_grid = i
 
-                                    # Place a sell order on grid line i+1
-                                    self.grids[f'order_{i+1}']['side'] = 'sell'
-                                    self.grids[f'order_{i+1}']['status'] = 'active'
-                                    
-                                    print("Placing a limit sell order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids[f'order_{i+1}']['price']))
-                                elif self.grids[f'order_{i}']['side'] == 'sell' and self.closest_grid == i-1:
-                                    # If the filled order was a sell order, place a buy order on the level below it, assuming it was previously inactive
+                                        # Place a sell order on grid line i+1
+                                        self.grids[f'order_{i+1}']['side'] = 'sell'
+                                        self.grids[f'order_{i+1}']['status'] = 'active'
+                                        
+                                        print("Placing a limit sell order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids[f'order_{i+1}']['price']))
+                                    else:
+                                        # TODO: Implement
+                                        pass
+                                elif self.grids[f'order_{i}']['side'] == 'sell':
+                                    if self.closest_grid == i-1:
+                                        # If the filled order was a sell order, place a buy order on the level below it, assuming it was previously inactive
 
-                                    # Update available_cash, holdings, profit, and percent_change to simulate the fulfillment of the limit sell order
-                                    result['current_cash_balance'] += self.cash_per_level
-                                    result['current_crypto_equity'] -= round_to_min_order_quantity_increment(self.cash_per_level/self.grids[f'order_{i}']['price'], self.crypto_meta_data['min_order_quantity_increment'])
-                                    result['profit'] = result['current_cash_balance'] + round_down_to_cents(result['current_crypto_equity'] * float(self.crypto_quote['close_price'])) - result['initial_balance']
-                                    result['percent_change'] = result['profit'] * 100 / result['initial_balance']
+                                        # Update available_cash, holdings, profit, and percent_change to simulate the fulfillment of the limit sell order
+                                        result['current_cash_balance'] += self.cash_per_level
+                                        result['current_crypto_equity'] -= round_to_min_order_quantity_increment(self.cash_per_level/self.grids[f'order_{i}']['price'], self.crypto_meta_data['min_order_quantity_increment'])
+                                        result['profit'] = result['current_cash_balance'] + round_down_to_cents(result['current_crypto_equity'] * float(self.crypto_quote['close_price'])) - result['initial_balance']
+                                        result['percent_change'] = result['profit'] * 100 / result['initial_balance']
 
-                                    # Set the filled level to inactive and adjust the inactive index
-                                    self.grids[f'order_{i}']['status'] = 'inactive'
-                                    self.closest_grid = i
+                                        # Set the filled level to inactive and adjust the inactive index
+                                        self.grids[f'order_{i}']['status'] = 'inactive'
+                                        self.closest_grid = i
 
-                                    # Place a buy order on grid line i
-                                    self.grids[f'order_{i-1}']['side'] = 'buy'
-                                    self.grids[f'order_{i-1}']['status'] = 'active'
+                                        # Place a buy order on grid line i
+                                        self.grids[f'order_{i-1}']['side'] = 'buy'
+                                        self.grids[f'order_{i-1}']['status'] = 'active'
 
-                                    print("Placing a limit buy order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids[f'order_{i-1}']['price']))
-                                else:
-                                    # TODO: Implement
-                                    raise Exception("Order was filled but either was not sell nor buy or ignored level was not correct or both")
+                                        print("Placing a limit buy order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids[f'order_{i-1}']['price']))
+                                    else:
+                                        # TODO: Implement
+                                        pass
                 else:
                     print("Either loss threshold or loss percentage exceeded: terminating backtesting")
                     break
