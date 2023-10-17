@@ -75,21 +75,14 @@ class RobinhoodCryptoExchange(Exchange):
             print('already logged out: logout() can only be called when currently logged in')
 
 class KrakenExchange(Exchange):
-    def __init__(self, api_key, api_sec):
+    def __init__(self, api_key='', api_sec=''):
         super().__init__()
         self.api_key = api_key
         self.api_sec = api_sec
         self.api_base_url = 'https://api.kraken.com/0'
-    
-    def login(self):
-        # Method not needed for KrakenExchange
-        pass
-    
-    def logout(self):
-        # Method not needed for KrakenExchange
-        pass
 
     def get_latest_quote(self, symbol, interval=1, since=0):
+        """Get the latest quote of a cryptocurrency."""
         query_parameters = {
             "pair": symbol
         }
@@ -104,7 +97,7 @@ class KrakenExchange(Exchange):
         
         return response.json()
     
-    def get_server_time(self):
+    def get_exchange_time(self):
         response = self.public_request('/public/Time')
         return response.json()
     
@@ -236,6 +229,33 @@ class KrakenExchange(Exchange):
 
         return response.json()
     
+    def edit_order(self, txid, pair, userref=0, volume='', price='', price2='', deadline=''):
+        """Edit an open order by its txid."""
+        # https://docs.kraken.com/rest/#tag/Trading/operation/editOrder
+        payload = {
+            "txid": txid,
+            "pair": pair
+        }
+
+        if userref != 0:
+            payload["userref"] = userref
+        
+        if volume != '':
+            payload["volume"] = volume
+        
+        if price != '':
+            payload["price"] = price
+        
+        if price2 != '':
+            payload["price2"] = price2
+        
+        if deadline != '':
+            payload["deadline"] = deadline
+        
+        response = self.authenticated_request('/private/EditOrder', payload)
+
+        return response.json()
+    
     def cancel_order(self, txid):
         """
         Cancel an open order.
@@ -298,7 +318,38 @@ class KrakenExchange(Exchange):
 
         return response.json()
     
+    def get_closed_orders(self, trades=False, userref=0, start=0, end=0, ofs=0, closetime='both', consolidate_ticker=True):
+        """Retrieve information about orders that have been closed (filled or cancelled)."""
+        # https://docs.kraken.com/rest/#tag/Account-Data/operation/getClosedOrders
+        payload = {
+            "trades": trades
+        }
+
+        if userref != 0:
+            payload["userref"] = userref
+        
+        if start != 0:
+            payload["start"] = start
+        
+        if end != 0:
+            payload["end"] = end
+        
+        if ofs != 0:
+            payload["ofs"] = ofs
+        
+        if closetime != 'both':
+            payload["closetime"] = closetime
+        
+        if consolidate_ticker != True:
+            payload["consolidate_ticker"] = consolidate_ticker
+        
+        response = self.authenticated_request('/private/ClosedOrders', payload)
+
+        return response.json()
+    
     def get_websockets_token(self):
+        """Get a websocket token for Kraken's WebSockets API."""
+        # https://docs.kraken.com/rest/#tag/Websockets-Authentication/operation/getWebsocketsToken
         response = self.authenticated_request('/private/GetWebSocketsToken')
 
         return response.json()

@@ -3,72 +3,45 @@ from models.result import Result
 
 api_bp = Blueprint("api", __name__, url_prefix="/")
 
-# Example data
-tasks = [
-    {'id': 1, 'title': 'Task 1', 'completed': False},
-    {'id': 2, 'title': 'Task 2', 'completed': True},
-    {'id': 3, 'title': 'Task 3', 'completed': False}
-]
-
-# Get all tasks
-@api_bp.route('/api/tasks', methods=['GET'])
-def get_tasks():
-    return jsonify(tasks)
-
-# Get a specific task
-@api_bp.route('/api/tasks/<int:task_id>', methods=['GET'])
-def get_task(task_id):
-    task = next((task for task in tasks if task['id'] == task_id), None)
-    if task:
-        return jsonify(task)
-    else:
-        return jsonify({'error': 'Task not found'})
-
-# Create a new task
-@api_bp.route('/api/tasks', methods=['POST'])
-def create_task():
-    data = request.get_json()
-    title = data.get('title')
-    completed = data.get('completed', False)
-
-    new_task = {
-        'id': len(tasks) + 1,
-        'title': title,
-        'completed': completed
-    }
-    tasks.append(new_task)
-
-    return jsonify(new_task)
-
-# Update a task
-@api_bp.route('/api/tasks/<int:task_id>', methods=['PUT'])
-def update_task(task_id):
-    task = next((task for task in tasks if task['id'] == task_id), None)
-    if task:
-        data = request.get_json()
-        task['title'] = data.get('title', task['title'])
-        task['completed'] = data.get('completed', task['completed'])
-        return jsonify(task)
-    else:
-        return jsonify({'error': 'Task not found'})
-
-# Delete a task
-@api_bp.route('/api/tasks/<int:task_id>', methods=['DELETE'])
-def delete_task(task_id):
-    task = next((task for task in tasks if task['id'] == task_id), None)
-    if task:
-        tasks.remove(task)
-        return jsonify({'message': 'Task deleted'})
-    else:
-        return jsonify({'error': 'Task not found'})
-
 # Get version
 @api_bp.route("/v", methods=["GET"])
 def get_version():
     """Access version id."""
     try:
         __version__ = '1.0.0'
+
         result = Result(data={"version": __version__})
+        
+        return result.to_api_response()
+    except Exception as e:
+        result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
+        return result.to_api_response()
+
+@api_bp.route("/api/register", methods=["POST"])
+def register():
+    try:
+        result = Result()
+        # TODO: Implement logic
+        return result.to_api_response()
+    except Exception as e:
+        result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
+        return result.to_api_response()
+
+@api_bp.route("/api/login", methods=["POST"])
+def login():
+    try:
+        result = Result()
+        # TODO: Implement logic
+        return result.to_api_response()
+    except Exception as e:
+        result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
+        return result.to_api_response()
+
+@api_bp.route("/api/logout", methods=["POST"])
+def logout():
+    try:
+        result = Result()
+        # TODO: Implement logic
         return result.to_api_response()
     except Exception as e:
         result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
@@ -80,6 +53,30 @@ def get_user():
     try:
         result = Result()
         # TODO: Implement logic
+        return result.to_api_response()
+    except Exception as e:
+        result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
+        return result.to_api_response()
+
+# Update user
+@api_bp.route("/api/user/update", methods=["POST"])
+def update_user():
+    try:
+        result = Result()
+        # TODO: Implement logic
+        return result.to_api_response()
+    except Exception as e:
+        result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
+        return result.to_api_response()
+
+# Get supported exchanges
+@api_bp.route("/api/exchanges", methods=["GET"])
+def get_supported_exchanges():
+    try:
+        result = Result()
+
+        result.data = ['Kraken']
+        
         return result.to_api_response()
     except Exception as e:
         result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)

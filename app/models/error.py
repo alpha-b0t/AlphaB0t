@@ -1,101 +1,62 @@
 # Kraken API errors
-class KrakenAPIInvalidKeyError(Exception):
+
+# General errors
+class KrakenGeneralInternalError(Exception):
     def __init__(self, message):
         super.__init__(message)
     
     def __str__(self):
-        return f"KrakenAPIInvalidKeyError: {self.args[0]}"
+        return f"KrakenGeneralInternalError: {self.args[0]}"
 
-class KrakenAPIInvalidSignatureError(Exception):
+class KrakenGeneralUnknownMethodError(Exception):
     def __init__(self, message):
         super.__init__(message)
     
     def __str__(self):
-        return f"KrakenAPIInvalidSignatureError: {self.args[0]}"
+        return f"KrakenGeneralUnknownMethodError: {self.args[0]}"
 
-class KrakenAPIInvalidNonceError(Exception):
+class KrakenGeneralInvalidArgumentsError(Exception):
     def __init__(self, message):
         super.__init__(message)
     
     def __str__(self):
-        return f"KrakenAPIInvalidNonceError: {self.args[0]}"
+        return f"KrakenGeneralInvalidArgumentsError: {self.args[0]}"
 
-class KrakenPermissionDeniedError(Exception):
+class KrakenGeneralInvalidArgumentsIndexUnavailableError(Exception):
     def __init__(self, message):
         super.__init__(message)
     
     def __str__(self):
-        return f"KrakenPermissionDeniedError: {self.args[0]}"
+        return f"KrakenGeneralInvalidArgumentsIndexUnavailableError: {self.args[0]}"
 
-class KrakenInvalidArgumentsError(Exception):
+class KrakenGeneralPermissionDeniedError(Exception):
     def __init__(self, message):
         super.__init__(message)
     
     def __str__(self):
-        return f"KrakenInvalidArgumentsError: {self.args[0]}"
+        return f"KrakenGeneralPermissionDeniedError: {self.args[0]}"
 
-class KrakenCannotOpenOrderError(Exception):
+class KrakenGeneralTemporaryLockoutError(Exception):
     def __init__(self, message):
         super.__init__(message)
     
     def __str__(self):
-        return f"KrakenCannotOpenOrderError: {self.args[0]}"
+        return f"KrakenGeneralTemporaryLockoutError: {self.args[0]}"
 
-class KrakenInsufficientFundsError(Exception):
-    def __init__(self, message):
-        super.__init__(message)
-    
-    def __str__(self):
-        return f"KrakenInsufficientFundsError: {self.args[0]}"
-
-class KrakenOrderMinimumNotMetError(Exception):
-    def __init__(self, message):
-        super.__init__(message)
-    
-    def __str__(self):
-        return f"KrakenOrderMinimumNotMetError: {self.args[0]}"
-
-class KrakenCostMinimumNotMetError(Exception):
-    def __init__(self, message):
-        super.__init__(message)
-    
-    def __str__(self):
-        return f"KrakenCostMinimumNotMetError: {self.args[0]}"
-
-class KrakenTickSizeCheckFailedError(Exception):
-    def __init__(self, message):
-        super.__init__(message)
-    
-    def __str__(self):
-        return f"KrakenTickSizeCheckFailedError: {self.args[0]}"
-
-class KrakenOrdersLimitExceededError(Exception):
-    def __init__(self, message):
-        super.__init__(message)
-    
-    def __str__(self):
-        return f"KrakenOrdersLimitExceededError: {self.args[0]}"
-
-class KrakenRateLimitExceededError(Exception):
-    def __init__(self, message):
-        super.__init__(message)
-    
-    def __str__(self):
-        return f"KrakenRateLimitExceededError: {self.args[0]}"
-
-class KrakenDomainRateLimitExceededError(Exception):
-    def __init__(self, message):
-        super.__init__(message)
-    
-    def __str__(self):
-        return f"KrakenDomainRateLimitExceededError: {self.args[0]}"
-
+# Service errors
 class KrakenServiceUnavailableError(Exception):
     def __init__(self, message):
         super.__init__(message)
     
     def __str__(self):
         return f"KrakenServiceUnavailableError: {self.args[0]}"
+
+class KrakenServiceBusyError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenServiceBusyError: {self.args[0]}"
 
 class KrakenServiceMarketCancelOnlyError(Exception):
     def __init__(self, message):
@@ -117,3 +78,177 @@ class KrakenServiceDeadlineElapsedError(Exception):
     
     def __str__(self):
         return f"KrakenServiceDeadlineElapsedError: {self.args[0]}"
+
+# API errors
+class KrakenAPIBadRequestError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenAPIBadRequestError: {self.args[0]}"
+
+class KrakenAPIRateLimitExceededError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenAPIRateLimitExceededError: {self.args[0]}"
+
+class KrakenAPIInvalidKeyError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenAPIInvalidKeyError: {self.args[0]}"
+
+class KrakenAPIInvalidSignatureError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenAPIInvalidSignatureError: {self.args[0]}"
+
+class KrakenAPIInvalidNonceError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenAPIInvalidNonceError: {self.args[0]}"
+
+class KrakenAPIFeatureDisabledError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenAPIFeatureDisabledError: {self.args[0]}"
+
+# Order errors
+class KrakenOrderCannotOpenOrderError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenOrderCannotOpenOrderError: {self.args[0]}"
+
+class KrakenOrderCannotOpenOpposingPositionError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenOrderCannotOpenOpposingPositionError: {self.args[0]}"
+
+class KrakenOrderInsufficientFundsError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenOrderInsufficientFundsError: {self.args[0]}"
+
+class KrakenOrderMinimumNotMetError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenOrderMinimumNotMetError: {self.args[0]}"
+
+class KrakenOrderCostMinimumNotMetError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenOrderCostMinimumNotMetError: {self.args[0]}"
+
+class KrakenOrderTickSizeCheckFailedError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenOrderTickSizeCheckFailedError: {self.args[0]}"
+
+class KrakenOrderOrdersLimitExceededError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenOrderOrdersLimitExceededError: {self.args[0]}"
+
+class KrakenOrderRateLimitExceededError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenOrderRateLimitExceededError: {self.args[0]}"
+
+class KrakenOrderDomainRateLimitExceededError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenOrderDomainRateLimitExceededError: {self.args[0]}"
+
+class KrakenOrderPositionsLimitExceededError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenOrderPositionsLimitExceededError: {self.args[0]}"
+
+class KrakenOrderUnknownPositionError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenOrderUnknownPositionError: {self.args[0]}"
+
+class KrakenOrderOrderNotEditableError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenOrderOrderNotEditableError: {self.args[0]}"
+
+class KrakenOrderNotEnoughLeavesQtyError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenOrderNotEnoughLeavesQtyError: {self.args[0]}"
+
+# Funding errors
+class KrakenFundingFailedError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+    
+    def __str__(self):
+        return f"KrakenFundingFailedError: {self.args[0]}"
+
+class KrakenFundingMaxFeeExceededError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenFundingMaxFeeExceededError: {self.args[0]}"
+
+# Query errors
+class KrakenQueryUnknownAssetPairError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenQueryUnknownAssetPairError: {self.args[0]}"
+
+# Session errors
+class KrakenSessionInvalidSessionError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenSessionInvalidSessionError: {self.args[0]}"
+
+# Trade errors
+class KrakenTradeLockedError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
+    
+    def __str__(self):
+        return f"KrakenTradeLockedError: {self.args[0]}"

@@ -1,16 +1,18 @@
 class GridBot():
     def __init__(self, exchange):
         self.exchange = exchange
-        return
     
     def start(self):
-        return
+        pass
     
     def stop(self):
-        return
+        pass
     
     def pause(self):
-        return
+        pass
     
     def resume(self):
-        return
+        pass
+    
+    def update(self):
+        pass
