@@ -2,7 +2,7 @@ from dotenv import dotenv_values
 
 class AppConfig():
     def __init__(self):
-        return
+        pass
 
 class GRIDBotConfig():
     def __init__(self):
@@ -32,4 +32,10 @@ class GRIDBotConfig():
 
 class ExchangeConfig():
     def __init__(self):
-        return
+        env_config = dotenv_values(".env")
+
+        self.exchange = env_config["EXCHANGE"]
+        self.api_key = env_config["API_KEY"]
+        self.api_sec = env_config["API_SEC"]
+
+        del env_config

@@ -161,7 +161,7 @@ def display_holdings(holdings, prices):
     
     return text
 
-def print_grids(grids, cash_per_level):
+def display_grids(grids, cash_per_level):
     for i in range(len(grids)-1, -1, -1):
         if i == len(grids)-1:
             print("=============================================")

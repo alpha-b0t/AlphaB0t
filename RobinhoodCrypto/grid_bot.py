@@ -146,7 +146,7 @@ class GRIDBot():
                 else:
                     self.test_get_balances()
                 
-                self.error_queue.update()
+                self.error_queue.refresh()
 
             # Check if the loss is acceptable
             while self.is_loss_acceptable():
@@ -173,7 +173,7 @@ class GRIDBot():
                     self.send_message_to_discord()
                 
                 # Refresh the error queue
-                self.error_queue.update()
+                self.error_queue.refresh()
 
                 # Wait for self.latency seconds
                 time.sleep(self.latency)
@@ -212,7 +212,7 @@ class GRIDBot():
             print("Robinhood Internal Error: TypeError: continuing trading")
             
             try:
-                self.error_queue.update()
+                self.error_queue.refresh()
                 self.error_queue.append(time.time())
             except ErrorQueueLimitExceededError as e:
                 if self.send_to_discord:
@@ -241,7 +241,7 @@ class GRIDBot():
             print("Robinhood Internal Error: KeyError: continuing trading")
             
             try:
-                self.error_queue.update()
+                self.error_queue.refresh()
                 self.error_queue.append(time.time())
             except ErrorQueueLimitExceededError as e:
                 if self.send_to_discord:
@@ -379,7 +379,7 @@ class GRIDBot():
                 if i != closest_grid:
                     grids[i]['status'] = 'active'
             
-            print_grids(grids, cash_per_level)
+            display_grids(grids, cash_per_level)
 
             # Determine amount of dollars to buy initial amount of cryptocurrency
             grid_level_initial_buy_count = 0
@@ -611,7 +611,7 @@ class GRIDBot():
 
         print("number of pending orders:", len(get_all_open_orders()))
         print("grids:")
-        print_grids(self.grids, self.cash_per_level)
+        display_grids(self.grids, self.cash_per_level)
         print('\n')
     
     def get_latest_quote(self, crypto_symbol):
@@ -700,7 +700,7 @@ class GRIDBot():
             if i != self.closest_grid:
                 self.grids[i]['status'] = 'active'
         
-        print_grids(self.grids, self.cash_per_level)
+        display_grids(self.grids, self.cash_per_level)
 
         # Determine amount of dollars to buy initial amount of cryptocurrency
         grid_level_initial_buy_count = 0

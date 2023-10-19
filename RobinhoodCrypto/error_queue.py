@@ -17,7 +17,6 @@ class ErrorQueue():
         self.queue = []
         self.latency = latency
         self.limit = limit
-        return
     
     def __repr__(self):
         return '{queue: ' + repr(self.queue) + ', latency: ' + str(self.latency) + ', limit: ' + str(self.limit) + '}'
@@ -28,9 +27,12 @@ class ErrorQueue():
     def __len__(self):
         return len(self.queue)
     
-    def update(self):
+    def refresh(self):
+        """Removes errors in queue that occurred more than 'self.latency' seconds ago."""
+        # Get the current time
         current_time = time.time()
         
+        # Find the index for the first error to keep
         remove_before = 0
         for i in range(len(self.queue)):
             if current_time - self.queue[i] >= self.latency:
@@ -38,14 +40,13 @@ class ErrorQueue():
             else:
                 break
         
+        # Update the queue if any errors are to be dropped
         if remove_before != 0:
             self.queue = self.queue[remove_before:]
-        return
     
-    def append(self, data):
+    def append(self, time: float):
         if not self.is_full():
-            self.queue.append(data)
-        return
+            self.queue.append(time)
     
     def is_full(self):
         if len(self.queue) < self.limit:
@@ -54,4 +55,3 @@ class ErrorQueue():
             return True
         else:
             raise ErrorQueueLimitExceededError("There are too many items in the ErrorQueue. ErrorQueue length: " + str(len(self.queue)) + ", ErrorQueue limit: " + str(self.limit))
-        return

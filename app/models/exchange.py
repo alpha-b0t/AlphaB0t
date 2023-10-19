@@ -440,6 +440,73 @@ class CoinbaseExchange(Exchange):
             response = self.public_request(f"/products/{product_id}/candles")
         
         return response.json()
+    
+    def get_fees(self):
+        """Gets fee rates and 30 days trailing volume."""
+        response = self.authenticated_request('GET', '/fees')
+        return response.json()
+    
+    def create_order(self, type, side, product_id, profile_id='', stp='dc', stop='', stop_price='', price='', size='', funds='', time_in_force='GTC', cancel_after='', post_only=False, client_oid=''):
+        """Creates an order."""
+        payload = {
+            "type": type,
+            "side": side,
+            "product_id": product_id
+        }
+
+        if profile_id != '':
+            payload["profile_id"] = profile_id
+        
+        if stp != 'dc':
+            payload["stp"] = stp
+        
+        if stop != '':
+            payload["stop"] = stop
+        
+        if stop_price != '':
+            payload["stop_price"] = stop_price
+        
+        if price != '':
+            payload["price"] = price
+        
+        if size != '':
+            payload["size"] = size
+        
+        if funds != '':
+            payload["funds"] = funds
+        
+        if time_in_force != '':
+            payload["time_in_force"] = time_in_force
+        
+        if cancel_after != '':
+            payload["cancel_after"] = cancel_after
+        
+        if post_only != False:
+            payload["post_only"] = post_only
+        
+        if client_oid != '':
+            payload["client_oid"] = client_oid
+        
+        response = self.authenticated_request('POST', '/orders', payload)
+
+        return response.json()
+    
+    def cancel_order(self, order_id, profile_id='', product_id=''):
+        """Cancel a single open order by id."""
+        query_parameters = {}
+
+        if profile_id != '':
+            query_parameters["profile_id"] = profile_id
+        
+        if product_id != '':
+            query_parameters["product_id"] = product_id
+        
+        if query_parameters != {}:
+            response = self.authenticated_request('DELETE', f"/orders/{order_id}", query_parameters)
+        else:
+            response = self.authenticated_request('DELETE', f"/orders/{order_id}")
+        
+        return response.json()
 
 class RobinhoodCryptoExchange(Exchange):
     def __init__(self):
