@@ -12,9 +12,10 @@ if __name__ == '__main__':
 
         # grid_trader.start()
 
-        backtest_results = grid_trader.backtest(grid_trader.crypto)
-        print("backtesting results:")
-        print(backtest_results)
+        simulation_metric = grid_trader.simulate_grid_trading('LINK', 4, 8.10, 5.25, 'day', 'year', '24_7', 100, 10)
+
+        print(f"Simulation performance: {simulation_metric}%")
+
         grid_trader.logout()
     else:
         del config

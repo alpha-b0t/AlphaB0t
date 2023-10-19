@@ -9,12 +9,9 @@ class GRIDBotConfig():
         env_config = dotenv_values(".env")
 
         self.exchange = env_config['EXCHANGE']
-        self.crypto = env_config['CRYPTO']
+        self.pair = env_config['PAIR']
         self.days_to_run = int(env_config['DAYS_TO_RUN'])
         self.mode = env_config['MODE']
-        self.backtest_interval = env_config['BACKTEST_INTERVAL']
-        self.backtest_span = env_config['BACKTEST_SPAN']
-        self.backtest_bounds = env_config['BACKTEST_BOUNDS']
         self.upper_price = float(env_config['UPPER_PRICE'])
         self.lower_price = float(env_config['LOWER_PRICE'])
         self.level_num = int(env_config['LEVEL_NUM'])
