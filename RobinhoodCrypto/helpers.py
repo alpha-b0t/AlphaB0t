@@ -6,12 +6,12 @@ def confirm_grids(upper_price, lower_price, level_num, cash):
         if i == level_num-1:
             print("=============================================")
             print('grid_' + str(i) + ':')
-            print('\tprice: $' + str(upper_price - (level_num-1-i)*(upper_price-lower_price)/(level_num-1)))
+            print('\tprice: $' + str(round_down_to_cents(upper_price - (level_num-1-i)*(upper_price-lower_price)/(level_num-1))))
             print('\tcash: $' + str(round_down_to_cents(cash/level_num)))
             print("=============================================")
         else:
             print('grid_' + str(i) + ':')
-            print('\tprice: $' + str(upper_price - (level_num-1-i)*(upper_price-lower_price)/(level_num-1)))
+            print('\tprice: $' + str(round_down_to_cents(upper_price - (level_num-1-i)*(upper_price-lower_price)/(level_num-1))))
             print('\tcash: $' + str(round_down_to_cents(cash/level_num)))
             print("=============================================")
 
@@ -166,22 +166,22 @@ def print_grids(grids, cash_per_level):
         if i == len(grids)-1:
             print("=============================================")
             print('grid_' + str(i))
-            print('\tprice: $' + str(grids['order_' + str(i)]['price']))
-            print('\tside:', grids['order_' + str(i)]['side'])
-            print('\tstatus:', grids['order_' + str(i)]['status'])
+            print('\tprice: $' + str(grids[i]['price']))
+            print('\tside:', grids[i]['side'])
+            print('\tstatus:', grids[i]['status'])
             try:
-                print('\torder:', grids['order_' + str(i)]['order'])
+                print('\torder:', grids[i]['order'])
             except KeyError:
                 print('\torder:', None)
             print('\tcash: $' + str(cash_per_level))
             print("=============================================")
         else:
             print('grid_' + str(i))
-            print('\tprice: $' + str(grids['order_' + str(i)]['price']))
-            print('\tside:', grids['order_' + str(i)]['side'])
-            print('\tstatus:', grids['order_' + str(i)]['status'])
+            print('\tprice: $' + str(grids[i]['price']))
+            print('\tside:', grids[i]['side'])
+            print('\tstatus:', grids[i]['status'])
             try:
-                print('\torder:', grids['order_' + str(i)]['order'])
+                print('\torder:', grids[i]['order'])
             except KeyError:
                 print('\torder:', None)
             print('\tcash: $' + str(cash_per_level))

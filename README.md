@@ -213,12 +213,9 @@ In this genetic algorithm example, we start with a random population of paramete
 ## Example .env file
 ```
 EXCHANGE=Kraken
-CRYPTO=LINK
+PAIR=LINK
 DAYS_TO_RUN=30
 MODE=test
-BACKTEST_INTERVAL=day
-BACKTEST_SPAN=year
-BACKTEST_BOUNDS=24_7
 UPPER_PRICE=8.10
 LOWER_PRICE=5.25
 LEVEL_NUM=4

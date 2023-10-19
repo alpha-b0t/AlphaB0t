@@ -17,3 +17,6 @@ class GRIDBot():
     
     def update(self):
         pass
+
+    def simulate_trading(self):
+        pass
