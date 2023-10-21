@@ -1,4 +1,4 @@
-# trading-bot-platform-backend
+# MoonTrader-backend
 
 ## Tech stack
 
