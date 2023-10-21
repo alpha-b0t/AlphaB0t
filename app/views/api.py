@@ -3,8 +3,8 @@ from models.result import Result
 
 api_bp = Blueprint("api", __name__, url_prefix="/")
 
-# Get version
-@api_bp.route("/v", methods=["GET"])
+# Get API version
+@api_bp.route("/api/v", methods=["GET"])
 def get_version():
     """Access version id."""
     try:
@@ -12,6 +12,20 @@ def get_version():
 
         result = Result(data={"version": __version__})
         
+        return result.to_api_response()
+    except Exception as e:
+        result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
+        return result.to_api_response()
+
+# Get API status
+@api_bp.route("/api/status", methods=["GET"])
+def get_status():
+    """Access API status."""
+    try:
+        result = Result()
+
+        result.data = {"API_status": "online"}
+
         return result.to_api_response()
     except Exception as e:
         result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
@@ -72,7 +86,7 @@ def update_user():
         result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
         return result.to_api_response()
 
-# Get user's exchanges
+# Get user's connected exchanges
 @api_bp.route("/api/exchanges/<int:user_id>", methods=["GET"])
 def get_user_exchanges(user_id):
     try:

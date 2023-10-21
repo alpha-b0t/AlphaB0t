@@ -24,6 +24,9 @@
 - AWS
 - Docker
 
+### Payments
+- Stripe
+
 ## Getting started
 
 ### Example .env file
