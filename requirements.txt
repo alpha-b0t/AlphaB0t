@@ -3,3 +3,4 @@ Flask-SQLAlchemy==3.0.2
 psycopg2==2.9.5
 SQLAlchemy==2.0.16
 Flask-Migrate==2.7.0
+flask-cors==4.0.0
