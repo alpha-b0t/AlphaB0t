@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request, Blueprint
 from app.models.result import Result
+from app.database.data_access import *
 
 api_bp = Blueprint("api", __name__, url_prefix="/")
 
@@ -69,6 +70,22 @@ def get_user(user_id):
 
         # TODO: Implement logic
         result.data = {"user_id": user_id}
+
+        return result.to_api_response()
+    except Exception as e:
+        result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
+        return result.to_api_response()
+
+# Add user
+@api_bp.route("/api/user/add", methods=["POST"])
+def add_user():
+    try:
+        result = Result()
+
+        # Fetch data from request
+        data = request.get_json()
+
+        result.data = data
 
         return result.to_api_response()
     except Exception as e:

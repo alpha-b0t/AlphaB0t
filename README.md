@@ -32,7 +32,7 @@
 
 To run the application locally, run the following command in your terminal:
 ```
-flask --app flaskr run --debug
+flask --app app run --debug
 ```
 
 ### Example .env file
