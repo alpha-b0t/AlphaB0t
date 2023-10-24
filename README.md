@@ -72,6 +72,7 @@ CANCEL_ORDERS_UPON_EXIT=none
 - https://flask.palletsprojects.com/en/2.3.x/tutorial/layout/
 - https://flask.palletsprojects.com/en/2.3.x/tutorial/factory/
 - https://flask-sqlalchemy.palletsprojects.com/en/3.1.x/
+- https://flask-cors.corydolphin.com/en/latest/api.html#api-docs
 
 ## Profitable grid parameters
 1. 2023-10-13
