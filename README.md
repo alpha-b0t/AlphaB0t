@@ -35,6 +35,22 @@ To run the application locally, run the following command in your terminal:
 flask --app app run --debug
 ```
 
+To compile C++ code to the C++17 standard, run the following command in your terminal:
+```
+make
+```
+The compiled C++ code will go in the bin folder.
+
+To clear the compiled C++ code, run the following command in your terminal
+```
+make clean
+```
+
+To run the C++ code (i.e. run `main()` in main.cpp), run the following command in your terminal
+```
+make run-main
+```
+
 ### Example .env file
 ```
 DATABASE_USERNAME=
