@@ -17,9 +17,28 @@ class Car {
 class EV : public Car {
     public:
         double batteryLevel;
+        bool isSelfDriveOn = false;
 
         EV(string makerName, string modelName, double batteryPercentage) : Car(makerName, modelName) {
             batteryLevel = batteryPercentage;
+        }
+
+        double charge(float hours, float chargePerHour) {
+            batteryLevel += chargePerHour * hours;
+
+            if (batteryLevel > 100) {
+                batteryLevel = 100;
+            }
+
+            return batteryLevel;
+        }
+
+        void turnOnSelfDrive() {
+            isSelfDriveOn = true;
+        }
+
+        void turnOffSelfDrive() {
+            isSelfDriveOn = false;
         }
 };
 
