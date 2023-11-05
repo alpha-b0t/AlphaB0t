@@ -2,7 +2,9 @@
 #define __CAR_H__
 
 #include <string>
+
 using namespace std;
+
 class Car {
     public:
         string make;
@@ -17,10 +19,12 @@ class Car {
 class EV : public Car {
     public:
         double batteryLevel;
+        double speed;
         bool isSelfDriveOn = false;
 
         EV(string makerName, string modelName, double batteryPercentage) : Car(makerName, modelName) {
             batteryLevel = batteryPercentage;
+            speed = 0;
         }
 
         double charge(float hours, float chargePerHour) {
