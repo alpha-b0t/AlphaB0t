@@ -143,14 +143,15 @@ class KrakenExchange(Exchange):
         response = self.public_request('/public/SystemStatus')
         return response.json()
     
-    def add_order(self, ordertype, type, volume, pair, userref=0, price='', price2='', trigger='', timeinforce='GTC', starttm='', expiretm='', deadline=''):
+    def add_order(self, ordertype, type, volume, pair, userref=0, price='', price2='', trigger='', oflags='', timeinforce='GTC', starttm='', expiretm='', deadline='', validate='false'):
         """Add an order."""
         # https://docs.kraken.com/rest/#tag/Trading/operation/addOrder
         payload = {
             "ordertype": ordertype,
             "type": type,
             "volume": volume,
-            "pair": pair
+            "pair": pair,
+            "validate": validate
         }
 
         if userref != 0:
@@ -164,6 +165,9 @@ class KrakenExchange(Exchange):
         
         if trigger != '':
             payload["trigger"] = trigger
+
+        if oflags != '':
+            payload["oflags"] = oflags
         
         if timeinforce != 'GTC':
             payload["timeinforce"] = timeinforce
@@ -181,11 +185,12 @@ class KrakenExchange(Exchange):
 
         return response.json()
     
-    def add_order_batch(self, orders, pair, deadline=''):
+    def add_order_batch(self, orders, pair, deadline='', validate='false'):
         """Add a batch of orders at once."""
         payload = {
             "orders": orders,
-            "pair": pair
+            "pair": pair,
+            "validate": validate
         }
 
         if deadline != '':
@@ -195,12 +200,13 @@ class KrakenExchange(Exchange):
 
         return response.json()
     
-    def edit_order(self, txid, pair, userref=0, volume='', price='', price2='', deadline=''):
+    def edit_order(self, txid, pair, userref=0, volume='', price='', price2='', deadline='', validate='false'):
         """Edit an open order by its txid."""
         # https://docs.kraken.com/rest/#tag/Trading/operation/editOrder
         payload = {
             "txid": txid,
-            "pair": pair
+            "pair": pair,
+            "validate": validate
         }
 
         if userref != 0:
