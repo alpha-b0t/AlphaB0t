@@ -20,7 +20,6 @@ class GRIDBot():
         self.level_num = config.level_num
         self.cash = config.cash
         self.loss_threshold = config.loss_threshold
-        self.loss_percentage = config.loss_percentage
         self.latency = config.latency_in_sec
 
         self.send_to_discord = config.send_to_discord
@@ -83,8 +82,6 @@ class GRIDBot():
         assert config.cash > 0
         assert type(config.loss_threshold) == float or type(config.loss_threshold) == int
         assert config.loss_threshold > 0
-        assert type(config.loss_percentage) == float or type(config.loss_percentage) == int
-        assert config.loss_percentage > 0
         assert type(config.latency_in_sec) == float or type(config.latency_in_sec) == int
         assert config.latency_in_sec > 0
         assert type(config.send_to_discord) == bool
@@ -285,7 +282,7 @@ class GRIDBot():
     def resume(self):
         self.start(True)
     
-    def simulate_trading(self, pair: str, level_num: int, upper_price: float, lower_price: float, interval: str, span: str, bounds: str, loss_threshold: float, loss_percentage: float) -> float:
+    def simulate_trading(self, pair: str, level_num: int, upper_price: float, lower_price: float, interval: str, span: str, bounds: str, loss_threshold: float) -> float:
         """Simulates GRID trading using given parameters"""
         try:
             assert interval in ['15second', '5minute', '10minute', 'hour', 'day', 'week']
@@ -415,7 +412,7 @@ class GRIDBot():
 
             for i in range(1, len(self.crypto_historical_data)):
                 # Check if backtesting should continue
-                if result['profit'] >= -1 * loss_threshold and result['percent_change'] >= -1 * loss_percentage:
+                if result['profit'] >= -1 * loss_threshold:
                     # Continue iterating
                     # Get the latest crypto prices
                     crypto_quote = self.crypto_historical_data[i]
@@ -568,12 +565,7 @@ class GRIDBot():
         Returns true if loss has not exceeded loss threshold or loss percentage threshold. If either loss threshold or loss percentage threshold have been passed then False is returned.
         """
         if self.profit >= -1 * self.loss_threshold:
-            if self.percent_change >= -1 * self.loss_percentage:
-                return True
-            else:
-                print("Loss percentage exceeded " + str(self.loss_percentage) + "%: terminating automated trading")
-                
-                return False
+            return True
         else:
             print("Loss exceeded $" + str(self.loss_threshold) + ": terminating automated trading")
             
@@ -1035,5 +1027,5 @@ class GRIDBot():
         self.discord_webhook.send(message)
     
     def send_loss_exceeded_message_to_discord(self):
-        message = "Either loss exceeded $" + str(self.loss_threshold) + " or loss percentage exceeded " + str(self.loss_percentage) + "%"
+        message = "Either loss exceeded $" + str(self.loss_threshold)
         self.discord_webhook.send(message)

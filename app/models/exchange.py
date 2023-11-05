@@ -121,8 +121,7 @@ class KrakenExchange(Exchange):
         :return: The response from the Kraken API.
         :rtype: requests.Response
         """
-        if data.get("nonce") == None:
-            data["nonce"] = self.get_nonce()
+        data['nonce'] = self.get_nonce()
         
         headers = {}
         
@@ -314,6 +313,20 @@ class KrakenExchange(Exchange):
         
         response = self.authenticated_request('/private/ClosedOrders', payload)
 
+        return response.json()
+    
+    def get_trade_volume(self, pair=''):
+        """Returns 30 day USD trading volume and resulting fee schedule for any asset pair(s) provided."""
+        # https://docs.kraken.com/rest/#tag/Account-Data/operation/getTradeVolume
+        if pair != '':
+            payload = {
+                'pair': pair
+            }
+
+            response = self.authenticated_request('/private/TradeVolume', payload)
+        else:
+            response = self.authenticated_request('/private/TradeVolume')
+        
         return response.json()
     
     def get_websockets_token(self):
