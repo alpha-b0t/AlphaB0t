@@ -16,6 +16,9 @@ class GRIDBotConfig():
         env_config = dotenv_values(".env")
 
         self.exchange = env_config['EXCHANGE']
+        self.api_key = env_config['API_KEY']
+        self.api_sec = env_config['API_SEC']
+        self.api_passphrase = env_config['API_PASSPHRASE']
         self.pair = env_config['PAIR']
         self.days_to_run = int(env_config['DAYS_TO_RUN'])
         self.mode = env_config['MODE']
@@ -24,11 +27,13 @@ class GRIDBotConfig():
         self.level_num = int(env_config['LEVEL_NUM'])
         self.cash = float(env_config['CASH'])
         self.loss_threshold = float(env_config['LOSS_THRESHOLD'])
-        self.loss_percentage = float(env_config['LOSS_PERCENTAGE'])
         self.latency_in_sec = float(env_config['LATENCY_IN_SEC'])
         self.send_to_discord = (env_config['SEND_TO_DISCORD'].lower() == 'true')
-        self.discord_latency_in_hours = float(env_config['DISCORD_LATENCY_IN_HOURS'])
-        self.discord_url = env_config['DISCORD_URL']
+
+        if self.send_to_discord:
+            self.discord_latency_in_hours = float(env_config['DISCORD_LATENCY_IN_HOURS'])
+            self.discord_url = env_config['DISCORD_URL']
+        
         self.max_error_count = int(env_config['MAX_ERROR_COUNT'])
         self.error_latency_in_sec = float(env_config['ERROR_LATENCY_IN_SEC'])
         self.init_buy_error_latency_in_sec = float(env_config['INIT_BUY_ERROR_LATENCY_IN_SEC'])
@@ -41,8 +46,9 @@ class ExchangeConfig():
     def __init__(self):
         env_config = dotenv_values(".env")
 
-        self.exchange = env_config["EXCHANGE"]
-        self.api_key = env_config["API_KEY"]
-        self.api_sec = env_config["API_SEC"]
+        self.exchange = env_config['EXCHANGE']
+        self.api_key = env_config['API_KEY']
+        self.api_sec = env_config['API_SEC']
+        self.api_passphrase = env_config['API_PASSPHRASE']
 
         del env_config
