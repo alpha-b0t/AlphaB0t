@@ -30,10 +30,46 @@ if __name__ == '__main__':
     elif exchange_config.exchange == 'Kraken':
         kraken_exchange = KrakenExchange(exchange_config.api_key, exchange_config.api_sec)
 
+        # Get extended balance
         print(kraken_exchange.get_extended_balance())
+
+        # Get account balance
         print(kraken_exchange.get_account_balance())
+
+        # Get trade balance
         print(kraken_exchange.get_trade_balance())
-        print(kraken_exchange.get_trade_volume('XBTUSD'))
+
+        # Get trade volume and fee schedule
+        print(kraken_exchange.get_trade_volume(exchange_config.pair))
+
+        # Add an order
+        add_response = kraken_exchange.add_order(
+            ordertype='limit',
+            type='buy',
+            volume=5,
+            pair=exchange_config.pair,
+            price='2',
+            oflags='post',
+            validate='true'
+        )
+        
+        print(add_response)
+
+        # Edit an order
+        # edit_response = kraken_exchange.edit_order(
+        #     txid=add_response['result']['txid'],
+        #     pair=exchange_config.pair,
+        #     price='1.5',
+        #     oflags='post',
+        #     validate='true'
+        # )
+
+        # print(edit_response)
+
+        # Cancel an order
+        # cancel_response = kraken_exchange.cancel_order('OQD3ML-T6SZR-TBJWL7')
+
+        # print(cancel_response)
     else:
         # Run C++ executables
         cpp_executable = './bin/main'

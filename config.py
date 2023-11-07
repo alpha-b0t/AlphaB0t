@@ -50,5 +50,6 @@ class ExchangeConfig():
         self.api_key = env_config['API_KEY']
         self.api_sec = env_config['API_SEC']
         self.api_passphrase = env_config['API_PASSPHRASE']
+        self.pair = env_config['PAIR']
 
         del env_config

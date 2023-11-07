@@ -200,7 +200,7 @@ class KrakenExchange(Exchange):
 
         return response.json()
     
-    def edit_order(self, txid, pair, userref=0, volume='', price='', price2='', deadline='', validate='false'):
+    def edit_order(self, txid, pair, userref=0, volume='', price='', price2='', oflags='', deadline='', validate='false'):
         """Edit an open order by its txid."""
         # https://docs.kraken.com/rest/#tag/Trading/operation/editOrder
         payload = {
@@ -220,6 +220,9 @@ class KrakenExchange(Exchange):
         
         if price2 != '':
             payload["price2"] = price2
+        
+        if oflags != '':
+            payload["oflags"] = oflags
         
         if deadline != '':
             payload["deadline"] = deadline
