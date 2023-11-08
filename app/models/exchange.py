@@ -42,10 +42,12 @@ class Exchange():
         pass
 
 class KrakenExchange(Exchange):
-    def __init__(self, api_key='', api_sec=''):
+    def __init__(self, api_key='', api_sec='', pair='', mode='test'):
         super().__init__()
         self.api_key = api_key
         self.api_sec = api_sec
+        self.pair = pair
+        self.mode = mode.lower()
         self.api_base_url = 'https://api.kraken.com/0'
 
     def get_latest_quote(self, symbol, interval=1, since=0):
@@ -66,6 +68,10 @@ class KrakenExchange(Exchange):
     
     def get_exchange_time(self):
         response = self.public_request('/public/Time')
+        return response.json()
+    
+    def get_exchange_status(self):
+        response = self.public_request('/public/SystemStatus')
         return response.json()
     
     def get_tradable_asset_pairs(self, pair='', info="info"):
@@ -139,13 +145,12 @@ class KrakenExchange(Exchange):
     def get_nonce(self):
         return str(int(1000*time.time()))
     
-    def get_exchange_status(self):
-        response = self.public_request('/public/SystemStatus')
-        return response.json()
-    
     def add_order(self, ordertype, type, volume, pair, userref=0, price='', price2='', trigger='', oflags='', timeinforce='GTC', starttm='', expiretm='', deadline='', validate='false'):
         """Add an order."""
         # https://docs.kraken.com/rest/#tag/Trading/operation/addOrder
+        if self.mode == 'test':
+            validate = True
+
         payload = {
             "ordertype": ordertype,
             "type": type,
@@ -187,6 +192,10 @@ class KrakenExchange(Exchange):
     
     def add_order_batch(self, orders, pair, deadline='', validate='false'):
         """Add a batch of orders at once."""
+        # https://docs.kraken.com/rest/#tag/Trading/operation/addOrderBatch
+        if self.mode == 'test':
+            validate = True
+        
         payload = {
             "orders": orders,
             "pair": pair,
@@ -203,6 +212,9 @@ class KrakenExchange(Exchange):
     def edit_order(self, txid, pair, userref=0, volume='', price='', price2='', oflags='', deadline='', validate='false'):
         """Edit an open order by its txid."""
         # https://docs.kraken.com/rest/#tag/Trading/operation/editOrder
+        if self.mode == 'test':
+            validate = True
+        
         payload = {
             "txid": txid,
             "pair": pair,
@@ -324,12 +336,72 @@ class KrakenExchange(Exchange):
 
         return response.json()
     
+    def get_orders_info(self, txid, userref=0, trades=False, consolidate_taker=True):
+        """Retrieve information about specific orders."""
+        # https://docs.kraken.com/rest/#tag/Account-Data/operation/getOrdersInfo
+        payload = {
+            "txid": txid
+        }
+
+        if userref != 0:
+            payload["userref"] = userref
+        
+        if trades != False:
+            payload["trades"] = trades
+        
+        if consolidate_taker != True:
+            payload["consolidate_taker"] = consolidate_taker
+        
+        response = self.authenticated_request('/private/QueryOrders', payload)
+
+        return response.json()
+    
+    def get_trades_info(self, txid, trades=False):
+        """Retrieve information about specific trades/fills."""
+        # https://docs.kraken.com/rest/#tag/Account-Data/operation/getTradesInfo
+        payload = {
+            "txid": txid
+        }
+
+        if trades != False:
+            payload["trades"] = trades
+        
+        response = self.authenticated_request('/private/QueryTrades', payload)
+
+        return response.json()
+    
+    def get_trades_history(self, type='all', trades=False, start=0, end=0, ofs='', consolidate_taker=True):
+        """Retrieve information about trades/fills. 50 results are returned at a time, the most recent by default."""
+        # https://docs.kraken.com/rest/#tag/Account-Data/operation/getTradeHistory
+        payload = {
+            "type": type
+        }
+
+        if trades != False:
+            payload["trades"] = trades
+        
+        if start != 0:
+            payload["start"] = start
+        
+        if end != 0:
+            payload["end"] = end
+        
+        if ofs != '':
+            payload["ofs"] = ofs
+        
+        if consolidate_taker != True:
+            payload["consolidate_taker"] = consolidate_taker
+        
+        response = self.authenticated_request('/private/TradesHistory', payload)
+
+        return response.json()
+    
     def get_trade_volume(self, pair=''):
         """Returns 30 day USD trading volume and resulting fee schedule for any asset pair(s) provided."""
         # https://docs.kraken.com/rest/#tag/Account-Data/operation/getTradeVolume
         if pair != '':
             payload = {
-                'pair': pair
+                "pair": pair
             }
 
             response = self.authenticated_request('/private/TradeVolume', payload)

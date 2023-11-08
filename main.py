@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
             grid_trader.logout()
     elif exchange_config.exchange == 'Kraken':
-        kraken_exchange = KrakenExchange(exchange_config.api_key, exchange_config.api_sec)
+        kraken_exchange = KrakenExchange(exchange_config.api_key, exchange_config.api_sec, exchange_config.pair, exchange_config.mode)
 
         # Get extended balance
         print(kraken_exchange.get_extended_balance())
