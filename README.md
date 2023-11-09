@@ -61,7 +61,7 @@ EXCHANGE=Kraken
 API_KEY=
 API_SEC=
 API_PASSPHRASE=
-PAIR=LINK
+PAIR=LINKUSD
 DAYS_TO_RUN=30
 MODE=test
 UPPER_PRICE=8.10
@@ -79,6 +79,21 @@ INIT_BUY_ERROR_LATENCY_IN_SEC=5
 INIT_BUY_ERROR_MAX_COUNT=10
 CANCEL_ORDERS_UPON_EXIT=none
 ```
+
+### Setting up Kraken account
+
+Create an API key with the following permissions:
+
+Funds permissions:
+- Query
+
+Orders and trades:
+- Query open orders & trades
+- Query closed orders & trades
+- Create & modify orders
+- Cancel & close orders
+
+Websocket Interface: On
 
 ## Useful links
 - https://medium.com/coinmonks/what-is-a-grid-trading-bot-3b58f3ec059b#:~:text=Grid%20Trading%20Bot%20is%20a,grid%20level%2C%20and%20vice%20versa.

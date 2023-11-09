@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Car/car.h"
 #include "Power/power.h"
+#include "Result/result.h"
 
 using namespace std;
 
@@ -15,6 +16,10 @@ int main(int argc, char* argv[]) {
     Power power;
 
     cout << power.type << " power at " << power.percent << "%" << endl;
+
+    Result result;
+
+    cout << "result.code: " << result.code << endl;
 
     cout << "Ending..." << endl;
 

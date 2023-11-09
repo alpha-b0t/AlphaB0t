@@ -49,46 +49,6 @@ class KrakenExchange(Exchange):
         self.pair = pair
         self.mode = mode.lower()
         self.api_base_url = 'https://api.kraken.com/0'
-
-    def get_latest_quote(self, symbol, interval=1, since=0):
-        """Get the latest quote of a cryptocurrency."""
-        query_parameters = {
-            "pair": symbol
-        }
-
-        if interval != 1:
-            query_parameters["interval"] = interval
-        
-        if since != 0:
-            query_parameters["since"] = since
-        
-        response = self.public_request('/public/OHLC', query_parameters)
-        
-        return response.json()
-    
-    def get_exchange_time(self):
-        response = self.public_request('/public/Time')
-        return response.json()
-    
-    def get_exchange_status(self):
-        response = self.public_request('/public/SystemStatus')
-        return response.json()
-    
-    def get_tradable_asset_pairs(self, pair='', info="info"):
-        """Get tradable asset pairs."""
-        query_parameters = {
-            "pair": pair
-        }
-
-        if info != "info":
-            query_parameters["info"] = info
-        
-        if pair != '':
-            response = self.public_request('/public/AssetPairs', query_parameters)
-        else:
-            response = self.public_request('/public/AssetPairs')
-
-        return response.json()
     
     def public_request(self, uri_path, query_parameters={}):
         url = self.api_base_url + uri_path
@@ -105,6 +65,126 @@ class KrakenExchange(Exchange):
         
         response = requests.get(url)
         return response
+    
+    def get_exchange_time(self):
+        response = self.public_request('/public/Time')
+        return response.json()
+    
+    def get_exchange_status(self):
+        response = self.public_request('/public/SystemStatus')
+        return response.json()
+    
+    def get_asset_info(self, asset='', aclass='currency'):
+        """Get information about the assets that are available for deposit, withdrawal, trading and staking."""
+        # https://docs.kraken.com/rest/#tag/Market-Data/operation/getAssetInfo
+        if asset != '' or aclass != 'currency':
+            query_parameters = {}
+
+            if asset != '':
+                query_parameters["asset"] = asset
+            
+            if aclass != 'currency':
+                query_parameters["aclass"] = aclass
+            
+            response = self.public_request('/public/Assets', query_parameters)
+        else:
+            response = self.public_request('/public/Assets')
+        
+        return response.json()
+    
+    def get_tradable_asset_pairs(self, pair='', info='info'):
+        """Get tradable asset pairs."""
+        # https://docs.kraken.com/rest/#tag/Market-Data/operation/getTradableAssetPairs
+        if pair != '' or info != 'info':
+            query_parameters = {}
+            
+            if pair != '':
+                query_parameters["pair"] = pair
+
+            if info != 'info':
+                query_parameters["info"] = info
+            
+            response = self.public_request('/public/AssetPairs', query_parameters)
+        else:
+            response = self.public_request('/public/AssetPairs')
+
+        return response.json()
+    
+    def get_ticker_info(self, pair=''):
+        """Get ticker information. Note: Today's prices start at midnight UTC. Leaving the pair parameter blank will return tickers for all tradeable assets on Kraken."""
+        # https://docs.kraken.com/rest/#tag/Market-Data/operation/getTickerInformation
+        if pair != '':
+            query_parameters = {
+                "pair": pair
+            }
+
+            response = self.public_request('/public/Ticker', query_parameters)
+        else:
+            response = self.public_request('/public/Ticker')
+        
+        return response.json()
+    
+    def get_ohlc_data(self, pair, interval=1, since=0):
+        """Get the latest quote of a cryptocurrency. Note: the last entry in the OHLC array is for the current, not-yet-committed frame and will always be present, regardless of the value of since."""
+        # https://docs.kraken.com/rest/#tag/Market-Data/operation/getOHLCData
+        query_parameters = {
+            "pair": pair
+        }
+
+        if interval != 1:
+            query_parameters["interval"] = interval
+        
+        if since != 0:
+            query_parameters["since"] = since
+        
+        response = self.public_request('/public/OHLC', query_parameters)
+        
+        return response.json()
+    
+    def get_order_book(self, pair, count=100):
+        """Get order book."""
+        # https://docs.kraken.com/rest/#tag/Market-Data/operation/getOrderBook
+        query_parameters = {
+            "pair": pair
+        }
+
+        if count != 100:
+            query_parameters["count"] = count
+        
+        response = self.public_request('/public/Depth', query_parameters)
+
+        return response.json()
+    
+    def get_recent_trades(self, pair, since=0, count=1000):
+        """Returns the last 1000 trades by default."""
+        # https://docs.kraken.com/rest/#tag/Market-Data/operation/getRecentTrades
+        query_parameters = {
+            "pair": pair
+        }
+
+        if since != 0:
+            query_parameters["since"] = since
+        
+        if count != 1000:
+            query_parameters["count"] = count
+        
+        response = self.public_request('/public/Trades', query_parameters)
+
+        return response.json()
+    
+    def get_recent_spreads(self, pair, since=0):
+        """Returns the last ~200 top-of-book spreads for a given pair."""
+        # https://docs.kraken.com/rest/#tag/Market-Data/operation/getRecentSpreads
+        query_parameters = {
+            "pair": pair
+        }
+
+        if since != 0:
+            query_parameters["since"] = since
+        
+        response = self.public_request('/public/Spread', query_parameters)
+
+        return response.json()
     
     def get_signature(self, urlpath, data, secret) -> str:
 
@@ -143,6 +223,7 @@ class KrakenExchange(Exchange):
         return req
     
     def get_nonce(self):
+        """Returns nonce value as a string from a UNIX timestamp in milliseconds."""
         return str(int(1000*time.time()))
     
     def add_order(self, ordertype, type, volume, pair, userref=0, price='', price2='', trigger='', oflags='', timeinforce='GTC', starttm='', expiretm='', deadline='', validate='false'):
@@ -260,7 +341,7 @@ class KrakenExchange(Exchange):
     
     def cancel_order_batch(self, orders):
         """Cancel a batch of orders at once."""
-
+        # https://docs.kraken.com/rest/#tag/Trading/operation/cancelOrderBatch
         # Here orders is a list of txids
         payload = {
             "orders": orders

@@ -70,6 +70,11 @@ if __name__ == '__main__':
         # cancel_response = kraken_exchange.cancel_order('OQD3ML-T6SZR-TBJWL7')
 
         # print(cancel_response)
+
+        # Get OHLC data
+        ohlc_response = kraken_exchange.get_ohlc_data(kraken_exchange.pair)
+
+        print(ohlc_response)
     else:
         # Run C++ executables
         cpp_executable = './bin/main'
