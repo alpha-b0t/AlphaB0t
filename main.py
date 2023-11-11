@@ -21,14 +21,14 @@ if __name__ == '__main__':
                 interval='day',
                 span='year',
                 bounds='24_7',
-                loss_threshold=100
+                stop_loss=100
             )
 
             print(f"Simulation performance: {simulation_metric}%")
 
             grid_trader.logout()
     elif exchange_config.exchange == 'Kraken':
-        kraken_exchange = KrakenExchange(exchange_config.api_key, exchange_config.api_sec, exchange_config.pair, exchange_config.mode)
+        kraken_exchange = KrakenExchange(exchange_config.api_key, exchange_config.api_sec, exchange_config.mode)
 
         # Get extended balance
         print(kraken_exchange.get_extended_balance())
@@ -40,14 +40,14 @@ if __name__ == '__main__':
         print(kraken_exchange.get_trade_balance())
 
         # Get trade volume and fee schedule
-        print(kraken_exchange.get_trade_volume(exchange_config.pair))
+        print(kraken_exchange.get_trade_volume(grid_bot_config.pair))
 
         # Add an order
         add_response = kraken_exchange.add_order(
             ordertype='limit',
             type='buy',
             volume=5,
-            pair=exchange_config.pair,
+            pair=grid_bot_config.pair,
             price='2',
             oflags='post',
             validate='true'
@@ -72,7 +72,7 @@ if __name__ == '__main__':
         # print(cancel_response)
 
         # Get OHLC data
-        ohlc_response = kraken_exchange.get_ohlc_data(kraken_exchange.pair)
+        ohlc_response = kraken_exchange.get_ohlc_data(grid_bot_config.pair)
 
         print(ohlc_response)
     else:

@@ -2,7 +2,6 @@ import robin_stocks.robinhood as rh
 from RobinhoodCrypto.order import *
 from RobinhoodCrypto.error_queue import ErrorQueue, ErrorQueueLimitExceededError
 import time
-from discord import SyncWebhook
 from RobinhoodCrypto.helpers import *
 from config import GRIDBotConfig
 import random
@@ -19,15 +18,8 @@ class GRIDBot():
         self.lower_price = config.lower_price
         self.level_num = config.level_num
         self.cash = config.cash
-        self.loss_threshold = config.loss_threshold
+        self.stop_loss = config.stop_loss
         self.latency = config.latency_in_sec
-
-        self.send_to_discord = config.send_to_discord
-
-        if self.send_to_discord:
-            self.discord_webhook = SyncWebhook.from_url(config.discord_url)
-            self.discord_latency_in_hours = config.discord_latency_in_hours
-            self.last_discord_post = None
         
         self.error_latency = config.error_latency_in_sec
         self.max_error_count = config.max_error_count
@@ -80,18 +72,10 @@ class GRIDBot():
         assert config.level_num >= 2
         assert type(config.cash) == float or type(config.cash) == int
         assert config.cash > 0
-        assert type(config.loss_threshold) == float or type(config.loss_threshold) == int
-        assert config.loss_threshold > 0
+        assert type(config.stop_loss) == float or type(config.stop_loss) == int
+        assert config.stop_loss > 0
         assert type(config.latency_in_sec) == float or type(config.latency_in_sec) == int
         assert config.latency_in_sec > 0
-        assert type(config.send_to_discord) == bool
-        
-        if config.send_to_discord:
-            assert type(config.discord_latency_in_hours) == float or type(config.discord_latency_in_hours) == int
-            assert config.discord_latency_in_hours > 0
-            assert type(config.discord_url) == str
-            assert len(config.discord_url) > 0
-        
         assert type(config.max_error_count) == int
         assert type(config.error_latency_in_sec) == float or type(config.error_latency_in_sec) == int
         assert config.error_latency_in_sec > 0
@@ -133,9 +117,6 @@ class GRIDBot():
     def start(self, is_initialized=False):
         try:
             if not is_initialized:
-                if self.send_to_discord:
-                    self.send_start_message_to_discord()
-                
                 self.init_grid()
                 
                 if self.mode == 'live':
@@ -165,19 +146,11 @@ class GRIDBot():
                 # Update the output
                 self.update_output()
                 
-                # Update discord if necessary
-                if self.send_to_discord:
-                    self.send_message_to_discord()
-                
                 # Refresh the error queue
                 self.error_queue.refresh()
 
                 # Wait for self.latency seconds
                 time.sleep(self.latency)
-            
-            if self.send_to_discord:
-                self.send_end_message_to_discord()
-                self.send_loss_exceeded_message_to_discord()
 
             # Cancel all open crypto orders
             if self.cancel_orders_upon_exit == 'all':
@@ -190,11 +163,6 @@ class GRIDBot():
         
         except KeyboardInterrupt as e:
             print("User ended execution of program.")
-
-            if self.send_to_discord:
-                self.send_end_message_to_discord()
-                self.send_error_message_to_discord(e, 'KeyboardInterrupt')
-                self.discord_webhook
             
             if self.cancel_orders_upon_exit == 'all':
                 cancel_all_orders()
@@ -212,10 +180,6 @@ class GRIDBot():
                 self.error_queue.refresh()
                 self.error_queue.append(time.time())
             except ErrorQueueLimitExceededError as e:
-                if self.send_to_discord:
-                    self.send_end_message_to_discord()
-                    self.send_error_message_to_discord(e, 'Too many TypeErrors occured')
-                
                 if self.cancel_orders_upon_exit == 'all':
                     cancel_all_orders()
                 elif self.cancel_orders_upon_exit == 'buy' or self.cancel_orders_upon_exit == 'sell':
@@ -224,9 +188,6 @@ class GRIDBot():
                 self.logout()
                 
                 raise e
-
-            if self.send_to_discord:
-                self.send_error_message_to_discord(e, 'TypeError')
             
             # Continue trading
             self.resume()
@@ -240,11 +201,7 @@ class GRIDBot():
             try:
                 self.error_queue.refresh()
                 self.error_queue.append(time.time())
-            except ErrorQueueLimitExceededError as e:
-                if self.send_to_discord:
-                    self.send_end_message_to_discord()
-                    self.send_error_message_to_discord(e, 'Too many KeyErrors occured')
-                
+            except ErrorQueueLimitExceededError as e:                
                 if self.cancel_orders_upon_exit == 'all':
                     cancel_all_orders()
                 elif self.cancel_orders_upon_exit == 'buy' or self.cancel_orders_upon_exit == 'sell':
@@ -253,19 +210,12 @@ class GRIDBot():
                 self.logout()
                 
                 raise e
-
-            if self.send_to_discord:
-                self.send_error_message_to_discord(e, 'KeyError')
             
             # Continue trading
             self.resume()
         
         except Exception as e:
             print("An unexpected error occured: cancelling open orders and logging out")
-
-            if self.send_to_discord:
-                self.send_end_message_to_discord()
-                self.send_error_message_to_discord(e, 'Unknown')
             
             if self.cancel_orders_upon_exit == 'all':
                 cancel_all_orders()
@@ -282,7 +232,7 @@ class GRIDBot():
     def resume(self):
         self.start(True)
     
-    def simulate_trading(self, pair: str, level_num: int, upper_price: float, lower_price: float, interval: str, span: str, bounds: str, loss_threshold: float) -> float:
+    def simulate_trading(self, pair: str, level_num: int, upper_price: float, lower_price: float, interval: str, span: str, bounds: str, stop_loss: float) -> float:
         """Simulates GRID trading using given parameters"""
         try:
             assert interval in ['15second', '5minute', '10minute', 'hour', 'day', 'week']
@@ -412,7 +362,7 @@ class GRIDBot():
 
             for i in range(1, len(self.crypto_historical_data)):
                 # Check if backtesting should continue
-                if result['profit'] >= -1 * loss_threshold:
+                if result['profit'] >= -1 * stop_loss:
                     # Continue iterating
                     # Get the latest crypto prices
                     crypto_quote = self.crypto_historical_data[i]
@@ -564,10 +514,10 @@ class GRIDBot():
         Space: O(1)
         Returns true if loss has not exceeded loss threshold or loss percentage threshold. If either loss threshold or loss percentage threshold have been passed then False is returned.
         """
-        if self.profit >= -1 * self.loss_threshold:
+        if self.profit >= -1 * self.stop_loss:
             return True
         else:
-            print("Loss exceeded $" + str(self.loss_threshold) + ": terminating automated trading")
+            print("Loss exceeded $" + str(self.stop_loss) + ": terminating automated trading")
             
             return False
     
@@ -705,7 +655,6 @@ class GRIDBot():
         # Place market order for cryptocurrency
         if self.mode == 'live':
             rh.orders.order_buy_crypto_by_price(self.pair, initial_buy_amount, timeInForce='gtc', jsonify=True)
-            #rh.orders.order_buy_crypto_limit(self.pair, self.round_to_min_order_quantity_increment(initial_buy_amount/self.crypto_quote['ask_price']), self.round_to_min_order_price_increment(self.crypto_quote['ask_price']), timeInForce='gtc', jsonfiy=True)
         else:
             print("Placing a market order for $" + str(initial_buy_amount) + " at an ask price of $" + str(self.crypto_quote['ask_price']))
 
@@ -716,11 +665,10 @@ class GRIDBot():
             self.profit = self.available_cash + self.get_crypto_holdings_capital() - self.initial_cash - self.initial_crypto_capital
             self.percent_change = self.profit * 100 / self.cash
         
-        # Place limit buy orders and possibly limit sell orders
+        # Place limit buy orders and limit sell orders
         for i in range(len(self.grids)):
             if self.grids[i]['side'] == 'buy' and self.grids[i]['status'] == 'active':
                 if self.mode == 'live':
-                    #self.grids[i]['order'] = Order(rh.orders.order_buy_crypto_limit_by_price(self.pair, self.cash_per_level, self.grids[i]['price'], timeInForce='gtc', jsonify=True))
                     self.grids[i]['order'] = Order(rh.orders.order_buy_crypto_limit(self.pair, round_to_min_order_quantity_increment(self.cash_per_level/self.grids[i]['price'], self.crypto_meta_data['min_order_quantity_increment']), self.grids[i]['price'], timeInForce='gtc', jsonify=True))
                 else:
                     print("Placing a limit buy order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids[i]['price']))
@@ -730,7 +678,6 @@ class GRIDBot():
                     err_count = 0
                     while err_count < self.init_buy_error_max_count:
                         try:
-                            #self.grids[i]['order'] = Order(rh.orders.order_sell_crypto_limit_by_price(self.pair, self.cash_per_level, self.grids[i]['price'], timeInForce='gtc', jsonify=True))
                             self.grids[i]['order'] = Order(rh.orders.order_sell_crypto_limit(self.pair, round_to_min_order_quantity_increment(self.cash_per_level/self.grids[i]['price'], self.crypto_meta_data['min_order_quantity_increment']), self.grids[i]['price'], timeInForce='gtc', jsonify=True))
                         except KeyError as ex:
                             err_count += 1
@@ -945,87 +892,3 @@ class GRIDBot():
                     else:
                         # TODO: Implement
                         raise Exception("Order was filled but either was not sell nor buy or ignored level was not correct or both")
-    
-    def send_message_to_discord(self):
-        """
-        Sends out the lastest information out to the discord channel
-        """
-        if self.last_discord_post is None or time.time() - self.last_discord_post >= self.discord_latency_in_hours * 3600:
-            message = ""
-            message += time.ctime() + "\n"
-            message += "=============================================\n"
-            message += "mode: " + self.mode + "\n"
-            message += "runtime: " + display_time(self.get_runtime()) + "\n"
-            message += "equity: $" + str(round(self.equity, 2)) + "\n"
-            message += 'crypto holdings:\n'
-            message += display_holdings(self.holdings, [self.get_latest_quote(crypto)['mark_price'] for crypto, amount in self.holdings.items()]) + '\n'
-            message += 'crypto average bought price:\n'
-            message += display_bought_price(self.bought_price) + '\n'
-            message += "crypto equity: $" + str(round(self.get_crypto_holdings_capital(), 2)) + '\n'
-            message += "cash: " + display_cash(self.available_cash) + '\n'
-            message += "crypto equity and cash: " + display_crypto_equity_and_cash(self.available_cash, self.get_crypto_holdings_capital()) + '\n'
-            message += "profit: " + display_profit(self.profit) + " (" + display_percent_change(self.percent_change) + ")\n"
-
-            message += self.pair + " ask price: $" + str(round_to_min_order_price_increment(self.crypto_quote['ask_price'], self.crypto_meta_data['min_order_price_increment'])) + '\n'
-            message += self.pair + " market price: $" + str(round_to_min_order_price_increment(self.crypto_quote['mark_price'], self.crypto_meta_data['min_order_price_increment'])) + '\n'
-            message += self.pair + " bid price: $" + str(round_to_min_order_price_increment(self.crypto_quote['bid_price'], self.crypto_meta_data['min_order_price_increment'])) + '\n'
-
-            spread = (self.crypto_quote['ask_price'] - self.crypto_quote['bid_price']) * 100 / self.crypto_quote['mark_price']
-            message += self.pair + " spread: " + str(round(spread, 2)) + "%\n"
-
-            message += "number of pending orders: " + str(len(get_all_open_orders())) + '\n'
-            message += "grids:\n"
-
-            for i in range(len(self.grids)-1, -1, -1):
-                if i == len(self.grids)-1:
-                    message += "=============================================\n"
-                    message += 'grid_' + str(i) + '\n'
-                    message += '\tprice: $' + str(self.grids[i]['price']) + '\n'
-                    message += '\tside: ' + self.grids[i]['side'] + '\n'
-                    message += '\tstatus: ' + self.grids[i]['status'] + '\n'
-                    try:
-                        message += '\torder: ' + str(self.grids[i]['order']) + '\n'
-                    except KeyError:
-                        message += '\torder: None\n'
-                    message += '\tcash: $' + str(self.cash_per_level) + '\n'
-                    message += "=============================================\n"
-                else:
-                    message += 'grid_' + str(i) + '\n'
-                    message += '\tprice: $' + str(self.grids[i]['price']) + '\n'
-                    message += '\tside: ' + self.grids[i]['side'] + '\n'
-                    message += '\tstatus: ' + self.grids[i]['status'] + '\n'
-                    try:
-                        message += '\torder: ' + str(self.grids[i]['order']) + '\n'
-                    except KeyError:
-                        message += '\torder: None\n'
-                    message += '\tcash: $' + str(self.cash_per_level) + '\n'
-                    message += "=============================================\n"
-            message += "=============================================\n"
-
-            message += '\n'
-            self.discord_webhook.send(message)
-            self.last_discord_post = time.time()
-            return
-    
-    def send_start_message_to_discord(self):
-        """
-        Sends out a message to discord indicating the grid trading bot has been activated
-        """
-        message = "Grid Trading Bot: ACTIVATED"
-        self.discord_webhook.send(message)
-    
-    def send_end_message_to_discord(self):
-        """
-        Sends out a message to discord indicating the grid trading bot has stopped
-        """
-        message = "Grid Trading Bot: STOPPED"
-        self.discord_webhook.send(message)
-    
-    def send_error_message_to_discord(self, exception, error_type):
-        message = "Exception Occured: " + error_type + '\n'
-        message += str(exception)
-        self.discord_webhook.send(message)
-    
-    def send_loss_exceeded_message_to_discord(self):
-        message = "Either loss exceeded $" + str(self.loss_threshold)
-        self.discord_webhook.send(message)

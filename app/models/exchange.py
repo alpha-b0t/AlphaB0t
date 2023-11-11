@@ -42,14 +42,14 @@ class Exchange():
         pass
 
 class KrakenExchange(Exchange):
-    def __init__(self, api_key='', api_sec='', pair='', mode='test'):
+    def __init__(self, api_key='', api_sec='', mode='test'):
         super().__init__()
         self.api_key = api_key
         self.api_sec = api_sec
-        self.pair = pair
         self.mode = mode.lower()
         self.api_base_url = 'https://api.kraken.com/0'
     
+    # Public requests
     def public_request(self, uri_path, query_parameters={}):
         url = self.api_base_url + uri_path
 
@@ -186,33 +186,15 @@ class KrakenExchange(Exchange):
 
         return response.json()
     
-    def get_signature(self, urlpath, data, secret) -> str:
-
-        postdata = urllib.parse.urlencode(data)
-        encoded = (str(data['nonce']) + postdata).encode()
-        message = urlpath.encode() + hashlib.sha256(encoded).digest()
-
-        mac = hmac.new(base64.b64decode(secret), message, hashlib.sha512)
-        sigdigest = base64.b64encode(mac.digest())
-        return sigdigest.decode()
-    
-    def authenticated_request(self, uri_path, data={}):
-        """
-        This method sends an authenticated request to the Kraken API.
-
-        :param uri_path: The API endpoint to send the request to.
-        :type uri_path: str
-        :param data: The data to send in the request body.
-        :type data: dict
-        :return: The response from the Kraken API.
-        :rtype: requests.Response
-        """
+    # Authenticated requests
+    def authenticated_request(self, uri_path: str, data={}):
+        """This method sends an authenticated request to the Kraken API."""
         data['nonce'] = self.get_nonce()
         
         headers = {}
         
         headers['API-Key'] = self.api_key
-        headers['API-Sign'] = self.get_signature('/0'+uri_path, data, self.api_sec)
+        headers['API-Sign'] = self.get_signature('/0'+uri_path, data)
 
         req = requests.post(
             url=(self.api_base_url + uri_path),
@@ -222,7 +204,17 @@ class KrakenExchange(Exchange):
 
         return req
     
-    def get_nonce(self):
+    def get_signature(self, urlpath: str, data) -> str:
+
+        postdata = urllib.parse.urlencode(data)
+        encoded = (str(data['nonce']) + postdata).encode()
+        message = urlpath.encode() + hashlib.sha256(encoded).digest()
+
+        mac = hmac.new(base64.b64decode(self.api_sec), message, hashlib.sha512)
+        sigdigest = base64.b64encode(mac.digest())
+        return sigdigest.decode()
+    
+    def get_nonce(self) -> str:
         """Returns nonce value as a string from a UNIX timestamp in milliseconds."""
         return str(int(1000*time.time()))
     
