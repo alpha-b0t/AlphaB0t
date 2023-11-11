@@ -30,29 +30,30 @@ if __name__ == '__main__':
     elif exchange_config.exchange == 'Kraken':
         kraken_exchange = KrakenExchange(exchange_config.api_key, exchange_config.api_sec, exchange_config.mode)
 
+        # Get account balance
+        print("Account balance:")
+        print(kraken_exchange.get_account_balance())
+        
         # Get extended balance
+        print("Extended balance:")
         print(kraken_exchange.get_extended_balance())
 
-        # Get account balance
-        print(kraken_exchange.get_account_balance())
-
-        # Get trade balance
-        print(kraken_exchange.get_trade_balance())
-
         # Get trade volume and fee schedule
+        print("Trade volume and fee schedule:")
         print(kraken_exchange.get_trade_volume(grid_bot_config.pair))
 
         # Add an order
         add_response = kraken_exchange.add_order(
             ordertype='limit',
             type='buy',
-            volume=5,
+            volume=100,
             pair=grid_bot_config.pair,
             price='2',
             oflags='post',
             validate='true'
         )
         
+        print("Add order response:")
         print(add_response)
 
         # Edit an order
@@ -72,6 +73,7 @@ if __name__ == '__main__':
         # print(cancel_response)
 
         # Get OHLC data
+        print("OHLC:")
         ohlc_response = kraken_exchange.get_ohlc_data(grid_bot_config.pair)
 
         print(ohlc_response)

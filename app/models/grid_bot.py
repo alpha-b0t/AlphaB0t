@@ -1,6 +1,8 @@
 from app.models.exchange import Exchange, KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange
 from app.models.grid import Grid
+from app.models.ohlc import OHLC
 from app.helpers.format import round_down_to_cents
+import time
 
 class GRIDBot():
     def __init__(self, exchange, pair, days_to_run, mode, upper_price, lower_price, level_num, cash, stop_loss, take_profit):
@@ -34,9 +36,7 @@ class GRIDBot():
         pass
 
 class KrakenGRIDBot(GRIDBot):
-    def __init__(self, api_key, api_sec, pair, days_to_run, mode, upper_price, lower_price, level_num, cash, stop_loss, take_profit, base_currency):
-        self.exchange_name = "Kraken"
-        
+    def __init__(self, api_key, api_sec, pair, days_to_run, mode, upper_price, lower_price, level_num, cash, stop_loss, take_profit, base_currency, latency=5.00):
         self.exchange = KrakenExchange(api_key, api_sec, pair, mode)
 
         self.pair = pair
@@ -49,13 +49,20 @@ class KrakenGRIDBot(GRIDBot):
         self.stop_loss = stop_loss
         self.take_profit = take_profit
         self.base_currency = base_currency
+        self.latency = latency
 
         self.check_config()
     
     def check_config(self):
         """Throws an error if the configurations are not correct."""
         # TODO: Implement
-        assert True
+        assert self.mode in ['live', 'test']
+        assert self.stop_loss > 0
+        assert self.take_profit > 0
+        assert self.take_profit > self.stop_loss
+        assert self.days_to_run > 0
+        assert self.cash > 0
+        assert self.latency > 0
     
     def init_grid(self):
         """Initializes grids."""
@@ -69,25 +76,23 @@ class KrakenGRIDBot(GRIDBot):
             prices.append(self.lower_price + i*(self.upper_price - self.lower_price)/(self.level_num-1))
         
         # Get latest OHLC data
-        ohlc_data_response = self.exchange.get_ohlc_data(self.pair)
+        ohlc_response = self.exchange.get_ohlc_data(self.pair)
 
-        ohlc_data = ohlc_data_response['result']
+        ohlc = ohlc_response['result']
 
-        keys = list(ohlc_data.keys())
+        keys = list(ohlc.keys())
 
         for i in range(len(keys)):
             if keys[i] != 'last':
-                key = keys[i]
+                self.ohlc_asset_key = keys[i]
                 break
         
-        # latest_ohlc looks like [int time, str open, str high, str low, str close, str vwap, str volume, int count]
-        latest_ohlc = ohlc_data[key][-1]
-        latest_close = float(latest_ohlc[4])
+        latest_ohlc = OHLC(ohlc[self.ohlc_asset_key][-1])
 
         # Mark orders as buys and sells
         side = []
         for i in range(self.level_num):
-            if latest_close > prices[i]:
+            if latest_ohlc.close > prices[i]:
                 side.append('buy')
             else:
                 side.append('sell')
@@ -97,7 +102,7 @@ class KrakenGRIDBot(GRIDBot):
         self.closest_grid = -1
 
         for i in range(self.level_num):
-            dist = abs(prices[i] - latest_close)
+            dist = abs(prices[i] - latest_ohlc.close)
 
             if dist < min_dist:
                 min_dist = dist
@@ -122,9 +127,9 @@ class KrakenGRIDBot(GRIDBot):
         self.exchange.add_order(
             ordertype='limit',
             type='buy',
-            volume=initial_buy_amount / latest_close,
+            volume=initial_buy_amount / latest_ohlc.close,
             pair=self.pair,
-            price=latest_close,
+            price=latest_ohlc.close,
             oflags='post',
         )
 
@@ -170,6 +175,28 @@ class KrakenGRIDBot(GRIDBot):
     def start(self):
         try:
             self.init_grid()
+
+            # TODO: Get balances
+
+            # TODO: Implement stop_loss check in while loop
+            while True:
+                # Get latest OHLC data
+                ohlc_response = self.exchange.get_ohlc_data(self.pair)
+                ohlc = ohlc_response.get('result')
+                latest_ohlc = OHLC(ohlc[self.ohlc_asset_key][-1])
+
+                # TODO: Update orders
+
+                # TODO: Get balances
+
+                # TODO: Update the output
+
+                # Wait for a certain amount of time
+                time.sleep(self.latency)
+            
+        except KeyboardInterrupt as e:
+            print("User ended execution of program.")
+        
         except Exception as e:
             raise e
     
