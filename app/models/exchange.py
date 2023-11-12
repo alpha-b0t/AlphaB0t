@@ -44,10 +44,24 @@ class Exchange():
 class KrakenExchange(Exchange):
     def __init__(self, api_key='', api_sec='', mode='test'):
         super().__init__()
+        assert mode.lower() in ['live', 'test']
         self.api_key = api_key
         self.api_sec = api_sec
         self.mode = mode.lower()
         self.api_base_url = 'https://api.kraken.com/0'
+    
+    def __repr__(self):
+        if self.api_key == '':
+            api_key_display = "''"
+        else:
+            api_key_display = '******'
+        
+        if self.api_sec == '':
+            api_sec_display = "''"
+        else:
+            api_sec_display = '******'
+        
+        return f"{{KrakenExchange api_key: {api_key_display}, api_sec: {api_sec_display}, mode: {self.mode}, api_base_url: {self.api_base_url}}}"
     
     # Public requests
     def public_request(self, uri_path, query_parameters={}):
