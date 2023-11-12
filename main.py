@@ -1,7 +1,8 @@
-from RobinhoodCrypto.grid_bot import GRIDBot
+from RobinhoodCrypto.gridbot import GRIDBot
 from config import AppConfig, GRIDBotConfig, ExchangeConfig
 from RobinhoodCrypto.helpers import confirm_grids
 from app.models.exchange import Exchange, KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange
+from app.models.gridbot import GRIDBot, KrakenGRIDBot
 import subprocess
 
 if __name__ == '__main__':
@@ -29,6 +30,7 @@ if __name__ == '__main__':
             grid_trader.logout()
     elif exchange_config.exchange == 'Kraken':
         kraken_exchange = KrakenExchange(exchange_config.api_key, exchange_config.api_sec, exchange_config.mode)
+        print(kraken_exchange)
 
         # Get account balance
         print("Account balance:")
@@ -42,41 +44,23 @@ if __name__ == '__main__':
         print("Trade volume and fee schedule:")
         print(kraken_exchange.get_trade_volume(grid_bot_config.pair))
 
-        # Add an order
-        add_response = kraken_exchange.add_order(
-            ordertype='limit',
-            type='buy',
-            volume=100,
-            pair=grid_bot_config.pair,
-            price='2',
-            oflags='post',
-            validate='true'
+        kraken_gridbot = KrakenGRIDBot(
+            grid_bot_config.api_key,
+            grid_bot_config.api_sec,
+            grid_bot_config.pair,
+            grid_bot_config.days_to_run,
+            grid_bot_config.mode,
+            grid_bot_config.upper_price,
+            grid_bot_config.lower_price,
+            grid_bot_config.level_num,
+            grid_bot_config.cash,
+            grid_bot_config.stop_loss,
+            grid_bot_config.take_profit,
+            grid_bot_config.base_currency,
+            grid_bot_config.latency_in_sec
         )
-        
-        print("Add order response:")
-        print(add_response)
 
-        # Edit an order
-        # edit_response = kraken_exchange.edit_order(
-        #     txid=add_response['result']['txid'],
-        #     pair=exchange_config.pair,
-        #     price='1.5',
-        #     oflags='post',
-        #     validate='true'
-        # )
-
-        # print(edit_response)
-
-        # Cancel an order
-        # cancel_response = kraken_exchange.cancel_order('OQD3ML-T6SZR-TBJWL7')
-
-        # print(cancel_response)
-
-        # Get OHLC data
-        print("OHLC:")
-        ohlc_response = kraken_exchange.get_ohlc_data(grid_bot_config.pair)
-
-        print(ohlc_response)
+        kraken_gridbot.start()
     else:
         # Run C++ executables
         cpp_executable = './bin/main'

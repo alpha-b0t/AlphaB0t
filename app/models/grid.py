@@ -6,3 +6,6 @@ class Grid():
         self.side = side
         self.status = status
         self.order = None
+    
+    def __repr__(self):
+        return f"{{Grid level_num: {self.level_num}, limit_price: {self.limit_price}, cash_per_level: {self.cash_per_level}, side: {self.side}, status: {self.status}, order: {self.order}}}"

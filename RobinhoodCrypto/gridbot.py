@@ -711,7 +711,6 @@ class GRIDBot():
                         self.grids[i+1]['side'] = 'sell'
                         self.grids[i+1]['status'] = 'active'
 
-                        #self.grids[i+1]['order'] = Order(rh.orders.order_sell_crypto_limit_by_price(self.pair, self.cash_per_level, self.grids[i+1]['price'], timeInForce='gtc', jsonify=True))
                         self.grids[i+1]['order'] = Order(
                             rh.orders.order_sell_crypto_limit(
                                 self.pair,
@@ -734,7 +733,6 @@ class GRIDBot():
                         self.grids[i-1]['side'] = 'buy'
                         self.grids[i-1]['status'] = 'active'
 
-                        #self.grids[i-1]['order'] = Order(rh.orders.order_buy_crypto_limit_by_price(self.pair, self.cash_per_level, self.grids[i-1]['price'], timeInForce='gtc', jsonify=True))
                         self.grids[i-1]['order'] = Order(
                             rh.orders.order_buy_crypto_limit(
                                 self.pair,
@@ -757,12 +755,13 @@ class GRIDBot():
                 'price': '76.24',
                 'quantity': '2.00',
                 'average_buy_price': '79.26',
-                },
+            },
             'crypto2': {
                 'price': '76.24',
                 'quantity': '2.00',
                 'average_buy_price': '79.26',
-                }}
+            }
+        }
         """
         holdings_data = rh.crypto.get_crypto_positions()
         
@@ -861,7 +860,6 @@ class GRIDBot():
                         self.grids[i+1]['status'] = 'active'
                         
                         if self.mode == 'live':
-                            #self.grids[i+1]['order'] = Order(rh.orders.order_sell_crypto_limit_by_price(self.pair, self.cash_per_level, self.grids[i+1]['price'], timeInForce='gtc', jsonify=True))
                             self.grids[i+1]['order'] = Order(rh.orders.order_sell_crypto_limit(self.pair, round_to_min_order_quantity_increment(self.cash_per_level/self.grids[i+1]['price'], self.crypto_meta_data['min_order_quantity_increment']), self.grids[i+1]['price'], timeInForce='gtc', jsonify=True))
                         else:
                             print("Placing a limit sell order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids[i+1]['price']))
@@ -884,7 +882,6 @@ class GRIDBot():
                         self.grids[i-1]['status'] = 'active'
 
                         if self.mode == 'live':
-                            #self.grids[i-1]['order'] = Order(rh.orders.order_buy_crypto_limit_by_price(self.pair, self.cash_per_level, self.grids[i-1]['price'], timeInForce='gtc', jsonify=True))
                             self.grids[i-1]['order'] = Order(rh.orders.order_buy_crypto_limit(self.pair, round_to_min_order_quantity_increment(self.cash_per_level/self.grids[i-1]['price'], self.crypto_meta_data['min_order_quantity_increment']), self.grids[i-1]['price'], timeInForce='gtc', jsonify=True))
                         else:
                             print("Placing a limit buy order for $" + str(self.cash_per_level) + " at a price of $" + str(self.grids[i-1]['price']))
