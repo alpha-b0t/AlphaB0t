@@ -309,7 +309,7 @@ class KrakenGRIDBot(GRIDBot):
                 available_balances = {}
 
                 for asset, extended_balance in extended_balance.items():
-                    available_balances[asset] = extended_balance[asset]['balance'] + extended_balance[asset].get('credit', 0) - extended_balance[asset].get('credit_used', 0) - extended_balance[asset]['hold_trade']
+                    available_balances[asset] = float(extended_balance[asset]['balance']) + float(extended_balance[asset].get('credit', 0)) - float(extended_balance[asset].get('credit_used', 0)) - float(extended_balance[asset]['hold_trade'])
                 
                 return available_balances
             except Exception as e:
