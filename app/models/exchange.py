@@ -1,3 +1,4 @@
+from config import ExchangeConfig
 import robin_stocks.robinhood as rh
 import requests
 import urllib.parse
@@ -42,12 +43,12 @@ class Exchange():
         pass
 
 class KrakenExchange(Exchange):
-    def __init__(self, api_key='', api_sec='', mode='test'):
+    def __init__(self, exchange_config: ExchangeConfig):
         super().__init__()
-        assert mode.lower() in ['live', 'test']
-        self.api_key = api_key
-        self.api_sec = api_sec
-        self.mode = mode.lower()
+        assert exchange_config.mode.lower() in ['live', 'test']
+        self.api_key = exchange_config.api_key
+        self.api_sec = exchange_config.api_sec
+        self.mode = exchange_config.mode.lower()
         self.api_base_url = 'https://api.kraken.com/0'
     
     def __repr__(self):

@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request, Blueprint
 from app.models.result import Result
 from app.database.data_access import *
+import stripe
 
 api_bp = Blueprint("api", __name__, url_prefix="/")
 
@@ -26,6 +27,34 @@ def get_status():
         result = Result()
 
         result.data = {"api_status": "online"}
+
+        return result.to_api_response()
+    except Exception as e:
+        result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
+        return result.to_api_response()
+
+# Create a Stripe Checkout Session
+@api_bp.route("/api/create-checkout-session", methods=['POST'])
+def create_checkout_session():
+    """Creates a Stripe Checkout Session."""
+    # https://stripe.com/docs/checkout/quickstart
+    # https://stripe.com/docs/billing/subscriptions/build-subscriptions?ui=stripe-hosted
+    try:
+        # TODO: Implement
+        result = Result()
+
+        # TODO: Set stripe.api_key to Stripe API key
+        checkout_session = stripe.checkout.Session.create(
+            success_url='https://example.com/success.html?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url='https://example.com/canceled.html',
+            mode='subscription',
+            line_items=[{
+                'price': 'price_H5ggYwtDq4fbrJ',
+                'quantity': 1
+            }],
+        )
+
+        result.data = checkout_session
 
         return result.to_api_response()
     except Exception as e:

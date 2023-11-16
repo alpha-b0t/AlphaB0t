@@ -9,20 +9,19 @@ class AppConfig():
         self.DATABASE_PORT = env_config['DATABASE_PORT']
         self.DATABASE_NAME = env_config['DATABASE_NAME']
 
-        del env_config
-
 class GRIDBotConfig():
     def __init__(self):
         env_config = dotenv_values(".env")
 
         self.exchange = env_config['EXCHANGE']
-        self.api_key = env_config['API_KEY']
-        self.api_sec = env_config['API_SEC']
-        self.api_passphrase = env_config['API_PASSPHRASE']
         self.pair = env_config['PAIR']
         self.base_currency = env_config['BASE_CURRENCY']
         self.days_to_run = int(env_config['DAYS_TO_RUN'])
         self.mode = env_config['MODE']
+
+        if self.mode is None or self.mode == '':
+            self.mode = 'test'
+        
         self.upper_price = float(env_config['UPPER_PRICE'])
         self.lower_price = float(env_config['LOWER_PRICE'])
         self.level_num = int(env_config['LEVEL_NUM'])
@@ -35,8 +34,6 @@ class GRIDBotConfig():
         self.init_buy_error_latency_in_sec = float(env_config['INIT_BUY_ERROR_LATENCY_IN_SEC'])
         self.init_buy_error_max_count = int(env_config['INIT_BUY_ERROR_MAX_COUNT'])
         self.cancel_orders_upon_exit = env_config['CANCEL_ORDERS_UPON_EXIT']
-        
-        del env_config
 
 class ExchangeConfig():
     def __init__(self):
@@ -44,8 +41,21 @@ class ExchangeConfig():
 
         self.exchange = env_config['EXCHANGE']
         self.api_key = env_config['API_KEY']
+
+        if self.api_key is None:
+            self.api_key = ''
+
         self.api_sec = env_config['API_SEC']
+
+        if self.api_sec is None:
+            self.api_sec = ''
+        
         self.api_passphrase = env_config['API_PASSPHRASE']
+
+        if self.api_passphrase is None:
+            self.api_passphrase = ''
+        
         self.mode = env_config['MODE']
 
-        del env_config
+        if self.mode is None or self.mode == '':
+            self.mode = 'test'

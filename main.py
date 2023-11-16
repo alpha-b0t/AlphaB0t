@@ -6,13 +6,13 @@ from app.models.gridbot import GRIDBot, KrakenGRIDBot
 import subprocess
 
 if __name__ == '__main__':
-    grid_bot_config = GRIDBotConfig()
+    gridbot_config = GRIDBotConfig()
     exchange_config = ExchangeConfig()
 
     if exchange_config.exchange == 'Robinhood':
     
-        if confirm_grids(grid_bot_config.upper_price, grid_bot_config.lower_price, grid_bot_config.level_num, grid_bot_config.cash):
-            grid_trader = GRIDBot(grid_bot_config)
+        if confirm_grids(gridbot_config.upper_price, gridbot_config.lower_price, gridbot_config.level_num, gridbot_config.cash):
+            grid_trader = GRIDBot(gridbot_config)
 
             simulation_metric = grid_trader.simulate_trading(
                 pair='LINK',
@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
             grid_trader.logout()
     elif exchange_config.exchange == 'Kraken':
-        kraken_exchange = KrakenExchange(exchange_config.api_key, exchange_config.api_sec, exchange_config.mode)
+        kraken_exchange = KrakenExchange(exchange_config)
         print(kraken_exchange)
 
         # Get account balance
@@ -42,22 +42,11 @@ if __name__ == '__main__':
 
         # Get trade volume and fee schedule
         print("Trade volume and fee schedule:")
-        print(kraken_exchange.get_trade_volume(grid_bot_config.pair))
+        print(kraken_exchange.get_trade_volume(gridbot_config.pair))
 
         kraken_gridbot = KrakenGRIDBot(
-            grid_bot_config.api_key,
-            grid_bot_config.api_sec,
-            grid_bot_config.pair,
-            grid_bot_config.days_to_run,
-            grid_bot_config.mode,
-            grid_bot_config.upper_price,
-            grid_bot_config.lower_price,
-            grid_bot_config.level_num,
-            grid_bot_config.cash,
-            grid_bot_config.stop_loss,
-            grid_bot_config.take_profit,
-            grid_bot_config.base_currency,
-            grid_bot_config.latency_in_sec
+            gridbot_config=gridbot_config,
+            exchange_config=exchange_config
         )
 
         kraken_gridbot.start()

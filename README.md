@@ -53,14 +53,23 @@ make run-main
 
 ### Example .env file
 ```
+# Database Configuration
 DATABASE_USERNAME=
 DATABASE_PASSWORD=
 DATABASE_PORT=
 DATABASE_NAME=
+
+# Exchange Configuration
 EXCHANGE=Kraken
 API_KEY=
 API_SEC=
 API_PASSPHRASE=
+
+# Stripe Configuration
+STRIPE_PUBLISHABLE_KEY=
+STRIPE_SECRET_KEY=
+
+# GRID Bot Configuration
 PAIR=MOONUSD
 BASE_CURRENCY=ZUSD
 MODE=test
