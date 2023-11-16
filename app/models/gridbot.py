@@ -63,13 +63,9 @@ class KrakenGRIDBot(GRIDBot):
         for attempt in range(self.max_error_count):
             try:
                 asset_info_response = self.exchange.get_tradable_asset_pairs(self.pair)
-                
-                assert len(asset_info_response['error']) == 0
-                assert asset_info_response.get('result') is not None
                 break
             except Exception as e:
                 print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
-                print(f"asset_info_response: {asset_info_response}")
                 
                 if attempt == self.max_error_count - 1:
                     print(f"Failed to make API request after {self.max_error_count} attempts")
@@ -107,13 +103,9 @@ class KrakenGRIDBot(GRIDBot):
         for attempt in range(self.max_error_count):
             try:
                 balances_response = self.exchange.get_account_balance()
-
-                assert len(balances_response['error']) == 0
-                assert balances_response.get('result') is not None
                 break
             except Exception as e:
                 print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
-                print(f"balances_response: {balances_response}")
                 
                 if attempt == self.max_error_count - 1:
                     print(f"Failed to make API request after {self.max_error_count} attempts")
@@ -158,13 +150,9 @@ class KrakenGRIDBot(GRIDBot):
         for attempt in range(self.max_error_count):
             try:
                 ohlc_response = self.exchange.get_ohlc_data(self.pair)
-
-                assert len(ohlc_response['error']) == 0
-                assert ohlc_response.get('result') is not None
                 break
             except Exception as e:
                 print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
-                print(f"ohlc_response: {ohlc_response}")
 
                 if attempt == self.max_error_count - 1:
                     print(f"Failed to make API request after {self.max_error_count} attempts")
@@ -220,14 +208,34 @@ class KrakenGRIDBot(GRIDBot):
         # Place a buy order for the initial amount to sell
         print(f"Adding a buy order for {round(initial_buy_amount / self.latest_ohlc.close, self.lot_decimals)} {self.pair} @ limit {self.latest_ohlc.close}")
 
-        initial_buy_order_response = self.exchange.add_order(
-            ordertype='limit',
-            type='buy',
-            volume=round(initial_buy_amount / self.latest_ohlc.close, self.lot_decimals),
-            pair=self.pair,
-            price=self.latest_ohlc.close,
-            oflags='post',
-        )
+        # initial_buy_order_response = self.exchange.add_order(
+        #     ordertype='limit',
+        #     type='buy',
+        #     volume=round(initial_buy_amount / self.latest_ohlc.close, self.lot_decimals),
+        #     pair=self.pair,
+        #     price=self.latest_ohlc.close,
+        #     oflags='post'
+        # )
+
+        for attempt in range(self.max_error_count):
+            try:
+                initial_buy_order_response = self.exchange.add_order(
+                    ordertype='limit',
+                    type='buy',
+                    volume=round(initial_buy_amount / self.latest_ohlc.close, self.lot_decimals),
+                    pair=self.pair,
+                    price=self.latest_ohlc.close,
+                    oflags='post'
+                )
+                break
+            except Exception as e:
+                print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
+
+                if attempt == self.max_error_count - 1:
+                    print(f"Failed to make API request after {self.max_error_count} attempts")
+                    raise e
+                else:
+                    time.sleep(self.error_latency)
 
         # Place limit buy orders and limit sell orders
         for i in range(len(self.grids)):
@@ -239,14 +247,34 @@ class KrakenGRIDBot(GRIDBot):
                 
                 print(f"Adding a {side} order for {round(self.grids[i].cash_per_level/self.grids[i].limit_price, self.lot_decimals)} {self.pair} @ limit {self.grids[i].limit_price}")
 
-                order_response = self.exchange.add_order(
-                    ordertype='limit',
-                    type=side,
-                    volume=round(self.grids[i].cash_per_level/self.grids[i].limit_price, self.lot_decimals),
-                    pair=self.pair,
-                    price=self.grids[i].limit_price,
-                    oflags='post'
-                )
+                # order_response = self.exchange.add_order(
+                #     ordertype='limit',
+                #     type=side,
+                #     volume=round(self.grids[i].cash_per_level/self.grids[i].limit_price, self.lot_decimals),
+                #     pair=self.pair,
+                #     price=self.grids[i].limit_price,
+                #     oflags='post'
+                # )
+
+                for attempt in range(self.max_error_count):
+                    try:
+                        order_response = self.exchange.add_order(
+                            ordertype='limit',
+                            type=side,
+                            volume=round(self.grids[i].cash_per_level/self.grids[i].limit_price, self.lot_decimals),
+                            pair=self.pair,
+                            price=self.grids[i].limit_price,
+                            oflags='post'
+                        )
+                        break
+                    except Exception as e:
+                        print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
+
+                        if attempt == self.max_error_count - 1:
+                            print(f"Failed to make API request after {self.max_error_count} attempts")
+                            raise e
+                        else:
+                            time.sleep(self.error_latency)
 
                 self.grids[i].order = KrakenOrder(order_response.get('result', {}).get('txid', ''), order_response.get('result', {}))
             else:
@@ -258,16 +286,11 @@ class KrakenGRIDBot(GRIDBot):
             try:
                 account_balances_response = self.exchange.get_account_balance()
 
-                assert len(account_balances_response['error']) == 0
-
                 account_balances = account_balances_response.get('result')
-
-                assert account_balances is not None
 
                 return float(account_balances.get(pair, 0))
             except Exception as e:
                 print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
-                print(f"account_balances_response: {account_balances_response}")
 
                 if attempt == self.max_error_count - 1:
                     print(f"Failed to make API request after {self.max_error_count} attempts")
@@ -281,11 +304,7 @@ class KrakenGRIDBot(GRIDBot):
             try:
                 extended_balances_response = self.exchange.get_extended_balance()
 
-                assert len(extended_balances_response['error']) == 0
-
                 extended_balance = extended_balances_response.get('result')
-
-                assert extended_balance is not None
 
                 available_balances = {}
 
@@ -295,7 +314,6 @@ class KrakenGRIDBot(GRIDBot):
                 return available_balances
             except Exception as e:
                 print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
-                print(f"extended_balances_response: {extended_balances_response}")
                 
                 if attempt == self.max_error_count - 1:
                     print(f"Failed to make API request after {self.max_error_count} attempts")
@@ -342,13 +360,9 @@ class KrakenGRIDBot(GRIDBot):
                 for attempt in range(self.max_error_count):
                     try:
                         ohlc_response = self.exchange.get_ohlc_data(self.pair)
-
-                        assert len(ohlc_response['error']) == 0
-                        assert ohlc_response.get('result') is not None
                         break
                     except Exception as e:
                         print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
-                        print(f"orders_response: {ohlc_response}")
 
                         if attempt == self.max_error_count - 1:
                             print(f"Failed to make API request after {self.max_error_count} attempts")
@@ -382,13 +396,9 @@ class KrakenGRIDBot(GRIDBot):
         for attempt in range(self.max_error_count):
             try:
                 orders_response = self.exchange.get_orders_info(txid, trades=True)
-
-                assert len(orders_response['error']) == 0
-                assert orders_response.get('result') is not None
                 break
             except Exception as e:
                 print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
-                print(f"orders_response: {orders_response}")
 
                 if attempt == self.max_error_count - 1:
                     print(f"Failed to make API request after {self.max_error_count} attempts")
@@ -429,14 +439,34 @@ class KrakenGRIDBot(GRIDBot):
                             print(f"Adding a sell order for {round(self.grids[i+1].cash_per_level/self.grids[i+1].limit_price, self.lot_decimals)} {self.pair} @ limit {self.grids[i+1].limit_price}")
 
                             # TODO: Add all order in once batch using self.exchange.add_order_batch to reduce API calls
-                            order_response = self.exchange.add_order(
-                                ordertype='limit',
-                                type='sell',
-                                volume=round(self.grids[i+1].cash_per_level/self.grids[i+1].limit_price, self.lot_decimals),
-                                pair=self.pair,
-                                price=self.grids[i+1].limit_price,
-                                oflags='post'
-                            )
+                            # order_response = self.exchange.add_order(
+                            #     ordertype='limit',
+                            #     type='sell',
+                            #     volume=round(self.grids[i+1].cash_per_level/self.grids[i+1].limit_price, self.lot_decimals),
+                            #     pair=self.pair,
+                            #     price=self.grids[i+1].limit_price,
+                            #     oflags='post'
+                            # )
+
+                            for attempt in range(self.max_error_count):
+                                try:
+                                    order_response = self.exchange.add_order(
+                                        ordertype='limit',
+                                        type='sell',
+                                        volume=round(self.grids[i+1].cash_per_level/self.grids[i+1].limit_price, self.lot_decimals),
+                                        pair=self.pair,
+                                        price=self.grids[i+1].limit_price,
+                                        oflags='post'
+                                    )
+                                    break
+                                except Exception as e:
+                                    print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
+
+                                    if attempt == self.max_error_count - 1:
+                                        print(f"Failed to make API request after {self.max_error_count} attempts")
+                                        raise e
+                                    else:
+                                        time.sleep(self.error_latency)
 
                             self.grids[i+1].order = KrakenOrder(order_response.get('result').get('txid', ''), order_response.get('result', {}))
                     else:
@@ -460,14 +490,34 @@ class KrakenGRIDBot(GRIDBot):
                             print(f"Adding a buy order for {round(self.grids[i-1].cash_per_level/self.grids[i-1].limit_price, self.lot_decimals)} {self.pair} @ limit {self.grids[i-1].limit_price}")
                             
                             # TODO: Add all order in once batch using self.exchange.add_order_batch to reduce API calls
-                            order_response = self.exchange.add_order(
-                                ordertype='limit',
-                                type='buy',
-                                volume=round(self.grids[i-1].cash_per_level/self.grids[i-1].limit_price, self.lot_decimals),
-                                pair=self.pair,
-                                price=self.grids[i-1].limit_price,
-                                oflags='post'
-                            )
+                            # order_response = self.exchange.add_order(
+                            #     ordertype='limit',
+                            #     type='buy',
+                            #     volume=round(self.grids[i-1].cash_per_level/self.grids[i-1].limit_price, self.lot_decimals),
+                            #     pair=self.pair,
+                            #     price=self.grids[i-1].limit_price,
+                            #     oflags='post'
+                            # )
+
+                            for attempt in range(self.max_error_count):
+                                try:
+                                    order_response = self.exchange.add_order(
+                                        ordertype='limit',
+                                        type='buy',
+                                        volume=round(self.grids[i-1].cash_per_level/self.grids[i-1].limit_price, self.lot_decimals),
+                                        pair=self.pair,
+                                        price=self.grids[i-1].limit_price,
+                                        oflags='post'
+                                    )
+                                    break
+                                except Exception as e:
+                                    print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
+
+                                    if attempt == self.max_error_count - 1:
+                                        print(f"Failed to make API request after {self.max_error_count} attempts")
+                                        raise e
+                                    else:
+                                        time.sleep(self.error_latency)
 
                             self.grids[i-1].order = KrakenOrder(order_response.get('result').get('txid', ''), order_response.get('result', {}))
     

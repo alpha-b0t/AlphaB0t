@@ -64,6 +64,15 @@ class KrakenExchange(Exchange):
         
         return f"{{KrakenExchange api_key: {api_key_display}, api_sec: {api_sec_display}, mode: {self.mode}, api_base_url: {self.api_base_url}}}"
     
+    def handle_response_errors(self, response):
+        """Given a response from Kraken, raises an error if there is an error returned or if there is not result."""
+        try:
+            assert len(response['error']) == 0
+            assert response.get('result') is not None
+        except Exception as e:
+            print(f"response: {response}")
+            raise e
+    
     # Public requests
     def public_request(self, uri_path, query_parameters={}):
         url = self.api_base_url + uri_path
@@ -83,11 +92,15 @@ class KrakenExchange(Exchange):
     
     def get_exchange_time(self):
         response = self.public_request('/public/Time')
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def get_exchange_status(self):
         response = self.public_request('/public/SystemStatus')
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def get_asset_info(self, asset='', aclass='currency'):
         """Get information about the assets that are available for deposit, withdrawal, trading and staking."""
@@ -105,7 +118,9 @@ class KrakenExchange(Exchange):
         else:
             response = self.public_request('/public/Assets')
         
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def get_tradable_asset_pairs(self, pair='', info='info'):
         """Get tradable asset pairs."""
@@ -123,7 +138,9 @@ class KrakenExchange(Exchange):
         else:
             response = self.public_request('/public/AssetPairs')
 
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def get_ticker_info(self, pair=''):
         """Get ticker information. Note: Today's prices start at midnight UTC. Leaving the pair parameter blank will return tickers for all tradeable assets on Kraken."""
@@ -137,7 +154,9 @@ class KrakenExchange(Exchange):
         else:
             response = self.public_request('/public/Ticker')
         
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def get_ohlc_data(self, pair, interval=1, since=0):
         """Get the latest quote of a cryptocurrency. Note: the last entry in the OHLC array is for the current, not-yet-committed frame and will always be present, regardless of the value of since."""
@@ -154,7 +173,9 @@ class KrakenExchange(Exchange):
         
         response = self.public_request('/public/OHLC', query_parameters)
         
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def get_order_book(self, pair, count=100):
         """Get order book."""
@@ -168,7 +189,9 @@ class KrakenExchange(Exchange):
         
         response = self.public_request('/public/Depth', query_parameters)
 
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def get_recent_trades(self, pair, since=0, count=1000):
         """Returns the last 1000 trades by default."""
@@ -185,7 +208,9 @@ class KrakenExchange(Exchange):
         
         response = self.public_request('/public/Trades', query_parameters)
 
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def get_recent_spreads(self, pair, since=0):
         """Returns the last ~200 top-of-book spreads for a given pair."""
@@ -199,7 +224,9 @@ class KrakenExchange(Exchange):
         
         response = self.public_request('/public/Spread', query_parameters)
 
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     # Authenticated requests
     def authenticated_request(self, uri_path: str, data={}):
@@ -276,7 +303,9 @@ class KrakenExchange(Exchange):
         
         response = self.authenticated_request('/private/AddOrder', payload)
 
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def add_order_batch(self, orders, pair, deadline='', validate='false'):
         """Add a batch of orders at once."""
@@ -295,7 +324,9 @@ class KrakenExchange(Exchange):
         
         response = self.authenticated_request('/private/AddOrderBatch', payload)
 
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def edit_order(self, txid, pair, userref=0, volume='', price='', price2='', oflags='', deadline='', validate='false'):
         """Edit an open order by its txid."""
@@ -329,7 +360,9 @@ class KrakenExchange(Exchange):
         
         response = self.authenticated_request('/private/EditOrder', payload)
 
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def cancel_order(self, txid):
         """
@@ -344,7 +377,9 @@ class KrakenExchange(Exchange):
 
         response = self.authenticated_request('/private/CancelOrder', payload)
 
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def cancel_order_batch(self, orders):
         """Cancel a batch of orders at once."""
@@ -356,19 +391,25 @@ class KrakenExchange(Exchange):
 
         response = self.authenticated_request('/private/CancelOrderBatch', payload)
 
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def get_account_balance(self):
         """Retrieve all cash balances, net of pending withdrawals."""
         # https://docs.kraken.com/rest/#tag/Account-Data/operation/getAccountBalance
         response = self.authenticated_request('/private/Balance')
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def get_extended_balance(self):
         """Retrieve all extended account balances, including credits and held amounts. Balance available for trading is calculated as: available balance = balance + credit - credit_used - hold_trade."""
         # https://docs.kraken.com/rest/#tag/Account-Data/operation/getExtendedBalance
         response = self.authenticated_request('/private/BalanceEx')
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def get_trade_balance(self, asset='ZUSD'):
         """Retrieve a summary of collateral balances, margin position valuations, equity and margin level."""
@@ -379,7 +420,9 @@ class KrakenExchange(Exchange):
 
         response = self.authenticated_request('/private/TradeBalance', payload)
 
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def get_open_orders(self, trades=False, userref=0):
         """Retrieve information about currently open orders."""
@@ -393,7 +436,9 @@ class KrakenExchange(Exchange):
         
         response = self.authenticated_request('/private/OpenOrders', payload)
 
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def get_closed_orders(self, trades=False, userref=0, start=0, end=0, ofs=0, closetime='both', consolidate_ticker=True):
         """Retrieve information about orders that have been closed (filled or cancelled)."""
@@ -422,7 +467,9 @@ class KrakenExchange(Exchange):
         
         response = self.authenticated_request('/private/ClosedOrders', payload)
 
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def get_orders_info(self, txid, userref=0, trades=False, consolidate_taker=True):
         """Retrieve information about specific orders."""
@@ -442,7 +489,9 @@ class KrakenExchange(Exchange):
         
         response = self.authenticated_request('/private/QueryOrders', payload)
 
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def get_trades_info(self, txid, trades=False):
         """Retrieve information about specific trades/fills."""
@@ -456,7 +505,9 @@ class KrakenExchange(Exchange):
         
         response = self.authenticated_request('/private/QueryTrades', payload)
 
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def get_trades_history(self, type='all', trades=False, start=0, end=0, ofs='', consolidate_taker=True):
         """Retrieve information about trades/fills. 50 results are returned at a time, the most recent by default."""
@@ -482,7 +533,9 @@ class KrakenExchange(Exchange):
         
         response = self.authenticated_request('/private/TradesHistory', payload)
 
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def get_trade_volume(self, pair=''):
         """Returns 30 day USD trading volume and resulting fee schedule for any asset pair(s) provided."""
@@ -496,14 +549,18 @@ class KrakenExchange(Exchange):
         else:
             response = self.authenticated_request('/private/TradeVolume')
         
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
     
     def get_websockets_token(self):
         """Get a websocket token for Kraken's WebSockets API."""
         # https://docs.kraken.com/rest/#tag/Websockets-Authentication/operation/getWebsocketsToken
         response = self.authenticated_request('/private/GetWebSocketsToken')
 
-        return response.json()
+        result = response.json()
+        self.handle_response_errors(result)
+        return result
 
 class CoinbaseExchange(Exchange):
     def __init__(self, api_key='', api_sec='', api_passphrase=''):
