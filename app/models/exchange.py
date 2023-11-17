@@ -67,7 +67,13 @@ class KrakenExchange(Exchange):
     def handle_response_errors(self, response):
         """Given a response from Kraken, raises an error if there is an error returned or if there is not result."""
         try:
-            assert len(response['error']) == 0
+            if len(response['error']) > 0:
+                for error_message in response['error']:
+                    assert error_message[0] != 'E'
+
+                    # Warning message
+                    print(f"Warning: {error_message}")
+            
             assert response.get('result') is not None
         except Exception as e:
             print(f"response: {response}")
