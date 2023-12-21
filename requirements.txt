@@ -5,3 +5,5 @@ SQLAlchemy==2.0.16
 Flask-Migrate==2.7.0
 flask-cors==4.0.0
 stripe==7.4.0
+python-dotenv==1.0.0
+robin_stocks
