@@ -151,7 +151,7 @@ class KrakenGRIDBot(GRIDBot):
 
         if self.mode != 'test':
             if self.total_investment > self.account_trade_balances[self.base_currency]:
-                raise Exception(f"Your total investment is greater than your balance of {self.base_currency} available for trading.")
+                raise Exception(f"Your total investment, {self.total_investment} {self.base_currency}, is greater than your balance of {self.base_currency} availabe for trading, {self.account_trade_balances[self.base_currency]}.")
     
     def __repr__(self):
         if self.name == '':
