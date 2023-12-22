@@ -444,16 +444,22 @@ class KrakenGRIDBot(GRIDBot):
         
         average_price = sum(prices) / len(prices)
 
-        return (total_investment / self.level_num) / average_price
+        return (total_investment / (self.level_num - 1)) / average_price
     
     def calculate_total_investment(self, quantity_per_grid: float) -> float:
         total_investment = 0
+        prices = []
         
         for i in range(self.level_num):
             price = round(self.lower_price + i*(self.upper_price - self.lower_price)/(self.level_num-1), self.pair_decimals)
+            prices += [price]
             
             total_investment += quantity_per_grid * price
 
+        average_price = sum(prices) / len(prices)
+
+        total_investment -= quantity_per_grid * average_price
+        
         return total_investment
     
     def start(self):
