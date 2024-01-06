@@ -281,7 +281,7 @@ class KrakenGRIDBot(GRIDBot):
             for attempt in range(self.max_error_count):
                 try:
                     # The appropiate Kraken API endpoint might be get_trades_info() instead of get_orders_info()
-                    initial_buy_order_update_response = self.exchange.get_orders_info(initial_buy_order_response['result']['txid'], trades=True)
+                    initial_buy_order_update_response = self.exchange.get_orders_info(initial_buy_order_response['result']['txid'][0], trades=True)
                     break
                 except Exception as e:
                     print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
@@ -293,7 +293,7 @@ class KrakenGRIDBot(GRIDBot):
                         time.sleep(self.error_latency)
             
             # Wait until the initial limit buy order has been fulfilled if it hasn't been already
-            while initial_buy_order_update_response['result'][initial_buy_order_response['result']['txid']]['status'] != "closed":
+            while initial_buy_order_update_response['result'][initial_buy_order_response['result']['txid'][0]]['status'] != "closed":
                 # Wait a certain amount of time for the order to fill
                 print(f"Waiting for initial buy order for {round(initial_buy_amount / self.latest_ohlc.close, self.lot_decimals)} {self.pair} @ limit {self.latest_ohlc.close} to be fulfilled...")
                 time.sleep(self.latency)
@@ -302,7 +302,7 @@ class KrakenGRIDBot(GRIDBot):
                 for attempt in range(self.max_error_count):
                     try:
                         # The appropiate Kraken API endpoint might be get_trades_info() instead of get_orders_info()
-                        initial_buy_order_update_response = self.exchange.get_orders_info(initial_buy_order_response['result']['txid'], trades=True)
+                        initial_buy_order_update_response = self.exchange.get_orders_info(initial_buy_order_response['result']['txid'][0], trades=True)
                         break
                     except Exception as e:
                         print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
