@@ -10,7 +10,7 @@ api_bp = Blueprint("api", __name__, url_prefix="/")
 def get_version():
     """Access version id."""
     try:
-        __version__ = '1.0.0'
+        __version__ = 'v0.1.0'
 
         result = Result(data={"version": __version__})
         
