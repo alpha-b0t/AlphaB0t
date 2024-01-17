@@ -24,6 +24,7 @@
 - Confluence
 - AWS
 - Docker
+- Redocly
 
 ### Payments
 - Stripe
