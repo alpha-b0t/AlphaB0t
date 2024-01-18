@@ -5,6 +5,7 @@ from app.models.order import KrakenOrder
 from app.helpers.format import round_down_to_cents
 from config import AppConfig, GRIDBotConfig, ExchangeConfig
 import time
+from datetime import datetime
 
 class GRIDBot():
     def __init__(self, exchange, pair, days_to_run, mode, upper_price, lower_price, level_num, cash, stop_loss, take_profit):
@@ -110,35 +111,36 @@ class KrakenGRIDBot(GRIDBot):
             self.total_investment = self.calculate_total_investment(self.quantity_per_grid)
 
             print(f"total investment: {self.total_investment}")
-
-        assert self.quantity_per_grid >= self.ordermin
-        assert round(self.quantity_per_grid * self.lower_price, self.pair_decimals) >= self.costmin
-
-        # Fetch fee schedule and trade volume info
-        for attempt in range(self.max_error_count):
-            try:
-                trade_volume_fee_response = self.exchange.get_trade_volume(self.pair)
-                break
-            except Exception as e:
-                print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
-                
-                if attempt == self.max_error_count - 1:
-                    print(f"Failed to make API request after {self.max_error_count} attempts")
-                    raise e
-                else:
-                    time.sleep(self.error_latency)
         
-        fee_info = trade_volume_fee_response.get('result')
-        self.trade_volume = fee_info['volume']
+        if self.exchange.api_key != '' and self.exchange.api_sec != '':
+            assert self.quantity_per_grid >= self.ordermin
+            assert round(self.quantity_per_grid * self.lower_price, self.pair_decimals) >= self.costmin
 
-        for key in fee_info['fees'].keys():
-            pair_key = key
-        
-        if fee_info.get('fees_maker') is None:
-            self.fee_taker = self.fee_maker = float(fee_info['fees'][pair_key]['fee'])
-        else:
-            self.fee_taker = float(fee_info['fees'][pair_key]['fee'])
-            self.fee_maker = float(fee_info['fees_maker'][pair_key]['fee'])
+            # Fetch fee schedule and trade volume info
+            for attempt in range(self.max_error_count):
+                try:
+                    trade_volume_fee_response = self.exchange.get_trade_volume(self.pair)
+                    break
+                except Exception as e:
+                    print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
+                    
+                    if attempt == self.max_error_count - 1:
+                        print(f"Failed to make API request after {self.max_error_count} attempts")
+                        raise e
+                    else:
+                        time.sleep(self.error_latency)
+            
+            fee_info = trade_volume_fee_response.get('result')
+            self.trade_volume = fee_info['volume']
+
+            for key in fee_info['fees'].keys():
+                pair_key = key
+            
+            if fee_info.get('fees_maker') is None:
+                self.fee_taker = self.fee_maker = float(fee_info['fees'][pair_key]['fee'])
+            else:
+                self.fee_taker = float(fee_info['fees'][pair_key]['fee'])
+                self.fee_maker = float(fee_info['fees_maker'][pair_key]['fee'])
 
         # TODO: Implement
         self.closed_orders = []
@@ -147,7 +149,8 @@ class KrakenGRIDBot(GRIDBot):
         self.fee = 0
 
         # Fetch balances
-        self.fetch_balances()
+        if self.exchange.api_key != '' and self.exchange.api_sec != '':
+            self.fetch_balances()
 
         if self.mode != 'test':
             if self.total_investment > self.account_trade_balances[self.base_currency]:
@@ -159,7 +162,7 @@ class KrakenGRIDBot(GRIDBot):
         else:
             name_display = self.name
         
-        return f"{{KrakenGRIDBot name: {name_display}, pair: {self.pair}, mode: {self.mode}, runtime: {self.get_runtime()}, profit: {self.profit}, gain_percent: {self.gain_percent}%, total_investment: {self.total_investment}}}"
+        return f"{{KrakenGRIDBot name: {name_display}, pair: {self.pair}, mode: {self.mode}, runtime: {self.get_runtime()}s, profit: {self.profit} {self.base_currency}, gain_percent: {self.gain_percent}%, fee: {self.fee} {self.base_currency}, total_investment: {self.total_investment} {self.base_currency}}}"
     
     def get_runtime(self):
         return time.time() - self.start_time
@@ -437,28 +440,46 @@ class KrakenGRIDBot(GRIDBot):
         ohlc = ohlc_response.get('result')
         self.latest_ohlc = OHLC(ohlc[self.ohlc_asset_key][-1])
     
+    def calculate_profit(self):
+        # Updates self.profit, self.gain_percent, and self.fee
+        # Note that self.profit is realized profit, not unrealized profit
+        profit = 0
+        fee = 0
+
+        try:
+            for i in range(len(self.closed_orders)):
+                if self.closed_orders[i].desc['type'] == 'buy':
+                    profit -= self.closed_orders[i].vol_exec * self.closed_orders[i].price
+                    profit -= self.closed_orders[i].fee
+
+                else:
+                    profit += self.closed_orders[i].vol_exec * self.closed_orders[i].price
+                    profit -= self.closed_orders[i].fee
+                
+                fee += self.closed_orders[i].fee
+            
+            self.profit = profit
+            self.fee = fee
+            self.gain_percent = profit / self.total_investment
+        except Exception as e:
+            print(f"Error updating profit: {e}")
+    
     def calculate_max_quantity_per_grid(self, total_investment: float) -> float:
         prices = []
-        for i in range(self.level_num):
+        for i in range(self.level_num - 1):
             prices += [round(self.lower_price + i*(self.upper_price - self.lower_price)/(self.level_num-1), self.pair_decimals)]
         
         average_price = sum(prices) / len(prices)
 
-        return (total_investment / (self.level_num - 1)) / average_price
+        return total_investment / average_price
     
     def calculate_total_investment(self, quantity_per_grid: float) -> float:
         total_investment = 0
-        prices = []
         
-        for i in range(self.level_num):
+        for i in range(self.level_num - 1):
             price = round(self.lower_price + i*(self.upper_price - self.lower_price)/(self.level_num-1), self.pair_decimals)
-            prices += [price]
             
             total_investment += quantity_per_grid * price
-
-        average_price = sum(prices) / len(prices)
-
-        total_investment -= quantity_per_grid * average_price
         
         return total_investment
     
@@ -506,6 +527,8 @@ class KrakenGRIDBot(GRIDBot):
                 print(f"\n\nSleeping for {self.latency} seconds...")
                 print("=========================================")
                 time.sleep(self.latency)
+                print("Time:", datetime.now())
+                print(self)
 
                 # Get latest OHLC data
                 print("\n\nFetching OHLC data...")

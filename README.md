@@ -42,14 +42,19 @@ make
 ```
 The compiled C++ code will go in the bin folder.
 
-To clear the compiled C++ code, run the following command in your terminal
+To clear the compiled C++ code, run the following command in your terminal:
 ```
 make clean
 ```
 
-To run the C++ code (i.e. run `main()` in main.cpp), run the following command in your terminal
+To run the C++ code (i.e. run `main()` in main.cpp), run the following command in your terminal:
 ```
 make run-main
+```
+
+To run the Python unit tests implemented in pytest, run the following command in your terminal:
+```
+pytest
 ```
 
 ### Example .env file
@@ -118,6 +123,7 @@ Websocket Interface: On
 - https://flask.palletsprojects.com/en/2.3.x/tutorial/factory/
 - https://flask-sqlalchemy.palletsprojects.com/en/3.1.x/
 - https://flask-cors.corydolphin.com/en/latest/api.html#api-docs
+- https://support.kraken.com/hc/en-us/articles/115000364388-Trading-glossary
 
 ## Profitable grid parameters
 1. 2023-10-13
