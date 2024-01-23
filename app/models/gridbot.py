@@ -166,6 +166,10 @@ class KrakenGRIDBot(GRIDBot):
     
     def get_runtime(self):
         return time.time() - self.start_time
+
+    def check_exchange_api_permissions(self):
+        # TODO: Implement
+        pass
     
     def check_config(self):
         """Throws an error if the configurations are not correct."""
@@ -189,6 +193,8 @@ class KrakenGRIDBot(GRIDBot):
         assert self.upper_price > self.lower_price
         assert self.lower_price > self.stop_loss
         assert self.max_error_count >= 1
+        assert self.level_num > 1
+        assert self.error_latency > 0
     
     def init_grid(self):
         """Initializes grids."""
