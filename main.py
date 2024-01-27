@@ -29,8 +29,6 @@ if __name__ == '__main__':
 
             grid_trader.logout()
     elif exchange_config.exchange == 'Kraken':
-        kraken_exchange = KrakenExchange(exchange_config)
-        print(kraken_exchange)
 
         # Initialize Kraken gribot
         kraken_gridbot = KrakenGRIDBot(
