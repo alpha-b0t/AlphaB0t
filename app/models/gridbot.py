@@ -304,7 +304,7 @@ class KrakenGRIDBot(GRIDBot):
             # Wait until the initial limit buy order has been fulfilled if it hasn't been already
             while initial_buy_order_update_response['result'][initial_buy_order_response['result']['txid'][0]]['status'] != "closed":
                 # Wait a certain amount of time for the order to fill
-                print(f"Waiting for initial buy order for {round(initial_buy_amount / self.latest_ohlc.close, self.lot_decimals)} {self.pair} @ limit {self.latest_ohlc.close} to be fulfilled...")
+                print(f"Waiting for initial buy order for {initial_buy_amount} {self.pair} @ limit {self.latest_ohlc.close} to be fulfilled...")
                 time.sleep(self.latency)
                 
                 # Fetch new order info
