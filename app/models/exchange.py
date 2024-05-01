@@ -85,13 +85,13 @@ class KrakenExchange(Exchange):
 
         if query_parameters != {}:
             url += '?'
-            first_key = True
+            count = 0
             for key in query_parameters.keys():
-                if not first_key:
+                if count != 0:
                     url += '&'
-                    first_key = False
                 
                 url += f"{key}={query_parameters[key]}"
+                count += 1
         
         response = requests.get(url)
         return response
