@@ -1,3 +1,4 @@
+# Environment files
 .env
 
 # Python files
@@ -6,3 +7,12 @@ __pycache__/
 
 # C++ compiled files
 /bin/
+
+# Bot files
+/app/bots/
+
+# AI data
+/AI/data/
+
+# AI models
+/AI/models/
