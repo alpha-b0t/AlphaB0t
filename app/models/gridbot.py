@@ -323,8 +323,7 @@ class KrakenGRIDBot(GRIDBot):
                             time.sleep(self.error_latency)
             
             # Initial limit buy order has been fulfilled
-            # Is this implemented correctly?
-            self.closed_orders += [initial_buy_order_update_response['result']]
+            self.closed_orders += [KrakenOrder(initial_buy_order_update_response['result']['txid'][0], initial_buy_order_response['result'])]
 
         # Place limit buy orders and limit sell orders
         for i in range(len(self.grids)):
