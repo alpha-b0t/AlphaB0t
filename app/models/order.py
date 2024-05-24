@@ -8,8 +8,7 @@ class KrakenOrder(Order):
         
         if order_data != {}:
             for key, value in order_data.items():
-                if key != 'txid':
-                    setattr(self, key, value)
+                setattr(self, key, value)
     
     def __repr__(self):
         if self.txid == '':
@@ -28,3 +27,6 @@ class KrakenOrder(Order):
         for key, value in order_data.items():
             if key != 'txid':
                 setattr(self, key, value)
+            else:
+                if value != self.txid:
+                    print(f"Recieved different txid when updating: recieved={value}, original={self.txid}")
