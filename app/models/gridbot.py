@@ -410,7 +410,9 @@ class KrakenGRIDBot(GRIDBot):
         """Fetches latest account balances and account balances available for trading."""
         for attempt in range(self.max_error_count):
             try:
+                print("Fetching balances: CHECKPOINT 0")
                 account_balances_response = self.exchange.get_account_balance()
+                print("Fetching balances: CHECKPOINT 1")
                 break
             except Exception as e:
                 print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
@@ -419,13 +421,18 @@ class KrakenGRIDBot(GRIDBot):
                     print(f"Failed to make API request after {self.max_error_count} attempts")
                     raise e
                 else:
+                    print("Fetching balances: ERROR WAIT")
                     time.sleep(self.error_latency)
         
+        print("Fetching balances: CHECKPOINT C")
         self.account_balances = account_balances_response.get('result')
 
+        print("Fetching balances: CHECKPOINT D")
         for asset in self.account_balances.keys():
+            print("Fetching balances: CHECKPOINT E")
             self.account_balances[asset] = float(self.account_balances[asset])
         
+        print("Fetching balances: CHECKPOINT F")
         self.account_trade_balances = self.get_available_trade_balance()
     
     def fetch_latest_ohlc(self):
