@@ -126,37 +126,6 @@ Websocket Interface: On
 - https://flask-cors.corydolphin.com/en/latest/api.html#api-docs
 - https://support.kraken.com/hc/en-us/articles/115000364388-Trading-glossary
 
-## Profitable grid parameters
-1. 2023-10-13
-```
-EXCHANGE=Robinhood
-CRYPTO=LINK
-BACKTEST_INTERVAL=day
-BACKTEST_SPAN=3month
-BACKTEST_BOUNDS=24_7
-UPPER_PRICE=8.30
-LOWER_PRICE=5.90
-LEVEL_NUM=6
-```
-
-backtesting results:
-{'initial_cash_balance': 1000, 'initial_crypto_equity': 0, 'initial_balance': 1000, 'final_cash_balance': 666.6800000000001, 'final_crypto_equity': 60.05000000000002, 'final_balance': 1098.79, 'current_cash_balance': 666.6800000000001, 'current_crypto_equity': 60.05000000000002, 'profit': 103.72000000000003, 'percent_change': 10.372000000000003, 'crypto': 'LINK', 'interval': 'day', 'span': '3month', 'bounds': '24_7'}
-
-2. 2023-10-13
-```
-EXCHANGE=Robinhood
-CRYPTO=LINK
-BACKTEST_INTERVAL=day
-BACKTEST_SPAN=year
-BACKTEST_BOUNDS=24_7
-UPPER_PRICE=8.10
-LOWER_PRICE=5.25
-LEVEL_NUM=4
-```
-
-backtesting results:
-{'initial_cash_balance': 1000, 'initial_crypto_equity': 0, 'initial_balance': 1000, 'final_cash_balance': 1000.0, 'final_crypto_equity': 51.09000000000002, 'final_balance': 1367.6399999999999, 'current_cash_balance': 1000.0, 'current_crypto_equity': 51.09000000000002, 'profit': 418.3699999999999, 'percent_change': 41.83699999999998, 'crypto': 'LINK', 'interval': 'day', 'span': 'year', 'bounds': '24_7'}
-
 ## Optimization
 
 I am trying to make my Python cryptocurrency spot grid trading bot more profitable. I have three parameters: `level_num` (the number of levels/grids), `upper_price` (the price of the highest grid/level), and `lower_price` (the price of the lowest grid/level). How do I algorithmically determine the most profitable values for these three parameters?
