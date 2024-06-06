@@ -1,6 +1,4 @@
 #include <iostream>
-#include "Car/car.h"
-#include "Power/power.h"
 #include "Result/result.h"
 
 using namespace std;
