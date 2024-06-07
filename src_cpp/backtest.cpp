@@ -38,11 +38,7 @@ class OHLC {
 vector<double> optimize_grid_params(int max_level_num, double min_lower_price, double max_upper_price, double price_increment, vector<OHLC> prices);
 double get_profit_from_backtest(int level_num, double lower_price, double upper_price, vector<OHLC> prices);
 double min_fee1(double fee);
-douvle min_fee2(double fee);
-
-int main() {
-    return 0:
-}
+double min_fee2(double fee);
 
 vector<double> optimize_grid_params(int max_level_num, double min_lower_price, double max_upper_price, double price_increment, vector<OHLC> prices) {
     double best_profit = -1;
