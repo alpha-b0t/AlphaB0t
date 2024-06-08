@@ -37,7 +37,8 @@ class KrakenOrder(Order):
         
         if order_data != {}:
             for key, value in order_data.items():
-                setattr(self, key, value)
+                if key != 'txid':
+                    setattr(self, key, value)
     
     def __repr__(self):
         if self.txid == '':
@@ -56,9 +57,8 @@ class KrakenOrder(Order):
         for key, value in order_data.items():
             if key != 'txid':
                 setattr(self, key, value)
-            else:
-                if value != self.txid:
-                    print(f"Recieved different txid when updating: recieved={value}, original={self.txid}")
+            elif value != self.txid:
+                    print(f"Received different txid when updating: received={value}, original={self.txid}")
     
     @classmethod
     def from_json(cls, json_data):
