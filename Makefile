@@ -2,7 +2,7 @@ CXX = g++
 CXXFLAGS = -std=c++17
 
 # Source directory
-SRC_DIR = src_cpp
+SRC_DIR = src
 
 # Output directory for compiled executables
 BIN_DIR = bin
