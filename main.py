@@ -1,7 +1,7 @@
-from RobinhoodCrypto.gridbot import GRIDBot
+# from RobinhoodCrypto.gridbot import GRIDBot
 from config import RequestConfig, GRIDBotConfig, ExchangeConfig
-from RobinhoodCrypto.helpers import confirm_grids
-from app.models.exchange import KrakenExchange
+# from RobinhoodCrypto.helpers import confirm_grids
+from app.models.exchange import KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange
 from app.models.gridbot import KrakenGRIDBot
 import subprocess
 from AI.get_data import fetch_data
@@ -37,7 +37,9 @@ if __name__ == '__main__':
         gridbot_config = GRIDBotConfig()
         exchange_config = ExchangeConfig()
         
-        if exchange_config.exchange_name == 'Robinhood':
+        if exchange_config.exchange_name == 'RobinhoodCrypto':
+            pass
+            """
             if confirm_grids(gridbot_config.upper_price, gridbot_config.lower_price, gridbot_config.level_num, gridbot_config.total_investment):
                 grid_trader = GRIDBot(gridbot_config)
 
@@ -55,6 +57,7 @@ if __name__ == '__main__':
                 print(f"Simulation performance: {simulation_metric}%")
 
                 grid_trader.logout()
+            """
         elif exchange_config.exchange_name == 'Kraken':
 
             if request_config.request in ['start', 'START', '', None, 'None']:
@@ -77,3 +80,5 @@ if __name__ == '__main__':
 
                 # Restart automated grid trading
                 kraken_gridbot.restart()
+        elif exchange_config.exchange_name == "Coinbase":
+            pass

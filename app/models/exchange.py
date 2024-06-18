@@ -1,5 +1,4 @@
 from config import ExchangeConfig
-import robin_stocks.robinhood as rh
 import requests
 import urllib.parse
 import hashlib
@@ -9,6 +8,10 @@ import time
 import json
 import inspect
 from constants import CLASS_NAMES
+import datetime
+from typing import Any, Dict, Optional
+import uuid
+from cryptography.hazmat.primitives.asymmetric import ed25519
 
 class Exchange():
     def __init__(self):
@@ -826,33 +829,130 @@ class CoinbaseExchange(Exchange):
         return instance
 
 class RobinhoodCryptoExchange(Exchange):
-    def __init__(self):
+    def __init__(self, exchange_config: ExchangeConfig={}):
         super().__init__()
         self.classname = 'RobinhoodCryptoExchange'
-    
-    def login(self):
-        """
-        Logs the user in with username and password with verification by sms text. This method does not store the session.
-        """
-        time_logged_in = 60 * 60 * 24 * self.days_to_run
+        if type(exchange_config) == dict:
+            # Reloading
+            print(f"Reloading RobinhoodCryptoExchange...")
+            return
         
-        rh.authentication.login(expiresIn=time_logged_in,
-                                scope='internal',
-                                by_sms=True,
-                                store_session=False)
-        
-        print("login successful")
+        self.exchange_config = {}
+
+        assert exchange_config.mode.lower() in ['live', 'test']
+        self.api_key = exchange_config.api_key
+        self.api_sec = exchange_config.api_sec
+        self.mode = exchange_config.mode.lower()
+
+        private_bytes = base64.b64decode(exchange_config.api_sec)
+        # Note that the cryptography library used here only accepts a 32 byte ed25519 private key
+        self.private_key = ed25519.Ed25519PrivateKey.from_private_bytes(private_bytes[:32])
+        self.api_base_url = "https://trading.robinhood.com"
     
-    def logout(self):
-        """
-        Attempts to log out the user unless already logged out.
-        """
+    @staticmethod
+    def _get_current_timestamp() -> int:
+        return int(datetime.datetime.now(tz=datetime.timezone.utc).timestamp())
+
+    @staticmethod
+    def get_query_params(key: str, *args: Optional[str]) -> str:
+        if not args:
+            return ""
+
+        params = []
+        for arg in args:
+            params.append(f"{key}={arg}")
+
+        return "?" + "&".join(params)
+
+    def make_api_request(self, method: str, path: str, body: str = "") -> Any:
+        timestamp = self._get_current_timestamp()
+        headers = self.get_authorization_header(method, path, body, timestamp)
+        url = self.api_base_url + path
+
         try:
-            rh.authentication.logout()
-            
-            print('logout successful')
-        except:
-            print('already logged out: logout() can only be called when currently logged in')
+            response = {}
+            if method == "GET":
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == "POST":
+                response = requests.post(url, headers=headers, json=json.loads(body), timeout=10)
+            return response.json()
+        except requests.RequestException as e:
+            print(f"Error making API request: {e}")
+            return None
+
+    def get_authorization_header(
+            self, method: str, path: str, body: str, timestamp: int
+    ) -> Dict[str, str]:
+        message_to_sign = f"{self.api_key}{timestamp}{path}{method}{body}"
+        signature = self.private_key.sign(message_to_sign.encode("utf-8"))
+
+        return {
+            "x-api-key": self.api_key,
+            "x-signature": base64.b64encode(signature).decode("utf-8"),
+            "x-timestamp": str(timestamp),
+        }
+
+    def get_account(self) -> Any:
+        path = "/api/v1/crypto/trading/accounts/"
+        return self.make_api_request("GET", path)
+
+    # The symbols argument must be formatted in trading pairs, e.g "BTC-USD", "ETH-USD". If no symbols are provided,
+    # all supported symbols will be returned
+    def get_trading_pairs(self, *symbols: Optional[str]) -> Any:
+        query_params = self.get_query_params("symbol", *symbols)
+        path = f"/api/v1/crypto/trading/trading_pairs/{query_params}"
+        return self.make_api_request("GET", path)
+
+    # The asset_codes argument must be formatted as the short form name for a crypto, e.g "BTC", "ETH". If no asset
+    # codes are provided, all crypto holdings will be returned
+    def get_holdings(self, *asset_codes: Optional[str]) -> Any:
+        query_params = self.get_query_params("asset_code", *asset_codes)
+        path = f"/api/v1/crypto/trading/holdings/{query_params}"
+        return self.make_api_request("GET", path)
+
+    # The symbols argument must be formatted in trading pairs, e.g "BTC-USD", "ETH-USD". If no symbols are provided,
+    # the best bid and ask for all supported symbols will be returned
+    def get_best_bid_ask(self, *symbols: Optional[str]) -> Any:
+        query_params = self.get_query_params("symbol", *symbols)
+        path = f"/api/v1/crypto/marketdata/best_bid_ask/{query_params}"
+        return self.make_api_request("GET", path)
+
+    # The symbol argument must be formatted in a trading pair, e.g "BTC-USD", "ETH-USD"
+    # The side argument must be "bid", "ask", or "both".
+    # Multiple quantities can be specified in the quantity argument, e.g. "0.1,1,1.999".
+    def get_estimated_price(self, symbol: str, side: str, quantity: str) -> Any:
+        path = f"/api/v1/crypto/marketdata/estimated_price/?symbol={symbol}&side={side}&quantity={quantity}"
+        return self.make_api_request("GET", path)
+
+    def place_order(
+            self,
+            client_order_id: str,
+            side: str,
+            order_type: str,
+            symbol: str,
+            order_config: Dict[str, str],
+    ) -> Any:
+        body = {
+            "client_order_id": client_order_id,
+            "side": side,
+            "type": order_type,
+            "symbol": symbol,
+            f"{order_type}_order_config": order_config,
+        }
+        path = "/api/v1/crypto/trading/orders/"
+        return self.make_api_request("POST", path, json.dumps(body))
+
+    def cancel_order(self, order_id: str) -> Any:
+        path = f"/api/v1/crypto/trading/orders/{order_id}/cancel/"
+        return self.make_api_request("POST", path)
+
+    def get_order(self, order_id: str) -> Any:
+        path = f"/api/v1/crypto/trading/orders/{order_id}/"
+        return self.make_api_request("GET", path)
+
+    def get_orders(self) -> Any:
+        path = "/api/v1/crypto/trading/orders/"
+        return self.make_api_request("GET", path)
     
     @classmethod
     def from_json(cls, json_data):
