@@ -3,7 +3,7 @@ Flask-SQLAlchemy==3.0.2
 psycopg2-binary
 SQLAlchemy==2.0.16
 Flask-Migrate==2.7.0
-flask-cors==4.0.0
+flask-cors==4.0.1
 stripe==7.4.0
 python-dotenv==1.0.0
 cryptography
