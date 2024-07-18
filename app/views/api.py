@@ -5,6 +5,18 @@ import stripe
 
 api_bp = Blueprint("api", __name__, url_prefix="/")
 
+# Ping API
+@api_bp.route("/api/ping", methods=["GET"])
+def ping():
+    """Ping."""
+    try:
+        result = Result()
+        
+        return result.to_api_response()
+    except Exception as e:
+        result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
+        return result.to_api_response()
+
 # Get API version
 @api_bp.route("/api/v", methods=["GET"])
 def get_version():
