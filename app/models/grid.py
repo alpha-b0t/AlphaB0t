@@ -3,7 +3,7 @@ from constants import CLASS_NAMES
 
 class Grid():
     def __init__(self, level_num, limit_price, quantity, side, status, order=None):
-        self.classname = 'Grid'
+        self.classname = self.__class__.__name__
         self.level_num = level_num
         self.limit_price = limit_price
         self.quantity = quantity
@@ -12,7 +12,7 @@ class Grid():
         self.order = order
     
     def __repr__(self):
-        return f"{{Grid level_num: {self.level_num}, limit_price: {self.limit_price}, quantity: {self.quantity}, side: {self.side}, status: {self.status}, order: {self.order}}}"
+        return f"{{{self.classname} level_num: {self.level_num}, limit_price: {self.limit_price}, quantity: {self.quantity}, side: {self.side}, status: {self.status}, order: {self.order}}}"
     
     @classmethod
     def from_json(cls, json_data):

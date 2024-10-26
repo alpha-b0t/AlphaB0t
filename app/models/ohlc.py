@@ -3,10 +3,10 @@ from constants import CLASS_NAMES
 
 class OHLC:
     def __init__(self, ohlc_data: list=[]):
-        self.classname = 'OHLC'
+        self.classname = self.__class__.__name__
         if ohlc_data == []:
             # Reloading
-            print(f"Reloading OHLC...")
+            print(f"Reloading {self.classname}...")
             return
         
         self.ohlc_data = []
@@ -21,7 +21,7 @@ class OHLC:
         self.count = ohlc_data[7]
     
     def __repr__(self):
-        return f"{{OHLC time: {self.time}, open: {self.open}, high: {self.high}, low: {self.low}, close: {self.close}, vwap: {self.vwap}, volume: {self.volume}, count: {self.count}}}"
+        return f"{{{self.classname} time: {self.time}, open: {self.open}, high: {self.high}, low: {self.low}, close: {self.close}, vwap: {self.vwap}, volume: {self.volume}, count: {self.count}}}"
     
     @classmethod
     def from_json(cls, json_data):

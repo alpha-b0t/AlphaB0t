@@ -1,34 +1,4 @@
-# MoonTrader-backend
-
-## Tech stack
-
-### Frontend
-- TypeScript
-- Angular
-
-### Backend
-- Python
-- Flask
-- C++
-
-### Database
-- PostgreSQL
-- Postico
-
-### Version control
-- Git
-
-### DevOps
-- Github
-- Jira
-- Confluence
-- AWS
-- Docker
-- Redocly
-- Postman
-
-### Payments
-- Stripe
+# MoonTrader-engine
 
 ## Getting started
 
@@ -75,9 +45,8 @@ API_PASSPHRASE=
 # Request Configuration
 REQUEST=
 
-# Stripe Configuration
-STRIPE_PUBLISHABLE_KEY=
-STRIPE_SECRET_KEY=
+# CoinMarketCap API Key
+CMC_API_KEY=
 
 # GRID Bot Configuration
 NAME=
