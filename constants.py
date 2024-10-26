@@ -7,7 +7,6 @@ CLASS_NAMES = [
     'KrakenOrder',
     'Grid',
     'GRIDBot',
-    'KrakenGRIDBot',
     'Exchange',
     'KrakenExchange',
     'CoinbaseExchange',
@@ -15,5 +14,9 @@ CLASS_NAMES = [
     'AppConfig',
     'RequestConfig',
     'GRIDBotConfig',
-    'ExchangeConfig'
+    'ExchangeConfig',
+    'SentimentBot',
+    'SentimentBotConfig',
+    'CoinMarketCapAPI',
+    'Bot',
 ]

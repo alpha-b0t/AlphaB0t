@@ -10,42 +10,89 @@ import inspect
 from constants import CLASS_NAMES
 import datetime
 from typing import Any, Dict, Optional
-import uuid
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
 class Exchange():
     def __init__(self):
-        self.classname = 'Exchange'
+        self.classname = self.__class__.__name__
     
-    def login(self):
-        pass
+    def get_exchange_time(self):
+        raise NotImplementedError("Not Implemented.")
     
-    def logout(self):
-        pass
+    def get_exchange_status(self):
+        raise NotImplementedError("Not Implemented.")
     
-    def get_balances(self):
-        pass
+    def get_asset_info(self, asset, aclass):
+        raise NotImplementedError("Not Implemented.")
     
-    def get_latest_quote(self, symbol):
-        pass
+    def get_tradable_asset_pairs(self, pair, info):
+        raise NotImplementedError("Not Implemented.")
     
-    def build_holdings(self):
-        pass
+    def get_ticker_info(self, pair):
+        raise NotImplementedError("Not Implemented.")
+
+    def get_ohlc_data(self, pair, interval, since):
+        raise NotImplementedError("Not Implemented.")
     
-    def get_holdings_and_bought_price(self):
-        pass
+    def get_order_book(self, pair, count):
+        raise NotImplementedError("Not Implemented.")
     
-    def get_cash_and_equity(self):
-        pass
+    def get_recent_trades(self, pair, since, count):
+        raise NotImplementedError("Not Implemented.")
     
-    def get_crypto_holdings_capital(self):
-        pass
+    def get_recent_spreads(self, pair, since):
+        raise NotImplementedError("Not Implemented.")
     
-    def create_order(self):
-        pass
+    def add_order(self):
+        raise NotImplementedError("Not Implemented.")
+    
+    def add_order_batch(self):
+        raise NotImplementedError("Not Implemented.")
+    
+    def edit_order(self):
+        raise NotImplementedError("Not Implemented.")
     
     def cancel_order(self):
-        pass
+        raise NotImplementedError("Not Implemented.")
+    
+    def cancel_order_batch(self):
+        raise NotImplementedError("Not Implemented.")
+    
+    def get_account_balance(self):
+        raise NotImplementedError("Not Implemented.")
+    
+    def get_extended_balance(self):
+        raise NotImplementedError("Not Implemented.")
+    
+    def get_trade_balance(self, asset):
+        raise NotImplementedError("Not Implemented.")
+    
+    def get_open_orders(self):
+        raise NotImplementedError("Not Implemented.")
+    
+    def get_closed_orders(self):
+        raise NotImplementedError("Not Implemented.")
+    
+    def get_orders_info(self):
+        raise NotImplementedError("Not Implemented.")
+    
+    def get_trades_info(self):
+        raise NotImplementedError("Not Implemented.")
+    
+    def get_trades_history(self):
+        raise NotImplementedError("Not Implemented.")
+    
+    def get_trade_volume(self):
+        raise NotImplementedError("Not Implemented.")
+    
+    def get_holdings_and_bought_price(self):
+        raise NotImplementedError("Not Implemented.")
+    
+    def get_cash_and_equity(self):
+        raise NotImplementedError("Not Implemented.")
+    
+    def get_crypto_holdings_capital(self):
+        raise NotImplementedError("Not Implemented.")
     
     @classmethod
     def from_json(cls, json_data):
@@ -74,10 +121,10 @@ class Exchange():
 class KrakenExchange(Exchange):
     def __init__(self, exchange_config: ExchangeConfig={}):
         super().__init__()
-        self.classname = 'KrakenExchange'
+        self.classname = self.__class__.__name__
         if type(exchange_config) == dict:
             # Reloading
-            print(f"Reloading KrakenExchange...")
+            print(f"Reloading {self.classname}...")
             return
         
         self.exchange_config = {}
@@ -99,7 +146,7 @@ class KrakenExchange(Exchange):
         else:
             api_sec_display = '******'
         
-        return f"{{KrakenExchange api_key: {api_key_display}, api_sec: {api_sec_display}, mode: {self.mode}, api_base_url: {self.api_base_url}}}"
+        return f"{{{self.classname} api_key: {api_key_display}, api_sec: {api_sec_display}, mode: {self.mode}, api_base_url: {self.api_base_url}}}"
     
     def handle_response_errors(self, response):
         """Given a response from Kraken, raises an error if there is an error returned or if there is not result."""
@@ -593,35 +640,11 @@ class KrakenExchange(Exchange):
         result = response.json()
         self.handle_response_errors(result)
         return result
-    
-    @classmethod
-    def from_json(cls, json_data):
-        # Get the parameters of the __init__ method
-        init_params = inspect.signature(cls.__init__).parameters
-
-        # Extract known attributes
-        known_attributes = {param for param in init_params if param != 'self'}
-        known_data = {k: v for k, v in json_data.items() if k in known_attributes}
-
-        # Extract additional attributes
-        additional_data = {k: v for k, v in json_data.items() if k not in known_attributes}
-
-        # Create instance with known attributes
-        instance = cls(**known_data)
-
-        # Set additional attributes
-        for key, value in additional_data.items():
-            if isinstance(value, dict) and 'classname' in value and value['classname'] in CLASS_NAMES:
-                exec(f'setattr(instance, key, {value["classname"]}.from_json(value))')
-            else:
-                setattr(instance, key, value)
-        
-        return instance
 
 class CoinbaseExchange(Exchange):
     def __init__(self, api_key='', api_sec='', api_passphrase=''):
         super().__init__()
-        self.classname = 'CoinbaseExchange'
+        self.classname = self.__class__.__name__
         self.api_key = api_key
         self.api_sec = api_sec
         self.api_passphrase = api_passphrase
@@ -803,38 +826,14 @@ class CoinbaseExchange(Exchange):
             response = self.authenticated_request('DELETE', f"/orders/{order_id}")
         
         return response.json()
-    
-    @classmethod
-    def from_json(cls, json_data):
-        # Get the parameters of the __init__ method
-        init_params = inspect.signature(cls.__init__).parameters
-
-        # Extract known attributes
-        known_attributes = {param for param in init_params if param != 'self'}
-        known_data = {k: v for k, v in json_data.items() if k in known_attributes}
-
-        # Extract additional attributes
-        additional_data = {k: v for k, v in json_data.items() if k not in known_attributes}
-
-        # Create instance with known attributes
-        instance = cls(**known_data)
-
-        # Set additional attributes
-        for key, value in additional_data.items():
-            if isinstance(value, dict) and 'classname' in value and value['classname'] in CLASS_NAMES:
-                exec(f'setattr(instance, key, {value["classname"]}.from_json(value))')
-            else:
-                setattr(instance, key, value)
-        
-        return instance
 
 class RobinhoodCryptoExchange(Exchange):
     def __init__(self, exchange_config: ExchangeConfig={}):
         super().__init__()
-        self.classname = 'RobinhoodCryptoExchange'
+        self.classname = self.__class__.__name__
         if type(exchange_config) == dict:
             # Reloading
-            print(f"Reloading RobinhoodCryptoExchange...")
+            print(f"Reloading {self.classname}...")
             return
         
         self.exchange_config = {}
@@ -953,27 +952,3 @@ class RobinhoodCryptoExchange(Exchange):
     def get_orders(self) -> Any:
         path = "/api/v1/crypto/trading/orders/"
         return self.make_api_request("GET", path)
-    
-    @classmethod
-    def from_json(cls, json_data):
-        # Get the parameters of the __init__ method
-        init_params = inspect.signature(cls.__init__).parameters
-
-        # Extract known attributes
-        known_attributes = {param for param in init_params if param != 'self'}
-        known_data = {k: v for k, v in json_data.items() if k in known_attributes}
-
-        # Extract additional attributes
-        additional_data = {k: v for k, v in json_data.items() if k not in known_attributes}
-
-        # Create instance with known attributes
-        instance = cls(**known_data)
-
-        # Set additional attributes
-        for key, value in additional_data.items():
-            if isinstance(value, dict) and 'classname' in value and value['classname'] in CLASS_NAMES:
-                exec(f'setattr(instance, key, {value["classname"]}.from_json(value))')
-            else:
-                setattr(instance, key, value)
-        
-        return instance

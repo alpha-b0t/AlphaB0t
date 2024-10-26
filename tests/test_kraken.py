@@ -1,4 +1,4 @@
-from app.models.gridbot import KrakenGRIDBot
+from app.models.gridbot import GRIDBot
 from app.models.exchange import KrakenExchange
 from config import ExchangeConfig, GRIDBotConfig
 import pytest
@@ -23,8 +23,8 @@ def test_kraken_calculate_max_quantity_per_grid(total_investment: float, lower_p
     gridbot_config.take_profit = upper_price + 0.01
     gridbot_config.stop_loss = lower_price - 0.01
 
-    # Set up a KrakenGRIDBot
-    kraken_gridbot = KrakenGRIDBot(gridbot_config, exchange_config)
+    # Set up a GRIDBot
+    kraken_gridbot = GRIDBot(gridbot_config, exchange_config)
 
     # Change the gridbot's pair decimals to match the input value
     kraken_gridbot.pair_decimals = pair_decimals
@@ -53,8 +53,8 @@ def test_kraken_calculate_total_investment(quantity_per_grid: float, lower_price
     gridbot_config.take_profit = upper_price + 0.01
     gridbot_config.stop_loss = lower_price - 0.01
 
-    # Set up a KrakenGRIDBot
-    kraken_gridbot = KrakenGRIDBot(gridbot_config, exchange_config)
+    # Set up a GRIDBot
+    kraken_gridbot = GRIDBot(gridbot_config, exchange_config)
 
     # Change the gridbot's pair decimals to match the input value
     kraken_gridbot.pair_decimals = pair_decimals
@@ -65,4 +65,4 @@ def test_kraken_calculate_total_investment(quantity_per_grid: float, lower_price
     # Assert
     assert actual_investment == expected_investment
 
-# TODO: Test KrakenGRIDBot's calculate_profit method
+# TODO: Test GRIDBot's get_realized_gain method

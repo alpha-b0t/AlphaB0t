@@ -19,7 +19,7 @@ class Result():
         else:
             message_display = self.message
         
-        return f"{{Result status: {status_display}, data: {self.data}, message: {message_display}, code: {self.code}, meta: {self.meta}}}"
+        return f"{{{self.classname} status: {status_display}, data: {self.data}, message: {message_display}, code: {self.code}, meta: {self.meta}}}"
     
     def to_json(self):
         return jsonify({

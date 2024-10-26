@@ -1,3 +1,4 @@
+from app.models.bot import Bot
 from app.models.exchange import KrakenExchange
 from app.models.grid import Grid
 from app.models.ohlc import OHLC
@@ -5,49 +6,14 @@ from app.models.order import KrakenOrder
 from config import GRIDBotConfig
 import time
 from datetime import datetime
-import json
-import inspect
-from app.helpers.json_util import CustomEncoder
-from constants import CLASS_NAMES
 
-class GRIDBot():
-    def __init__(self, exchange, pair, days_to_run, mode, upper_price, lower_price, level_num, cash, stop_loss, take_profit):
-        self.classname = 'GRIDBot'
-        self.exchange = exchange
-        self.pair = pair
-        self.days_to_run = days_to_run
-        self.mode = mode
-        self.upper_price = upper_price
-        self.lower_price = lower_price
-        self.level_num = level_num
-        self.cash = cash
-        self.stop_loss = stop_loss
-        self.take_profit = take_profit
-    
-    def start(self):
-        pass
-    
-    def stop(self):
-        pass
-    
-    def pause(self):
-        pass
-    
-    def restart(self):
-        pass
-    
-    def update(self):
-        pass
-
-    def simulate_trading(self):
-        pass
-
-class KrakenGRIDBot(GRIDBot):
+class GRIDBot(Bot):
     def __init__(self, gridbot_config: GRIDBotConfig={}, exchange: KrakenExchange={}):
-        self.classname = 'KrakenGRIDBot'
+        super().__init__()
+        self.classname = self.__class__.__name__
         if type(gridbot_config) == dict and type(exchange) == dict:
             # Reloading
-            print(f"Reloading KrakenGRIDBot...")
+            print(f"Reloading {self.classname}...")
             return
         
         # self.gridbot_config = gridbot_config
@@ -155,9 +121,12 @@ class KrakenGRIDBot(GRIDBot):
 
         # TODO: Implement
         self.closed_orders = []
-        self.profit = 0
-        self.gain_percent = 0
+        self.realized_gain = 0
+        self.realized_gain_percent = 0
+        self.unrealized_gain = 0
+        self.unrealized_gain_percent = 0
         self.fee = 0
+        self.account_balances = {}
 
         # Fetch balances
         if self.exchange.api_key != '' and self.exchange.api_sec != '':
@@ -173,14 +142,10 @@ class KrakenGRIDBot(GRIDBot):
         else:
             name_display = self.name
         
-        return f"{{KrakenGRIDBot name: {name_display}, pair: {self.pair}, mode: {self.mode}, runtime: {self.get_runtime()}s, profit: {self.profit} {self.base_currency}, gain_percent: {self.gain_percent}%, fee: {self.fee} {self.base_currency}, total_investment: {self.total_investment} {self.base_currency}}}"
+        return f"{{{self.classname} name: {name_display}, pair: {self.pair}, mode: {self.mode}, runtime: {self.get_runtime()}s, realized_gain: {self.realized_gain} {self.base_currency}, realized_gain_percent: {self.realized_gain_percent}%, unrealized_gain: {self.unrealized_gain} {self.base_currency}, unrealized_gain_percent: {self.unrealized_gain_percent}%, fee: {self.fee} {self.base_currency}, total_investment: {self.total_investment} {self.base_currency}}}"
     
     def get_runtime(self):
         return time.time() - self.start_time
-
-    def check_exchange_api_permissions(self):
-        # TODO: Implement
-        pass
     
     def check_config(self):
         """Throws an error if the configurations are not correct."""
@@ -441,6 +406,7 @@ class KrakenGRIDBot(GRIDBot):
         self.account_trade_balances = self.get_available_trade_balance()
     
     def fetch_latest_ohlc(self):
+        # TODO: Refactor with self.fetch_latest_ohlc_pair
         """Fetches latest OHLC data. self.init_grid() must be called before this function is to be called."""
         for attempt in range(self.max_error_count):
             try:
@@ -458,30 +424,92 @@ class KrakenGRIDBot(GRIDBot):
         ohlc = ohlc_response.get('result')
         self.latest_ohlc = OHLC(ohlc[self.ohlc_asset_key][-1])
     
-    def calculate_profit(self):
-        # Updates self.profit, self.gain_percent, and self.fee
-        # Note that self.profit is realized profit, not unrealized profit
-        profit = 0
+    def fetch_latest_ohlc_pair(self, pair) -> OHLC:
+        """Fetches latest OHLC data for the given pair."""
+        for attempt in range(self.max_error_count):
+            try:
+                ohlc_response = self.exchange.get_ohlc_data(pair)
+                break
+            except Exception as e:
+                print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
+
+                if attempt == self.max_error_count - 1:
+                    print(f"Failed to make API request after {self.max_error_count} attempts")
+                    raise e
+                else:
+                    time.sleep(self.error_latency)
+        
+        ohlc = ohlc_response.get('result')
+
+        for key in ohlc.keys():
+            if key != 'last':
+                pair_key = key
+                break
+        
+        return OHLC(ohlc[pair_key][-1])
+    
+    def get_realized_gain(self):
+        """Updates self.realized_gain, self.realized_gain_percent, and self.fee."""
+        gain = 0
         fee = 0
 
         try:
             for i in range(len(self.closed_orders)):
                 if self.closed_orders[i].descr['type'] == 'buy':
-                    profit -= float(self.closed_orders[i].vol_exec) * float(self.closed_orders[i].price)
-                    profit -= float(self.closed_orders[i].fee)
+                    gain -= float(self.closed_orders[i].vol_exec) * float(self.closed_orders[i].price)
+                    gain -= float(self.closed_orders[i].fee)
 
                 else:
-                    profit += float(self.closed_orders[i].vol_exec) * float(self.closed_orders[i].price)
-                    profit -= float(self.closed_orders[i].fee)
+                    gain += float(self.closed_orders[i].vol_exec) * float(self.closed_orders[i].price)
+                    gain -= float(self.closed_orders[i].fee)
                 
                 fee += float(self.closed_orders[i].fee)
             
-            self.profit = profit
+            self.realized_gain = gain
             self.fee = fee
-            self.gain_percent = profit * 100 / self.total_investment
+            self.realized_gain_percent = gain * 100 / self.total_investment
         except Exception as e:
-            print(f"Error updating profit: {e}")
+            print(f"Error updating realized gain: {e}")
             print(f"Closed orders: {self.closed_orders}")
+    
+    def get_unrealized_gain(self):
+        """Updates self.unrealized_gain and self.unrealized_gain_percent."""
+        gain = 0
+
+        try:
+            for asset in self.account_balances.keys():
+                amount = float(self.account_balances[asset])
+                if amount != 0:
+                    if asset != 'ZUSD':
+                        for attempt in range(self.max_error_count):
+                            try:
+                                ohlc_asset_key = self.exchange.get_asset_info(asset)
+                                ohlc_asset_key = ohlc_asset_key.get('result')
+
+                                for key in ohlc_asset_key.keys():
+                                    ohlc_asset_key = ohlc_asset_key[key].get('altname')
+                                    break
+                                break
+                            except Exception as e:
+                                print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
+
+                                if attempt == self.max_error_count - 1:
+                                    print(f"Failed to make API request after {self.max_error_count} attempts")
+                                    raise e
+                                else:
+                                    time.sleep(self.error_latency)
+                        
+                        ohlc_asset_key += 'USD'
+                        gain += amount * self.fetch_latest_ohlc_pair(ohlc_asset_key).close
+                    else:
+                        gain += amount
+
+            gain -= self.total_investment
+            self.unrealized_gain = gain
+            self.unrealized_gain_percent = gain * 100 / self.total_investment
+        except Exception as e:
+            print(f"Error updating unrealized gain: {e}")
+            print(f"Account balances: {self.account_balances}")
     
     def calculate_max_quantity_per_grid(self, total_investment: float) -> float:
         prices = []
@@ -525,8 +553,11 @@ class KrakenGRIDBot(GRIDBot):
             while self.latest_ohlc.close > self.stop_loss and self.latest_ohlc.close < self.take_profit:
                 print("\n\nUpdating orders...")
                 self.update_orders()
-                
                 print("Finished updating orders.")
+
+                print("\n\nManaging orders...")
+                self.manage_orders()
+                print("Finished managing orders.")
 
                 print("\n\nGrids:")
                 for i in range(len(self.grids)):
@@ -547,7 +578,8 @@ class KrakenGRIDBot(GRIDBot):
                 print("=========================================")
                 time.sleep(self.latency)
                 print("Time:", datetime.now())
-                self.calculate_profit()
+                self.get_realized_gain()
+                self.get_unrealized_gain()
                 print(self)
 
                 # Get latest OHLC data
@@ -559,16 +591,16 @@ class KrakenGRIDBot(GRIDBot):
             
         except KeyboardInterrupt as e:
             print("User ended execution of program.")
-            print(f"Exporting KrakenGRIDBOT to bot database as {self.name}.json...")
+            print(f"Exporting GRIDBot to bot database as {self.name}.json...")
             self.stop()
-            print(f"Successfully exported KrakenGRIDBOT.")
+            print(f"Successfully exported GRIDBot.")
         
         except Exception as e:
-            print(f"KrakenGRIDBot: {self}")
+            print(f"GRIDBot: {self}")
             print(f"Grids: {self.grids}")
-            print(f"Exporting KrakenGRIDBOT to bot database as {self.name}.json...")
+            print(f"Exporting GRIDBot to bot database as {self.name}.json...")
             self.stop()
-            print(f"Successfully exported KrakenGRIDBOT.")
+            print(f"Successfully exported GRIDBot.")
             raise e
     
     def update_orders(self):
@@ -602,7 +634,8 @@ class KrakenGRIDBot(GRIDBot):
             for i in range(len(self.grids)):
                 if self.grids[i].order.txid != '':
                     self.grids[i].order.update(orders.get(self.grids[i].order.txid, {}))
-        
+    
+    def manage_orders(self):
         for i in range(len(self.grids)):
             if self.grids[i].status == 'active' and self.grids[i].order.txid != '':
                 if self.grids[i].order.status == 'closed':
@@ -750,14 +783,12 @@ class KrakenGRIDBot(GRIDBot):
     def stop(self):
         self.to_json_file(f'app/bots/{self.name}.json')
     
-    def pause(self):
-        pass
-    
     def restart(self):
         try:
             print("=========================================")
             print("Time:", datetime.now())
-            self.calculate_profit()
+            self.get_realized_gain()
+            self.get_unrealized_gain()
             print(self)
 
             # Get latest OHLC data
@@ -780,8 +811,11 @@ class KrakenGRIDBot(GRIDBot):
             while self.latest_ohlc.close > self.stop_loss and self.latest_ohlc.close < self.take_profit:
                 print("\n\nUpdating orders...")
                 self.update_orders()
-                
                 print("Finished updating orders.")
+
+                print("\n\nManaging orders...")
+                self.manage_orders()
+                print("Finished managing orders.")
 
                 print("\n\nGrids:")
                 for i in range(len(self.grids)):
@@ -802,7 +836,8 @@ class KrakenGRIDBot(GRIDBot):
                 print("=========================================")
                 time.sleep(self.latency)
                 print("Time:", datetime.now())
-                self.calculate_profit()
+                self.get_realized_gain()
+                self.get_unrealized_gain()
                 print(self)
 
                 # Get latest OHLC data
@@ -814,76 +849,14 @@ class KrakenGRIDBot(GRIDBot):
         
         except KeyboardInterrupt as e:
             print("User ended execution of program.")
-            print(f"Exporting KrakenGRIDBOT to bot database as {self.name}.json...")
+            print(f"Exporting GRIDBot to bot database as {self.name}.json...")
             self.stop()
-            print(f"Successfully exported KrakenGRIDBOT.")
+            print(f"Successfully exported GRIDBot.")
         
         except Exception as e:
-            print(f"KrakenGRIDBot: {self}")
+            print(f"GRIDBot: {self}")
             print(f"Grids: {self.grids}")
-            print(f"Exporting KrakenGRIDBOT to bot database as {self.name}.json...")
+            print(f"Exporting GRIDBot to bot database as {self.name}.json...")
             self.stop()
-            print(f"Successfully exported KrakenGRIDBOT.")
+            print(f"Successfully exported GRIDBot.")
             raise e
-    
-    def update(self):
-        pass
-
-    def simulate_trading(self):
-        pass
-    
-    def to_json_file(self, filename):
-        data = vars(self)
-        with open(filename, 'w') as f:
-            json.dump(data, f, indent=4, cls=CustomEncoder)
-    
-    @classmethod
-    def from_json_file(cls, filename):
-        with open(filename, 'r') as f:
-            data = json.load(f)
-        
-        # Get the parameters of the __init__ method
-        init_params = inspect.signature(cls.__init__).parameters
-
-        # Extract known attributes
-        known_attributes = {param for param in init_params if param != 'self'}
-        known_data = {k: v for k, v in data.items() if k in known_attributes}
-
-        # Extract additional attributes
-        additional_data = {k: v for k, v in data.items() if k not in known_attributes}
-
-        # Create instance with known attributes
-        instance = cls(**known_data)
-
-        # Set known attributes (to be safe)
-        for key, value in known_data.items():
-            setattr(instance, key, cls.recursive_object_creation(value))
-
-        # Set additional attributes
-        for key, value in additional_data.items():
-            setattr(instance, key, cls.recursive_object_creation(value))
-        
-        return instance
-    
-    @classmethod
-    def recursive_object_creation(cls, data):
-        if isinstance(data, dict):
-            if 'classname' in data and data['classname'] in CLASS_NAMES:
-                print(f"CLASS_NAMES: data['classname']: {data['classname']}")
-                # If the data is a dictionary with a 'classname' key, create an instance of the class
-                obj = globals()[data['classname']](*[data[attr] for attr in inspect.signature(globals()[data['classname']]).parameters.keys() if attr != 'self'])
-                for key, value in data.items():
-                    if key != 'classname':
-                        # Recursively set additional attributes
-                        setattr(obj, key, cls.recursive_object_creation(value))
-                return obj
-            else:
-                print(f"REGULAR: data: {data}")
-                # If the data is a regular dictionary, recursively handle its values
-                return {k: cls.recursive_object_creation(v) for k, v in data.items()}
-        elif isinstance(data, list):
-            # If the data is a list, recursively handle each element in the list
-            return [cls.recursive_object_creation(item) for item in data]
-        else:
-            # Base case: return data as is
-            return data
