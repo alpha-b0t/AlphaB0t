@@ -1,4 +1,4 @@
-# MoonTrader-engine
+# ColdCryptoBot-engine
 
 ## Getting started
 
