@@ -9,7 +9,7 @@ from model_constants import EPOCHS, BATCH_SIZE, SEQUENCE_LENGTH
 
 # Load in the training data
 # Assumes the dataset has columns 'UNIX time', 'open', 'high', 'low', 'close', 'vwap', 'volume', 'count'
-data = pd.read_csv('AI/data/crypto_training_data.csv')
+data = pd.read_csv('ML/data/crypto_training_data.csv')
 
 # Feature scaling
 sc = StandardScaler()
@@ -67,5 +67,5 @@ print(predictions_actual)
 # (You can use any suitable evaluation metric based on your requirement)
 
 # Save the trained model
-model.save('AI/models/crypto_price_model.h5')
+model.save('ML/models/crypto_price_model.h5')
 print('Model saved successfully.')

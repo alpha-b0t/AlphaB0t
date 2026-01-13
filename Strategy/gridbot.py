@@ -1,8 +1,8 @@
 import robin_stocks.robinhood as rh
-from RobinhoodCrypto.order import *
-from RobinhoodCrypto.error_queue import ErrorQueue, ErrorQueueLimitExceededError
+from Strategy.order import *
+from Strategy.error_queue import ErrorQueue, ErrorQueueLimitExceededError
 import time
-from RobinhoodCrypto.helpers import *
+from Strategy.helpers import *
 from config import GRIDBotConfig
 import random
 

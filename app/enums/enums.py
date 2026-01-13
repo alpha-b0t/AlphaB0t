@@ -8,7 +8,7 @@ class BotMode(Enum):
 class BotType(Enum):
     GRID = 0
     SENTIMENT = 1
-    AI = 2
+    ML = 2
     DCA = 3
 
 class ExchangeType(Enum):

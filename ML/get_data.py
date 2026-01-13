@@ -49,4 +49,4 @@ def fetch_data(pair, interval, since, filename):
         except:
             break
         time.sleep(5)
-    export_data_to_json(data[0], f'AI/data/{filename}')
+    export_data_to_json(data[0], f'ML/data/{filename}')

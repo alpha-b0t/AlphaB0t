@@ -15,8 +15,8 @@ __pycache__/
 # Bot files
 /app/bots/
 
-# AI data
-/AI/data/
+# ML data
+/ML/data/
 
-# AI models
-/AI/models/
+# ML models
+/ML/models/

@@ -1,14 +1,14 @@
 from config import RequestConfig, GRIDBotConfig, ExchangeConfig
 from app.models.exchange import KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange
 from app.models.gridbot import GRIDBot
-from AI.get_data import fetch_data
-from AI.json_helper import export_json_to_csv
-from AI.clean_data import remove_duplicates_and_sort
+from ML.get_data import fetch_data
+from ML.json_helper import export_json_to_csv
+from ML.clean_data import remove_duplicates_and_sort
 
 if __name__ == '__main__':
     request_config = RequestConfig()
     
-    if request_config.request in ['AI', 'ai']:
+    if request_config.request in ['ML', 'ml']:
         pair = input('Enter crypto pair: ')
         interval = int(input('Enter interval (1, 5, 15, 30, 60, 240, 1440, 10080, 21600): '))
         since = 0
