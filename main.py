@@ -1,7 +1,7 @@
 from config import RequestConfig, GRIDBotConfig, ExchangeConfig
 from app.models.exchange import KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange
 from app.models.gridbot import GRIDBot
-from ML.get_data import fetch_data
+from ML.get_data import fetch_data, 
 from ML.json_helper import export_json_to_csv
 from ML.clean_data import remove_duplicates_and_sort
 
@@ -25,6 +25,19 @@ if __name__ == '__main__':
         export_json_to_csv(json_filename, csv_filename)
 
         remove_duplicates_and_sort(csv_filename)
+
+        if input("Fetch fear and greed index data? (y/n): ").lower() == 'y':
+            fg_json_filename = input("Enter JSON filename to store fear and greed data (e.g. 'fear_and_greed_data.json'): ")
+            fg_csv_filename = input("Enter CSV filename to store fear and greed data (e.g. 'fear_and_greed_data.csv'): ")
+            fetch_fear_and_greed_data(
+                start=since,
+                filename=fg_json_filename
+            )
+
+            export_json_to_csv(fg_json_filename, fg_csv_filename)
+
+            remove_duplicates_and_sort(fg_csv_filename)
+
     else:
         gridbot_config = GRIDBotConfig()
         exchange_config = ExchangeConfig()
