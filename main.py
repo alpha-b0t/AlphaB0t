@@ -1,7 +1,7 @@
 from config import RequestConfig, GRIDBotConfig, ExchangeConfig
 from app.models.exchange import KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange
 from app.models.gridbot import GRIDBot
-from app.models.Strategy.ML.get_data import fetch_data, 
+from app.models.Strategy.ML.get_data import fetch_data, fetch_fear_and_greed_data
 from app.models.Strategy.ML.json_helper import export_json_to_csv
 from app.models.Strategy.ML.clean_data import remove_duplicates_and_sort
 
