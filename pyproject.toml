@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "moontrader-engine"
+name = "AlphaB0t-engine"
 version = "0.2.0"
 description = "A cryptocurrency trading application"
 authors = ["Tyler Pruitt"]

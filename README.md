@@ -1,5 +1,7 @@
 # AlphaB0t-engine
 
+![AlphaB0t-engine-logo](./126627933.png)
+
 ## ⚠️ Disclaimer
 
 This project is for **educational and research purposes only**.
@@ -12,6 +14,10 @@ This project is for **educational and research purposes only**.
 
 By using this software, you acknowledge that you are solely responsible for any financial decisions and outcomes.  
 Use this software **at your own risk**.
+
+## High-Level Architecture
+Essentially, the high-level architecture consists of four parts: a bot or automonous agent that executes the strategy it is given through the exchange it it connected to in the context of the mode the bot is assigned to, the strategy, the exchange, and the bot mode. To put it bluntly, one can swap out different bot modes, strategies, and exchanges for the bot.
+![High-Level Architecture](./AlphaB0t_Architecture.jpeg)
 
 ## Getting started
 
