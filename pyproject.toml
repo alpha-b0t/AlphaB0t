@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "AlphaB0t-engine"
-version = "0.2.0"
+name = "AlphaB0t"
+version = "0.3.0"
 description = "A cryptocurrency trading application"
 authors = ["Tyler Pruitt"]
 readme = "README.md"
@@ -21,3 +21,4 @@ requests = "^2.32.4"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
