@@ -44,9 +44,9 @@ def get_status():
         result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
         return result.to_api_response()
 
-# Simulate GRID trading strategy on historical data
-@api_bp.route("/api/grid-trading/simulate", methods=["POST"])
-def simulate_grid_trading():
+# Simulate trading strategy on historical data
+@api_bp.route("/api/strategy/simulate", methods=["POST"])
+def simulate_strategy():
     try:
         result = Result()
         # TODO: Implement logic
@@ -56,9 +56,9 @@ def simulate_grid_trading():
         return result.to_api_response()
 
 # Get genetically optimized parameters from backtesting
-@api_bp.route("/api/grid-trading/optimizations", methods=["GET"])
+@api_bp.route("/api/strategy/optimizations", methods=["GET"])
 def get_optimized_parameters():
-    """Get optimized parameters for a Grid Trading Bot."""
+    """Get optimized parameters for a strategy."""
     try:
         result = Result()
         # TODO: Implement logic
@@ -67,10 +67,10 @@ def get_optimized_parameters():
         result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
         return result.to_api_response()
 
-# Add a grid trading bot
-@api_bp.route("/api/grid-trading/bots/add", methods=["POST"])
-def add_grid_bot():
-    """Add a Grid Trading Bot."""
+# Add a trading bot
+@api_bp.route("/api/bots/add", methods=["POST"])
+def add_bot():
+    """Add a Bot."""
     try:
         result = Result()
         # TODO: Implement logic
@@ -79,10 +79,10 @@ def add_grid_bot():
         result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
         return result.to_api_response()
 
-# Start a grid trading bot
-@api_bp.route("/api/grid-trading/bots/start", methods=["POST"])
-def start_grid_bot():
-    """Start the Grid Trading Bot."""
+# Start a trading bot
+@api_bp.route("/api/bots/start", methods=["POST"])
+def start_bot():
+    """Start a Trading Bot."""
     try:
         result = Result()
         # TODO: Implement logic
@@ -91,10 +91,10 @@ def start_grid_bot():
         result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
         return result.to_api_response()
 
-# Pause a grid trading bot
-@api_bp.route("/api/grid-trading/bots/pause", methods=["POST"])
-def pause_grid_bot():
-    """Pause the Grid Trading Bot."""
+# Pause a trading bot
+@api_bp.route("/api/bots/pause", methods=["POST"])
+def pause_bot():
+    """Pause a Trading Bot."""
     try:
         result = Result()
         # TODO: Implement logic
@@ -103,10 +103,10 @@ def pause_grid_bot():
         result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
         return result.to_api_response()
 
-# Restart a grid trading bot
-@api_bp.route("/api/grid-trading/bots/restart", methods=["POST"])
-def restart_grid_bot():
-    """Restart the Grid Trading Bot."""
+# Restart a trading bot
+@api_bp.route("/api/bots/restart", methods=["POST"])
+def restart_bot():
+    """Restart a Trading Bot."""
     try:
         result = Result()
         # TODO: Implement logic
@@ -115,10 +115,10 @@ def restart_grid_bot():
         result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
         return result.to_api_response()
 
-# Stop a grid trading bot
-@api_bp.route("/api/grid-trading/bots/stop", methods=["POST"])
-def stop_grid_bot():
-    """Stop the Grid Trading Bot."""
+# Stop a trading bot
+@api_bp.route("/api/bots/stop", methods=["POST"])
+def stop_bot():
+    """Stop a Trading Bot."""
     try:
         result = Result()
         # TODO: Implement logic
@@ -127,10 +127,10 @@ def stop_grid_bot():
         result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
         return result.to_api_response()
 
-# Update a grid trading bot
-@api_bp.route("/api/grid-trading/bots/update", methods=["PUT"])
-def update_grid_bot():
-    """Update the Grid Trading Bot."""
+# Update a trading bot
+@api_bp.route("/api/bots/update", methods=["PUT"])
+def update_bot():
+    """Update a Trading Bot."""
     try:
         result = Result()
         # TODO: Implement logic
@@ -139,25 +139,25 @@ def update_grid_bot():
         result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
         return result.to_api_response()
 
-# Get a grid trading bot
-@api_bp.route("/api/grid-trading/bots/<int:grid_bot_id>", methods=["GET"])
-def get_grid_bot(grid_bot_id):
-    """Get the Grid Trading Bot."""
+# Get a trading bot
+@api_bp.route("/api/bots/<int:bot_id>", methods=["GET"])
+def get_bot(bot_id):
+    """Get a Trading Bot."""
     try:
         result = Result()
 
         # TODO: Implement logic
-        result.data = {"grid_bot_id": grid_bot_id}
+        result.data = {"bot_id": bot_id}
 
         return result.to_api_response()
     except Exception as e:
         result = Result(status="failed", message=f"Internal Server Error: {e}", code=500)
         return result.to_api_response()
 
-# Remove a grid trading bot
-@api_bp.route("/api/grid-trading/bots/remove", methods=["DELETE"])
-def remove_grid_bot():
-    """Remove the Grid Trading Bot."""
+# Remove a trading bot
+@api_bp.route("/api/bots/remove", methods=["DELETE"])
+def remove_bot():
+    """Remove a Trading Bot."""
     try:
         result = Result()
         # TODO: Implement logic
