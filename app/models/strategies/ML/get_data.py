@@ -50,7 +50,7 @@ def fetch_data(pair, interval, since, filename):
         except:
             break
         time.sleep(5)
-    export_data_to_json(data[0], f'app/models/Strategy/ML/data/{filename}')
+    export_data_to_json(data[0], f'app/models/strategies/ML/data/{filename}')
 
 def fetch_fear_and_greed_data(start: int = -1, filename: str = 'fear_and_greed_data.json'):
     """
@@ -99,7 +99,7 @@ def fetch_fear_and_greed_data(start: int = -1, filename: str = 'fear_and_greed_d
         }
         
         # Export data to JSON
-        export_data_to_json(combined_response, f'app/models/Strategy/ML/data/{filename}')
+        export_data_to_json(combined_response, f'app/models/strategies/ML/data/{filename}')
         
         print(f"Fear and greed index data fetched successfully!")
         print(f"Total records fetched: {len(all_data)}")
