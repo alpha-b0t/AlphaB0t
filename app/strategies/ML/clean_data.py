@@ -2,7 +2,7 @@ import csv
 from operator import itemgetter
 
 def remove_duplicates_and_sort(csv_file):
-    csv_file = f'app/models/strategies/ML/data/{csv_file}'
+    csv_file = f'app/strategies/ML/data/{csv_file}'
 
     # Read CSV file and load data into a list of dictionaries
     data = []

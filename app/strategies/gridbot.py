@@ -1,8 +1,8 @@
 import robin_stocks.robinhood as rh
-from app.models.strategies.order import *
-from app.models.strategies.error_queue import ErrorQueue, ErrorQueueLimitExceededError
+from app.strategies.order import *
+from app.strategies.error_queue import ErrorQueue, ErrorQueueLimitExceededError
 import time
-from app.models.strategies.helpers import *
+from app.strategies.helpers import *
 from config import GRIDBotConfig
 import random
 

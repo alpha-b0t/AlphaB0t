@@ -10,7 +10,7 @@ model_uuid = input("Enter the UUID of the model to use for prediction: ").strip(
 # Load in the prediction data
 # Assumes the dataset has columns 'UNIX time', 'open', 'high', 'low', 'close', 'vwap', 'volume', 'count'
 # plus volatility and other TA indicators (see the training data)
-prediction_data = pd.read_csv('app/models/strategies/ML/data/crypto_prediction_data.csv')
+prediction_data = pd.read_csv('app/strategies/ML/data/crypto_prediction_data.csv')
 
 scaler = StandardScaler()
 scaled_prediction_data = scaler.fit_transform(prediction_data)
@@ -24,7 +24,7 @@ X_prediction = np.array(X_prediction)
 
 # Load the trained model
 try:
-    model = load_model(f'app/models/strategies/ML/models/crypto_price_model_{model_uuid}.h5')
+    model = load_model(f'app/strategies/ML/models/crypto_price_model_{model_uuid}.h5')
 except FileNotFoundError:
     print(f"Error: Model file not found for UUID {model_uuid}")
     exit(1)
