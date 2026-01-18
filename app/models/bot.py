@@ -4,7 +4,7 @@ import json
 from app.helpers.json_util import CustomEncoder
 
 # The following imports are needed for loading the objects from JSON
-from app.models.cmc_api import CoinMarketCapAPI
+from app.exchanges.cmc_api import CoinMarketCapAPI
 from app.models.exchange import Exchange, KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange
 from app.models.grid import Grid
 from app.models.ohlc import OHLC

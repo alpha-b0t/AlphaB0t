@@ -1,5 +1,5 @@
 from app.models.exchange import KrakenExchange
-from app.models.cmc_api import CoinMarketCapAPI
+from app.exchanges.cmc_api import CoinMarketCapAPI
 from config import ExchangeConfig, CoinMarketCapAPIConfig
 import time
 import json
