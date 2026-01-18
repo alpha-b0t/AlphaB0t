@@ -1,5 +1,5 @@
 from app.models.bot import Bot
-from app.models.exchange import KrakenExchange
+from app.exchanges.exchange import KrakenExchange
 from app.models.ohlc import OHLC
 from app.models.order import KrakenOrder
 from app.exchanges.cmc_api import CoinMarketCapAPI

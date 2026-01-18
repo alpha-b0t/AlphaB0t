@@ -1,4 +1,4 @@
-from app.models.exchange import KrakenExchange
+from app.exchanges.exchange import KrakenExchange
 from app.exchanges.cmc_api import CoinMarketCapAPI
 from config import ExchangeConfig, CoinMarketCapAPIConfig
 import time
