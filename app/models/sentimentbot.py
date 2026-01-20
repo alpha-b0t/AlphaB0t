@@ -1,4 +1,4 @@
-from app.models.bot import Bot
+from app.bots.bot import Bot
 from app.exchanges.exchange import KrakenExchange
 from app.strategies.ohlc import OHLC
 from app.strategies.order import KrakenOrder
