@@ -8,7 +8,7 @@ from app.exchanges.cmc_api import CoinMarketCapAPI
 from app.exchanges.exchange import Exchange, KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange
 from app.strategies.grid import Grid
 from app.strategies.ohlc import OHLC
-from app.models.order import Order, KrakenOrder
+from app.strategies.order import Order, KrakenOrder
 from app.models.result import Result
 from config import AppConfig, RequestConfig, GRIDBotConfig, SentimentBotConfig, CoinMarketCapAPIConfig, ExchangeConfig
 # Don't need to import class inherited from Bot
