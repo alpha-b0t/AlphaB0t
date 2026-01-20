@@ -2,7 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from config import AppConfig
 from app.database.data_access import *
-from app.views.api import api_bp
+from app.api import api_bp
 
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
