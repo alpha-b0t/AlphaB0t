@@ -91,7 +91,14 @@ model = Sequential([
 model.compile(optimizer='adam', loss='mean_squared_error')
 
 # Train the model
-model.fit(X_train, y_train, epocs=EPOCHS, batch_size=BATCH_SIZE)
+model.fit(
+    X_train,
+    y_train,
+    epocs=EPOCHS,
+    batch_size=BATCH_SIZE,
+    validation_split=0.1,
+    shuffle=False
+)
 
 # Evaluate the model
 loss = model.evaluate(X_test, y_test)
