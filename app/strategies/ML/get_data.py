@@ -3,8 +3,15 @@ from app.exchanges.cmc_api import CoinMarketCapAPI
 from config import ExchangeConfig, CoinMarketCapAPIConfig
 import time
 import json
+import os
 
 def export_data_to_json(data, filename):
+    # Ensure the 'data' folder exists
+    folder = 'app/strategies/ML/data'
+    os.makedirs(folder, exist_ok=True)
+
+    filename = f'{folder}/{filename}'
+    
     try:
         with open(filename, 'w') as json_file:
             json.dump(data, json_file, indent=4)
@@ -14,6 +21,7 @@ def export_data_to_json(data, filename):
 
 def fetch_data(pair, interval, since, filename):
     # Kraken OHLC API's settings
+    # intervals is in minutes
     intervals = [1, 5, 15, 30, 60, 240, 1440, 10080, 21600]
     max_data_points_per_response = 720
 
@@ -50,7 +58,7 @@ def fetch_data(pair, interval, since, filename):
         except:
             break
         time.sleep(5)
-    export_data_to_json(data[0], f'app/strategies/ML/data/{filename}')
+    export_data_to_json(data[0], filename)
 
 def fetch_fear_and_greed_data(start: int = -1, filename: str = 'fear_and_greed_data.json'):
     """
@@ -99,7 +107,7 @@ def fetch_fear_and_greed_data(start: int = -1, filename: str = 'fear_and_greed_d
         }
         
         # Export data to JSON
-        export_data_to_json(combined_response, f'app/strategies/ML/data/{filename}')
+        export_data_to_json(combined_response, filename)
         
         print(f"Fear and greed index data fetched successfully!")
         print(f"Total records fetched: {len(all_data)}")

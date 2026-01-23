@@ -1,11 +1,10 @@
 import numpy as np
 import pandas as pd
-import tensorflow as tf
 import uuid
 from datetime import datetime
 from sklearn.preprocessing import StandardScaler
-from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.layers import Dense, LSTM, Dropout
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, LSTM, Dropout, Input
 from model_constants import EPOCHS, BATCH_SIZE, SEQUENCE_LENGTH, MA_SHORT, MA_LONG, EMA_SHORT, EMA_LONG, RSI_PERIOD, MACD_FAST, MACD_SLOW, MACD_SIGNAL
 
 # Load in the training data
@@ -47,7 +46,7 @@ data['macd_signal'] = data['macd'].ewm(span=MACD_SIGNAL, adjust=False).mean()
 data['macd_histogram'] = data['macd'] - data['macd_signal']
 
 # Fill NaN values created by rolling/ewm calculations
-data = data.fillna(method='bfill')
+data = data.bfill()
 
 # Save the processed data before scaling for future reference
 data.to_csv(f'app/strategies/ML/data/model_{model_uuid}_training_data.csv', index=False)
@@ -78,7 +77,8 @@ y_test = y[train_size:]
 
 # Build the LSTM model
 model = Sequential([
-    LSTM(units=50, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])),
+    Input(shape=(X.shape[1], X.shape[2])),  # time steps, features
+    LSTM(units=50, return_sequences=True),
     Dropout(0.2),
     LSTM(units=50, return_sequences=True),
     Dropout(0.2),
@@ -94,7 +94,7 @@ model.compile(optimizer='adam', loss='mean_squared_error')
 model.fit(
     X_train,
     y_train,
-    epocs=EPOCHS,
+    epochs=EPOCHS,
     batch_size=BATCH_SIZE,
     validation_split=0.1,
     shuffle=False

@@ -10,7 +10,7 @@ if __name__ == '__main__':
     
     if request_config.request in ['ML', 'ml']:
         pair = input('Enter crypto pair: ')
-        interval = int(input('Enter interval (1, 5, 15, 30, 60, 240, 1440, 10080, 21600): '))
+        interval = int(input('Enter interval in minutes (1, 5, 15, 30, 60, 240, 1440, 10080, 21600): '))
         since = 0
         json_filename = input("Enter JSON filename to store data (e.g. 'training_data.json'): ")
         csv_filename = input("Enter CSV filename to store data (e.g. 'crypto_training_data.csv'): ")
