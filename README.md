@@ -21,14 +21,19 @@ Essentially, the high-level architecture consists of four parts: a bot or automo
 
 ## Getting started
 
+```
+poetry install
+poetry env activate
+```
+
 To run the application locally, run the following command in your terminal:
 ```
-flask --app app run --debug
+poetry run flask --app app run --debug
 ```
 
 To run the Python unit tests implemented in pytest, run the following command in your terminal:
 ```
-pytest
+poetry run pytest
 ```
 
 ### Example .env file
