@@ -14,10 +14,11 @@ from config import AppConfig, RequestConfig, GRIDBotConfig, SentimentBotConfig, 
 # Don't need to import class inherited from Bot
 
 class Bot():
+    # Responsible for placing orders, executing strategy, managing risk, monitoring orders, and managing positions
     def __init__(self):
         self.classname = self.__class__.__name__
     
-    def start(self):
+    def run(self):
         raise NotImplementedError("Not Implemented.")
     
     def get_runtime(self):
@@ -51,9 +52,6 @@ class Bot():
         raise NotImplementedError("Not Implemented.")
     
     def pause(self):
-        raise NotImplementedError("Not Implemented.")
-    
-    def restart(self):
         raise NotImplementedError("Not Implemented.")
     
     def update(self):
