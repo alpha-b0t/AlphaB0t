@@ -4,86 +4,26 @@ from constants import CLASS_NAMES
 
 class Strategy():
     # TODO: Finish implementing (along with StrategyConfig in config.py)
-    def __init__(self):
+    def __init__(self, exchange, params):
         self.classname = self.__class__.__name__
+        self.exchange = exchange
+        self.params = params
     
-    def get_exchange_time(self):
-        raise NotImplementedError("Not Implemented.")
+    def calculate_position_size(self, balance: float, price: float) -> float:
+        """Calculate how much to buy/sell"""
+        raise NotImplementedError
     
-    def get_exchange_status(self):
-        raise NotImplementedError("Not Implemented.")
-    
-    def get_asset_info(self, asset, aclass):
-        raise NotImplementedError("Not Implemented.")
-    
-    def get_tradable_asset_pairs(self, pair, info):
-        raise NotImplementedError("Not Implemented.")
-    
-    def get_ticker_info(self, pair):
-        raise NotImplementedError("Not Implemented.")
-
-    def get_ohlc_data(self, pair, interval, since):
-        raise NotImplementedError("Not Implemented.")
-    
-    def get_order_book(self, pair, count):
-        raise NotImplementedError("Not Implemented.")
-    
-    def get_recent_trades(self, pair, since, count):
-        raise NotImplementedError("Not Implemented.")
-    
-    def get_recent_spreads(self, pair, since):
-        raise NotImplementedError("Not Implemented.")
-    
-    def add_order(self):
-        raise NotImplementedError("Not Implemented.")
-    
-    def add_order_batch(self):
-        raise NotImplementedError("Not Implemented.")
-    
-    def edit_order(self):
-        raise NotImplementedError("Not Implemented.")
-    
-    def cancel_order(self):
-        raise NotImplementedError("Not Implemented.")
-    
-    def cancel_order_batch(self):
-        raise NotImplementedError("Not Implemented.")
-    
-    def get_account_balance(self):
-        raise NotImplementedError("Not Implemented.")
-    
-    def get_extended_balance(self):
-        raise NotImplementedError("Not Implemented.")
-    
-    def get_trade_balance(self, asset):
-        raise NotImplementedError("Not Implemented.")
-    
-    def get_open_orders(self):
-        raise NotImplementedError("Not Implemented.")
-    
-    def get_closed_orders(self):
-        raise NotImplementedError("Not Implemented.")
-    
-    def get_orders_info(self):
-        raise NotImplementedError("Not Implemented.")
-    
-    def get_trades_info(self):
-        raise NotImplementedError("Not Implemented.")
-    
-    def get_trades_history(self):
-        raise NotImplementedError("Not Implemented.")
-    
-    def get_trade_volume(self):
-        raise NotImplementedError("Not Implemented.")
-    
-    def get_holdings_and_bought_price(self):
-        raise NotImplementedError("Not Implemented.")
-    
-    def get_cash_and_equity(self):
-        raise NotImplementedError("Not Implemented.")
-    
-    def get_crypto_holdings_capital(self):
-        raise NotImplementedError("Not Implemented.")
+    def get_required_data(self) -> list:
+        """Return required data types (OHLCV, indicators, etc.)"""
+        raise NotImplementedError
+        
+    def update_indicators(self, new_data: dict):
+        """Update internal indicators with new data"""
+        raise NotImplementedError
+        
+    def get_parameters(self) -> dict:
+        """Return current strategy parameters"""
+        return self.params
     
     @classmethod
     def from_json(cls, json_data):
