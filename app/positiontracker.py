@@ -1,8 +1,11 @@
 class Position:
-    def __init__(self, side, entry_price, quantity, stop_loss=None, take_profit=None):
-        self.side = side # "long" or "short"
-        self.entry_price = entry_price
-        self.quantity = quantity
+    def __init__(self, side: str, entry_price: float, quantity: float, stop_loss=None, take_profit=None):
+        if side not in ("long", "short"):
+            raise ValueError("side must be 'long' or 'short'")
+
+        self.side = side
+        self.entry_price = float(entry_price)
+        self.quantity = float(quantity)
         self.stop_loss = stop_loss
         self.take_profit = take_profit
 
