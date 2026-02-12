@@ -1001,52 +1001,52 @@ class RobinhoodOptionExchange(Exchange):
     
     def get_exchange_time(self):
         """Returns the current exchange time (as string)."""
-        return r.stocks.get_market_hours()
+        return rh.stocks.get_market_hours()
 
     def get_exchange_status(self):
         """Check if the exchange is open or closed."""
-        market_hours = r.markets.get_market_hours()
+        market_hours = rh.markets.get_market_hours()
         if market_hours['is_open']:
             return "Open"
         else:
             return "Closed"
 
     def get_asset_info(self, pair):
-        """Fetch asset information for a given option or stock."""
-        return r.options.get_option_instrument_data(pair)
+        """Fetch asset information for a given option."""
+        return rh.options.get_option_instrument_data(pair)
 
     def get_tradable_asset_pairs(self, pair, info):
         """Get tradable asset pairs."""
-        return r.options.find_tradable_options(symbol=pair)
+        return rh.options.find_tradable_options(symbol=pair)
     
     def get_ticker_info(self, pair):
-        """Get ticker info for a given asset pair (stock/option)."""
-        return r.stocks.get_quote(pair)
+        """Get ticker info for a given asset pair."""
+        return rh.options.get_option_instrument_data(pair)
 
-    def get_ohlc_data(self, pair, interval, since):
+    def get_ohlc_data(self, pair, expirationDate, strikePrice, optionType):
         """Fetch OHLC (Open, High, Low, Close) data."""
-        return r.stocks.get_historicals(pair, interval, span='day', bounds='regular')
+        return rh.options.get_option_market_data(pair, expirationDate, strikePrice, optionType)
 
     def get_order_book(self, pair, count):
         """Fetch order book for an asset pair."""
         # Robinhood API does not support direct order books, you could adapt this method.
-        return r.options.get_option_instrument(pair)  # Placeholder for now.
+        return rh.options.get_option_instrument_data(pair)  # Placeholder for now.
 
     def get_recent_trades(self, pair, since, count):
         """Fetch recent trades."""
-        return r.stocks.get_recent_trades(pair, count)
+        return rh.stocks.get_recent_trades(pair, count)
 
     def get_recent_spreads(self, pair, since):
         """Fetch recent spreads."""
         # Robinhood API does not directly provide spread data, needs alternative calculation
-        return r.options.get_option_instrument(pair)  # Placeholder for now.
+        return rh.options.get_option_instrument(pair)  # Placeholder for now.
 
     def add_order(self, symbol, quantity, option_type, price, action):
         """Place an order for options trading."""
         if action == "buy":
-            return r.options.order_buy_to_open(symbol, quantity, price)
+            return rh.options.order_buy_to_open(symbol, quantity, price)
         elif action == "sell":
-            return r.options.order_sell_to_close(symbol, quantity, price)
+            return rh.options.order_sell_to_close(symbol, quantity, price)
         return None
 
     def add_order_batch(self, orders):
@@ -1060,11 +1060,11 @@ class RobinhoodOptionExchange(Exchange):
 
     def edit_order(self, order_id, new_price):
         """Edit an existing order."""
-        return r.orders.update_option_order(order_id, price=new_price)
+        return rh.orders.update_option_order(order_id, price=new_price)
 
     def cancel_order(self, order_id):
         """Cancel an order."""
-        return r.orders.cancel_option_order(order_id)
+        return rh.orders.cancel_option_order(order_id)
 
     def cancel_order_batch(self, order_ids):
         """Cancel a batch of orders."""
@@ -1076,35 +1076,35 @@ class RobinhoodOptionExchange(Exchange):
 
     def get_account_balance(self):
         """Fetch account balance."""
-        return r.account.get_account()
+        return rh.account.get_account()
 
     def get_extended_balance(self):
         """Fetch extended balance (cash, buying power, margin)."""
-        return r.account.get_margin()
+        return rh.account.get_margin()
     
     def get_trade_balance(self, asset):
         """Fetch trade balance for a given asset."""
-        return r.stocks.get_balance(asset)
+        return rh.stocks.get_balance(asset)
     
     def get_open_orders(self):
         """Fetch all open orders."""
-        return r.orders.get_all_open_orders()
+        return rh.orders.get_all_open_orders()
 
     def get_closed_orders(self):
         """Fetch all closed orders."""
-        return r.orders.get_all_closed_orders()
+        return rh.orders.get_all_closed_orders()
 
     def get_orders_info(self):
         """Fetch detailed information for all orders."""
-        return r.orders.get_all_open_orders() + r.orders.get_all_closed_orders()
+        return rh.orders.get_all_open_orders() + rh.orders.get_all_closed_orders()
 
     def get_trades_info(self):
         """Fetch detailed trade information."""
-        return r.stocks.get_all_trades()
+        return rh.stocks.get_all_trades()
 
     def get_trades_history(self):
         """Fetch historical trade data."""
-        return r.stocks.get_trade_history()
+        return rh.stocks.get_trade_history()
 
     def get_trade_volume(self):
         """Fetch the total volume of trades."""
@@ -1114,14 +1114,14 @@ class RobinhoodOptionExchange(Exchange):
 
     def get_holdings_and_bought_price(self):
         """Fetch all holdings and the average bought price."""
-        holdings = r.stocks.get_all_positions()
+        holdings = rh.stocks.get_all_positions()
         return [{"symbol": position['instrument']['symbol'], 
                  "quantity": position['quantity'], 
                  "avg_price": position['average_buy_price']} for position in holdings]
 
     def get_cash_and_equity(self):
         """Fetch cash and equity balances."""
-        account_info = r.account.get_account()
+        account_info = rh.account.get_account()
         return {
             "cash": account_info['cash'],
             "equity": account_info['equity']
@@ -1130,5 +1130,5 @@ class RobinhoodOptionExchange(Exchange):
     def get_crypto_holdings_capital(self):
         """Fetch crypto holdings balance and capital."""
         # Robinhood crypto functionality is limited
-        crypto_balance = r.crypto.get_crypto_balance()
+        crypto_balance = rh.crypto.get_crypto_balance()
         return crypto_balance
