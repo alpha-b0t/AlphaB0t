@@ -1,14 +1,14 @@
 from config import RequestConfig, GRIDBotConfig, ExchangeConfig
 from app.exchanges.exchange import KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange
 from app.bots.gridbot import GRIDBot
-from app.strategies.ML.get_data import fetch_data, fetch_fear_and_greed_data
-from app.strategies.ML.json_helper import export_json_to_csv
-from app.strategies.ML.clean_data import remove_duplicates_and_sort
+from app.strategies.LSTM.get_data import fetch_data, fetch_fear_and_greed_data
+from app.strategies.LSTM.json_helper import export_json_to_csv
+from app.strategies.LSTM.clean_data import remove_duplicates_and_sort
 
 if __name__ == '__main__':
     request_config = RequestConfig()
     
-    if request_config.request in ['ML', 'ml']:
+    if request_config.request in ['LSTM', 'lstm']:
         pair = input('Enter crypto pair: ')
         interval = int(input('Enter interval in minutes (1, 5, 15, 30, 60, 240, 1440, 10080, 21600): '))
         since = 0

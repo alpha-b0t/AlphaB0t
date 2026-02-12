@@ -7,7 +7,7 @@ import os
 
 def export_data_to_json(data, filename):
     # Ensure the 'data' folder exists
-    folder = 'app/strategies/ML/data'
+    folder = 'app/strategies/LSTM/data'
     os.makedirs(folder, exist_ok=True)
 
     filename = f'{folder}/{filename}'
@@ -62,7 +62,7 @@ def fetch_data(pair, interval, since, filename):
 
 def fetch_fear_and_greed_data(start: int = -1, filename: str = 'fear_and_greed_data.json'):
     """
-    Fetch all historical fear and greed index data from CoinMarketCap API for ML training.
+    Fetch all historical fear and greed index data from CoinMarketCap API for LSTM training.
     Automatically paginates through all available data since the start parameter.
     
     Args:

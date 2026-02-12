@@ -9,7 +9,7 @@ from model_constants import EPOCHS, BATCH_SIZE, SEQUENCE_LENGTH, MA_SHORT, MA_LO
 
 # Load in the training data
 # Assumes the dataset has columns 'UNIX time', 'open', 'high', 'low', 'close', 'vwap', 'volume', 'count'
-data = pd.read_csv('app/strategies/ML/data/crypto_training_data.csv')
+data = pd.read_csv('app/strategies/LSTM/data/crypto_training_data.csv')
 
 # Generate a unique UUID for this model
 model_uuid = str(uuid.uuid4())
@@ -49,8 +49,8 @@ data['macd_histogram'] = data['macd'] - data['macd_signal']
 data = data.bfill()
 
 # Save the processed data before scaling for future reference
-data.to_csv(f'app/strategies/ML/data/model_{model_uuid}_training_data.csv', index=False)
-print(f"Training data saved: app/strategies/ML/data/model_{model_uuid}_training_data.csv")
+data.to_csv(f'app/strategies/LSTM/data/model_{model_uuid}_training_data.csv', index=False)
+print(f"Training data saved: app/strategies/LSTM/data/model_{model_uuid}_training_data.csv")
 
 # Feature scaling
 sc = StandardScaler()
@@ -150,9 +150,9 @@ metrics_data = {
 }
 
 metrics_df = pd.DataFrame(metrics_data)
-metrics_df.to_csv(f'app/strategies/ML/data/model_{model_uuid}_metrics.csv', index=False)
-print(f"Metrics saved: app/strategies/ML/data/model_{model_uuid}_metrics.csv")
+metrics_df.to_csv(f'app/strategies/LSTM/data/model_{model_uuid}_metrics.csv', index=False)
+print(f"Metrics saved: app/strategies/LSTM/data/model_{model_uuid}_metrics.csv")
 
 # Save the trained model
-model.save(f'app/strategies/ML/models/crypto_price_model_{model_uuid}.h5')
-print(f'Model saved: app/strategies/ML/models/crypto_price_model_{model_uuid}.h5')
+model.save(f'app/strategies/LSTM/models/crypto_price_model_{model_uuid}.h5')
+print(f'Model saved: app/strategies/LSTM/models/crypto_price_model_{model_uuid}.h5')
