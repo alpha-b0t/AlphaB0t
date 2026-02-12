@@ -12,6 +12,7 @@ import datetime
 from typing import Any, Dict, Optional
 from cryptography.hazmat.primitives.asymmetric import ed25519
 import robin_stocks.robinhood import rh
+from app.helpers import round_down_to_cents
 
 class Exchange():
     def __init__(self):
@@ -92,7 +93,7 @@ class Exchange():
     def get_cash_and_equity(self):
         raise NotImplementedError("Not Implemented.")
     
-    def get_crypto_holdings_capital(self):
+    def get_holdings_capital(self):
         raise NotImplementedError("Not Implemented.")
     
     @classmethod
@@ -1043,10 +1044,40 @@ class RobinhoodOptionExchange(Exchange):
 
     def add_order(self, symbol, quantity, option_type, price, action):
         """Place an order for options trading."""
+        """
+        robin_stocks.robinhood.orders.order_buy_option_limit(positionEffect, creditOrDebit, price, symbol, quantity, expirationDate, strike, optionType='both', account_number=None, timeInForce='gtc', jsonify=True)[source]
+        Submits a limit order for an option. i.e. place a long call or a long put.
+
+        Parameters:
+        positionEffect (str) – Either ‘open’ for a buy to open effect or ‘close’ for a buy to close effect.
+
+        creditOrDebit (str) – Either ‘debit’ or ‘credit’.
+
+        price (float) – The limit price to trigger a buy of the option.
+
+        symbol (str) – The stock ticker of the stock to trade.
+
+        quantity (int) – The number of options to buy.
+
+        expirationDate (str) – The expiration date of the option in ‘YYYY-MM-DD’ format.
+
+        strike (float) – The strike price of the option.
+
+        optionType (str) – This should be ‘call’ or ‘put’
+
+        account_number (Optional[str]) – the robinhood account number.
+
+        timeInForce (Optional[str]) – Changes how long the order will be in effect for. ‘gtc’ = good until cancelled. ‘gfd’ = good for the day. ‘ioc’ = immediate or cancel. ‘opg’ execute at opening.
+
+        jsonify (Optional[str]) – If set to False, function will return the request object which contains status code and headers.
+
+        Returns:
+        Dictionary that contains information regarding the buying of options, such as the order id, the state of order (queued, confired, filled, failed, canceled, etc.), the price, and the quantity.
+        """
         if action == "buy":
-            return rh.options.order_buy_to_open(symbol, quantity, price)
+            return rh.options.order_buy_option_limit(symbol, quantity, price)
         elif action == "sell":
-            return rh.options.order_sell_to_close(symbol, quantity, price)
+            return rh.options.order_sell_option_limit(symbol, quantity, price)
         return None
 
     def add_order_batch(self, orders):
@@ -1088,7 +1119,7 @@ class RobinhoodOptionExchange(Exchange):
     
     def get_open_orders(self):
         """Fetch all open orders."""
-        return rh.orders.get_all_open_orders()
+        return rh.orders.get_all_open_option_orders()
 
     def get_closed_orders(self):
         """Fetch all closed orders."""
@@ -1096,7 +1127,7 @@ class RobinhoodOptionExchange(Exchange):
 
     def get_orders_info(self):
         """Fetch detailed information for all orders."""
-        return rh.orders.get_all_open_orders() + rh.orders.get_all_closed_orders()
+        return rh.orders.get_all_option_positions()
 
     def get_trades_info(self):
         """Fetch detailed trade information."""
@@ -1109,8 +1140,7 @@ class RobinhoodOptionExchange(Exchange):
     def get_trade_volume(self):
         """Fetch the total volume of trades."""
         # No direct Robinhood method, but could be calculated from trade history.
-        trades = self.get_trades_history()
-        return sum([trade['quantity'] for trade in trades])
+        raise NotImplementedError
 
     def get_holdings_and_bought_price(self):
         """Fetch all holdings and the average bought price."""
@@ -1127,8 +1157,11 @@ class RobinhoodOptionExchange(Exchange):
             "equity": account_info['equity']
         }
 
-    def get_crypto_holdings_capital(self):
-        """Fetch crypto holdings balance and capital."""
-        # Robinhood crypto functionality is limited
-        crypto_balance = rh.crypto.get_crypto_balance()
-        return crypto_balance
+    def get_holdings_capital(self):
+        """Fetch holdings balance using the market price."""
+        capital = 0.00
+        
+        for asset_name, amount in self.holdings.items():
+            capital += amount * float(self.get_latest_quote(asset_name)['mark_price'])
+        
+        return round_down_to_cents(capital)
