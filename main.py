@@ -5,6 +5,9 @@ from app.bots.gridbot import GRIDBot
 from app.enums.enums import RequestType, BotMode, StrategyType, ExchangeType, ExitAction
 from app.riskmanager import RiskManager
 from app.strategies.strategy import Strategy, GridStrategy, LSTMStrategy
+from app.strategies.LSTM.get_data import fetch_training_data
+from app.strategies.LSTM.train_model import train_model
+from app.strategies.LSTM.predict import predict_using_trained_model
 
 if __name__ == '__main__':
     request_config = RequestConfig()
@@ -54,5 +57,9 @@ if __name__ == '__main__':
             pass
         else:
             print(f"Exchange name {exchange_config.exchange_name} not found")
+    elif request_config.request in ['LSTM_TRAIN', 'lstm_train']:
+        fetch_training_data()
+
+        train_model()
     else:
         print(f"Request {request_config.request} not valid")
