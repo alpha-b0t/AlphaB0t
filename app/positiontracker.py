@@ -1,24 +1,35 @@
 class Position:
-    def __init__(self, side: str, entry_price: float, quantity: float, stop_loss=None, take_profit=None):
+    def __init__(self, ticker: str, side: str, entry_price: float, quantity: float, status="Open", stop_loss=None, take_profit=None):
         if side not in ("long", "short"):
             raise ValueError("side must be 'long' or 'short'")
 
+        self.ticker = ticker
         self.side = side
         self.entry_price = float(entry_price)
         self.quantity = float(quantity)
+        self.status = status
         self.stop_loss = stop_loss
         self.take_profit = take_profit
+    
+    def __repr__(self):
+        return f"{{{self.classname} ticker: {self.ticker}, side: {self.side}, entry price: {self.entry_price}, quantity: {self.quantity}, status: {self.status}, stop loss: {self.stop_loss}, take profit: {self.take_profit}}}"
 
 class PositionManager:
     def __init__(self):
         self.position = None
         self.realized_pnl: float = 0.0
+        self.closed_positions = []
+    
+    def __repr__(self):
+        return f"{{{self.classname} realized PnL: {self.realized_pnl}, num of closed positions: {len(self.closed_positions)}}}"
 
-    def track_position(
+    def open_position(
         self,
+        ticker: str,
         side: str,
         entry_price: float,
         quantity: float,
+        status: str = "Open",
         stop_loss: float = None,
         take_profit: float = None,
     ):
@@ -27,9 +38,11 @@ class PositionManager:
             raise Exception("Position already open")
 
         self.position = Position(
+            ticker=ticker,
             side=side,
             entry_price=entry_price,
             quantity=quantity,
+            status=status
             stop_loss=stop_loss,
             take_profit=take_profit,
         )
@@ -41,6 +54,8 @@ class PositionManager:
 
         pnl = self._calculate_pnl(exit_price)
         self.realized_pnl += pnl
+        self.position.status = "Closed"
+        self.closed_positions += [self.position]
         self.position = None
         return pnl
 
