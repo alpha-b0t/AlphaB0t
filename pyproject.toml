@@ -22,6 +22,7 @@ pandas = "^3.0.0"
 scikit-learn = "^1.8.0"
 numpy = "1.26"
 tensorflow = "2.16.2"
+robin-stocks = "^3.4.0"
 
 
 [build-system]
