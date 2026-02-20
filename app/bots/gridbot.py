@@ -782,6 +782,8 @@ class GRIDBot(Bot):
                             self.grids[i-1].order.update(order.get(txid, {}))
     
     def stop(self):
+        import os
+        os.makedirs('app/bots/local', exist_ok=True)
         self.to_json_file(f'app/bots/local/{self.name}.json')
     
     def restart(self):
@@ -861,3 +863,89 @@ class GRIDBot(Bot):
             self.stop()
             print(f"Successfully exported GRIDBot.")
             raise e
+
+    def simulate_trading(self):
+        """
+        Backtest the grid strategy against historical OHLC data without
+        placing real orders.
+
+        Iterates over previously-fetched OHLC candles and simulates order
+        fills whenever price crosses a grid level.  Results are printed to
+        stdout and returned as a summary dict.
+        """
+        print("[GRIDBot] Running simulation...")
+
+        # Fetch historical OHLC data (1-minute candles, last 720 candles)
+        for attempt in range(self.max_error_count):
+            try:
+                ohlc_response = self.exchange.get_ohlc_data(self.pair, interval=1)
+                break
+            except Exception as e:
+                print(f"[GRIDBot] Error fetching OHLC (attempt {attempt+1}/{self.max_error_count}): {e}")
+                if attempt == self.max_error_count - 1:
+                    raise
+                import time as _time
+                _time.sleep(self.error_latency)
+
+        ohlc_raw = ohlc_response.get('result', {})
+        asset_key = next((k for k in ohlc_raw if k != 'last'), None)
+        if asset_key is None:
+            print("[GRIDBot] No OHLC data returned.")
+            return {}
+
+        candles = ohlc_raw[asset_key]
+
+        # Build price levels
+        prices = [
+            round(self.lower_price + i * (self.upper_price - self.lower_price) / (self.level_num - 1),
+                  getattr(self, 'pair_decimals', 4))
+            for i in range(self.level_num)
+        ]
+
+        qty = getattr(self, 'quantity_per_grid', 1.0)
+
+        # Simple grid simulation: track position & PnL
+        holdings = 0.0
+        cash = self.total_investment
+        trade_log = []
+
+        for candle in candles:
+            ohlc = OHLC(candle)
+            low_price = ohlc.low
+            high_price = ohlc.high
+
+            for level_price in prices:
+                # Simulated buy fill: price dipped to or below buy level
+                if level_price < ohlc.close and low_price <= level_price:
+                    cost = level_price * qty
+                    if cash >= cost:
+                        cash -= cost
+                        holdings += qty
+                        trade_log.append({'side': 'buy', 'price': level_price, 'qty': qty})
+
+                # Simulated sell fill: price rose to or above sell level
+                elif level_price > ohlc.close and high_price >= level_price:
+                    if holdings >= qty:
+                        cash += level_price * qty
+                        holdings -= qty
+                        trade_log.append({'side': 'sell', 'price': level_price, 'qty': qty})
+
+        # Final portfolio value
+        final_price = OHLC(candles[-1]).close
+        total_value = cash + holdings * final_price
+        pnl = total_value - self.total_investment
+
+        summary = {
+            'total_trades': len(trade_log),
+            'buy_trades': sum(1 for t in trade_log if t['side'] == 'buy'),
+            'sell_trades': sum(1 for t in trade_log if t['side'] == 'sell'),
+            'final_cash': round(cash, 4),
+            'final_holdings': round(holdings, 6),
+            'final_price': final_price,
+            'total_value': round(total_value, 4),
+            'pnl': round(pnl, 4),
+            'pnl_pct': round(pnl * 100 / self.total_investment, 2) if self.total_investment else 0,
+        }
+
+        print(f"[GRIDBot] Simulation complete: {summary}")
+        return summary

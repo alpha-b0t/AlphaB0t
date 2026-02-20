@@ -47,11 +47,14 @@ class CoinMarketCapAPI():
     
     def handle_response_errors(self, response):
         try:
-            # TODO: Implement
-            assert response['error_code'] == 0
-        except Exception as e:
+            status = response.get('status', {})
+            error_code = status.get('error_code', response.get('error_code', 0))
+            if error_code != 0:
+                error_message = status.get('error_message', response.get('error_message', 'Unknown error'))
+                raise ValueError(f"CoinMarketCap API error {error_code}: {error_message}")
+        except (AttributeError, TypeError) as e:
             print(f"response: {response}")
-            raise e
+            raise ValueError(f"Unexpected response format: {e}")
     
     @classmethod
     def from_json(cls, json_data):
