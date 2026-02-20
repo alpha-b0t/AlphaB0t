@@ -1,6 +1,7 @@
 class RiskManager:
     def __init__(
         self,
+        portfolio_balance: float,
         risk_per_trade: float = 0.01,      # 1%
         max_position_pct: float = 0.2,     # 20% of balance
         max_drawdown_pct: float = 0.15     # 15% max drawdown
@@ -9,7 +10,7 @@ class RiskManager:
         self.max_position_pct = max_position_pct
         self.max_drawdown_pct = max_drawdown_pct
 
-        self.peak_balance = 0.0
+        self.peak_balance = portfolio_balance
 
     def validate_order(self, order: dict, balance: float) -> bool:
         """
