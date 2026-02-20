@@ -42,6 +42,8 @@ if __name__ == '__main__':
                 kraken_lstm_bot = Bot()
         elif exchange_config.exchange_name == "Coinbase":
             pass
+        elif exchange_config.exchange_name == "Binance_US":
+            pass
         else:
             print(f"Exchange name {exchange_config.exchange_name} not found")
     else:
