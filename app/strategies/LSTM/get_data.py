@@ -1,6 +1,5 @@
 from app.exchanges.exchange import KrakenExchange
 from app.exchanges.cmc_api import CoinMarketCapAPI
-from app.strategies.LSTM.get_data import fetch_data, fetch_fear_and_greed_data
 from app.strategies.LSTM.json_helper import export_json_to_csv
 from app.strategies.LSTM.clean_data import remove_duplicates_and_sort
 from app.strategies.LSTM.model_constants import INTERVAL
