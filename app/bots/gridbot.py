@@ -1,5 +1,6 @@
 from app.bots.bot import Bot
-from app.exchanges.exchange import KrakenExchange
+from app.exchanges.exchange import Exchange, KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange, RobinhoodOptionExchange
+from app.strategies.strategy import Strategy
 from app.strategies.grid import Grid
 from app.strategies.ohlc import OHLC
 from app.strategies.order import KrakenOrder
@@ -8,16 +9,16 @@ import time
 from datetime import datetime
 
 class GRIDBot(Bot):
-    def __init__(self, gridbot_config: GRIDBotConfig={}, exchange: KrakenExchange={}):
+    def __init__(self, gridbot_config: GRIDBotConfig={}, exchange: Exchange={}, strategy: Strategy={}):
         super().__init__()
         self.classname = self.__class__.__name__
-        if type(gridbot_config) == dict and type(exchange) == dict:
+        if type(gridbot_config) == dict and type(exchange) == dict and type(strategy) == dict:
             # Reloading
             print(f"Reloading {self.classname}...")
             return
         
-        # self.gridbot_config = gridbot_config
         self.exchange = exchange
+        self.strategy = strategy
 
         self.name = gridbot_config.name
         self.pair = gridbot_config.pair

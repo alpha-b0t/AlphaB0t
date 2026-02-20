@@ -11,7 +11,7 @@ from constants import CLASS_NAMES
 import datetime
 from typing import Any, Dict, Optional
 from cryptography.hazmat.primitives.asymmetric import ed25519
-import robin_stocks.robinhood import rh
+import robin_stocks.robinhood as rh
 from app.helpers import round_down_to_cents
 
 class Exchange():

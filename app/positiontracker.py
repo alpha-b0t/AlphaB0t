@@ -1,6 +1,6 @@
 class Position:
     def __init__(self, ticker: str, side: str, entry_price: float, quantity: float, status="Open", stop_loss=None, take_profit=None, risk_reward_ratio: float = 0.0, chance_of_success: float = 0.0):
-        self.classname = "Position"
+        self.classname = self.__class__.__name__
         if side not in ("long", "short"):
             raise ValueError("side must be 'long' or 'short'")
 
@@ -19,7 +19,7 @@ class Position:
 
 class PositionManager:
     def __init__(self):
-        self.classname = "PositionManager"
+        self.classname = self.__class__.__name__
         self.position = None
         self.realized_pnl: float = 0.0
         self.closed_positions = []
