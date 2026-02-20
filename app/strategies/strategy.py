@@ -293,7 +293,7 @@ class LSTMStrategy(Strategy):
         fetch_data(
             pair=self.pair,
             interval=int(self.model_metrics['interval']),
-            since=self.get_lookback_unix(20),
+            since=self.get_lookback_unix(int(self.model_metrics['interval']) * 60 * 2),
             filename='prediction_data.json'
         )
 
@@ -334,23 +334,26 @@ class LSTMStrategy(Strategy):
         data.to_csv(f'app/strategies/LSTM/data/model_{self.model_uuid}_prediction_data.csv', index=False)
         print(f"Prediction data saved: app/strategies/LSTM/data/model_{self.model_uuid}_prediction_data.csv")
 
+        prediction_data = pd.read_csv(f'app/strategies/LSTM/data/model_{self.model_uuid}_prediction_data.csv')
+        prediction_data = data # FIX ME
+
         # Feature scaling
         sc = StandardScaler()
-        scaled_prediction_data = sc.fit_transform(data)
+        scaled_prediction_data = sc.fit_transform(prediction_data)
 
         # Prepare the sequences
         X_prediction = []
-        for i in range(len(scaled_prediction_data) - self.model_metrics['sequence_length']):
-            X_prediction.append(scaled_prediction_data[i:i+self.model_metrics['sequence_length']])
+        for i in range(len(scaled_prediction_data) - int(self.model_metrics['sequence_length'])):
+            X_prediction.append(scaled_prediction_data[i:i+int(self.model_metrics['sequence_length'])])
 
         X_prediction = np.array(X_prediction)
 
-        return X_prediction
+        return X_prediction, prediction_data
     
     def get_price_prediction(self):
-        prediction_data = self.get_prediction_data()
+        X_prediction, prediction_data = self.get_prediction_data()
 
-        predictions = self.model.predict(prediction_data)
+        predictions = self.model.predict(X_prediction)
 
         # Reshape the predictions to match scaler's inverse_transform input shape
         predictions_reshaped = predictions.reshape(-1, 1)
@@ -366,8 +369,8 @@ class LSTMStrategy(Strategy):
     
     def get_lookback_unix(self, buffer_in_seconds: int = 5) -> int:
         # Interval is in minutes
-        lookback_seconds = int(self.model_metrics['interval']) * 60 + buffer_in_seconds
-        return int(time.time()) - lookback_seconds
+        lookback_seconds = int(self.model_metrics['interval']) * int(self.model_metrics['sequence_length']) * 60 + buffer_in_seconds
+        return int(time.time() - lookback_seconds)
     
     def get_signal(self) -> str:
         price_predictions = self.get_price_prediction()
@@ -375,9 +378,13 @@ class LSTMStrategy(Strategy):
         
         # TODO: Edit buffer
         buffer = 0.02 # 2%
-        if price_predictions[-1] > latest_ohlc.close * (1 + buffer):
+        
+        print(f"Current price: {latest_ohlc.close}")
+        print(f"Predicted close price: {price_predictions[-1][0]}")
+        print(f"Predicted change: {round(price_predictions[-1][0] - latest_ohlc.close, 2)}, ({round((price_predictions[-1][0] - latest_ohlc.close) * 100 / latest_ohlc.close, 2}%)")
+        if price_predictions[-1][0] > latest_ohlc.close * (1 + buffer):
             return 'BUY'
-        elif price_predictions[-1] < latest_ohlc.close * (1 - buffer):
+        elif price_predictions[-1][0] < latest_ohlc.close * (1 - buffer):
             return 'SELL'
         else:
             return 'HOLD'

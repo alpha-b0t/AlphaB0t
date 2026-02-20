@@ -7,7 +7,6 @@ from app.riskmanager import RiskManager
 from app.strategies.strategy import Strategy, GridStrategy, LSTMStrategy
 from app.strategies.LSTM.get_data import fetch_training_data
 from app.strategies.LSTM.train_model import train_model
-from app.strategies.LSTM.predict import predict_using_trained_model
 
 if __name__ == '__main__':
     request_config = RequestConfig()
@@ -54,6 +53,8 @@ if __name__ == '__main__':
                 kraken_lstm_bot = Bot(bot_config, kraken_exchange, lstm_strategy, risk_manager)
 
                 kraken_lstm_bot.run()
+            else:
+                print(f"Strategy {strategy_config.strategy} not valid")
         elif exchange_config.exchange_name == "Coinbase":
             pass
         elif exchange_config.exchange_name == "Binance_US":

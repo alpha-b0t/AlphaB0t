@@ -6,7 +6,7 @@ INTERVAL = 1 # Interval in minutes (1, 5, 15, 30, 60, 240, 1440, 10080, 21600)
 
 # Define the sequence length (number of time steps) for LSTM
 # You can adjust this based on the nature of your data
-SEQUENCE_LENGTH = 24
+SEQUENCE_LENGTH = 60 # Sequence length should be >= the longest length required for technical indicators
 
 # Technical Indicator Parameters
 MA_SHORT = 10      # Short-term Moving Average period
