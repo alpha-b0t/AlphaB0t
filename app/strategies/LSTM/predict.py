@@ -4,7 +4,7 @@ from sklearn.preprocessing import StandardScaler
 from tensorflow.keras.models import load_model
 from model_constants import SEQUENCE_LENGTH
 
-if __name__ == '__main__':
+def predict_using_trained_model():
     # Ask user for the model UUID
     model_uuid = input("Enter the UUID of the model to use for prediction: ").strip()
 
@@ -46,3 +46,6 @@ if __name__ == '__main__':
     # Now, predictions_actual contains the predicted close prices for the new data
     print(f"\nPredictions using model {model_uuid}:")
     print(predictions_actual)
+
+if __name__ == '__main__':
+    predict_using_trained_model()

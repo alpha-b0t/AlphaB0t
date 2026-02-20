@@ -16,7 +16,7 @@ def calculate_rsi(data, period=RSI_PERIOD):
     rsi = 100 - (100 / (1 + rs))
     return rsi
 
-if __name__ == "__main__":
+def train_model():
     # Load in the training data
     # Assumes the dataset has columns 'UNIX time', 'open', 'high', 'low', 'close', 'vwap', 'volume', 'count'
     data = pd.read_csv('app/strategies/LSTM/data/crypto_training_data.csv')
@@ -158,3 +158,6 @@ if __name__ == "__main__":
     # Save the trained model
     model.save(f'app/strategies/LSTM/models/model_{model_uuid}.h5')
     print(f'Model saved: app/strategies/LSTM/models/model_{model_uuid}.h5')
+
+if __name__ == "__main__":
+    train_model()

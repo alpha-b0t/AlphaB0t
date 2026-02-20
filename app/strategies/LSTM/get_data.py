@@ -104,7 +104,7 @@ def fetch_fear_and_greed_data(start: int = -1, filename: str = 'fear_and_greed_d
         print(f"Error fetching fear and greed data: {e}")
         raise e
 
-if __name__ == "__main__":
+def fetch_training_data():
     # Fetch training data
     pair = input('Enter crypto pair: ')
     since = 0
@@ -131,3 +131,6 @@ if __name__ == "__main__":
         )
 
         export_json_to_csv(fg_json_filename, fg_csv_filename)
+
+if __name__ == "__main__":
+    fetch_training_data()
