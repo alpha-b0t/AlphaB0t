@@ -17,6 +17,19 @@ Use this software **at your own risk**.
 
 ## High-Level Architecture
 Essentially, the high-level architecture consists of four parts: a bot or automonous agent that executes the strategy it is given through the exchange it it connected to in the context of the mode the bot is assigned to, the strategy, the exchange, and the bot mode. To put it bluntly, one can swap out different bot modes, strategies, and exchanges for the bot.
+
+```
+Strategy ------------|
+                     |
+Exchange ------------|
+                     |
+RiskManager ---------|--------> Bot
+                     |
+PositionManager -----|
+                     |
+Mode ----------------|
+```
+
 ![High-Level Architecture](./images/AlphaB0t_Architecture.jpeg)
 
 ## Getting started
