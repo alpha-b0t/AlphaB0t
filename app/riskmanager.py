@@ -1,20 +1,15 @@
 import inspect
 from constants import CLASS_NAMES
+from config import RiskManagerConfig
 
 class RiskManager:
-    def __init__(
-        self,
-        portfolio_balance: float,
-        risk_per_trade: float = 0.01,      # 1%
-        max_position_pct: float = 0.2,     # 20% of balance
-        max_drawdown_pct: float = 0.15     # 15% max drawdown
-    ):
+    def __init__(self, riskmanager_config: RiskManagerConfig = {}):
         self.classname = self.__class__.__name__
-        self.risk_per_trade = risk_per_trade
-        self.max_position_pct = max_position_pct
-        self.max_drawdown_pct = max_drawdown_pct
+        self.risk_per_trade = riskmanager_config.risk_per_trade
+        self.max_position_pct = riskmanager_config.max_position_pct
+        self.max_drawdown_pct = riskmanager_config.max_drawdown_pct
 
-        self.peak_balance = portfolio_balance
+        self.peak_balance = riskmanager_config.portfolio_balance
 
     def validate_order(self, order: dict, balance: float) -> bool:
         """

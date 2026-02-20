@@ -10,12 +10,15 @@ from app.strategies.grid import Grid
 from app.strategies.ohlc import OHLC
 from app.strategies.order import Order, KrakenOrder
 from app.models.result import Result
-from config import AppConfig, RequestConfig, GRIDBotConfig, CoinMarketCapAPIConfig, ExchangeConfig
+from app.strategies.strategy import Strategy, GridStrategy, LSTMStrategy
+from app.riskmanager import RiskManager
+from app.positionmanager import PositionManager
+from config import AppConfig, RequestConfig, BotConfig, GRIDBotConfig, CoinMarketCapAPIConfig, ExchangeConfig, StrategyConfig, RiskManagerConfig
 # Don't need to import class inherited from Bot
 
 class Bot():
     # Responsible for placing orders, executing strategy, managing risk through RiskManager, and monitoring orders and positions through PositionManager
-    def __init__(self):
+    def __init__(self, bot_config: BotConfig={}, exchange: Exchange={}, strategy: Strategy={}, risk_manager: RiskManager={}):
         self.classname = self.__class__.__name__
     
     def run(self):

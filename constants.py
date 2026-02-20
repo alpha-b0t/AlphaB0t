@@ -24,5 +24,6 @@ CLASS_NAMES = [
     'RiskManager',
     'RiskManagerConfig',
     'Position',
-    'PositionManager'
+    'PositionManager',
+    'BotConfig'
 ]

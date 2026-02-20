@@ -1,18 +1,22 @@
-from config import RequestConfig, GRIDBotConfig, ExchangeConfig, StrategyConfig, RiskManagerConfig
+from config import RequestConfig, GRIDBotConfig, ExchangeConfig, StrategyConfig, RiskManagerConfig, BotConfig
 from app.exchanges.exchange import KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange, RobinhoodOptionExchange
 from app.bots.bot import Bot
 from app.bots.gridbot import GRIDBot
 from app.enums.enums import RequestType, BotMode, StrategyType, ExchangeType, ExitAction
+from app.riskmanager import RiskManager
+from app.strategies.strategy import Strategy, GridStrategy, LSTMStrategy
 
 if __name__ == '__main__':
     request_config = RequestConfig()
 
     # TODO: Consider getting rid of request as it is essentially useless
     if request_config.request in ['RUN', 'run']:
-        gridbot_config = GRIDBotConfig()
+        bot_config = BotConfig()
         exchange_config = ExchangeConfig()
         strategy_config = StrategyConfig()
         riskmanager_config = RiskManagerConfig()
+
+        risk_manager = RiskManager(riskmanager_config)
         
         if exchange_config.exchange_name == 'RobinhoodCrypto':
             pass
@@ -23,9 +27,8 @@ if __name__ == '__main__':
 
             if strategy_config.strategy in ['GRID', 'grid']:
                 # Initialize Kraken gridbot
-                
                 kraken_gridbot = GRIDBot(
-                    gridbot_config=gridbot_config,
+                    gridbot_config=GRIDBotConfig(),
                     exchange=kraken_exchange
                 )
                 print(kraken_gridbot)
@@ -33,6 +36,8 @@ if __name__ == '__main__':
                 # Start automated grid trading
                 kraken_gridbot.start()
             elif strategy_config.strategy in ['GRID_LOAD', 'grid_load']:
+                gridbot_config = GRIDBotConfig()
+
                 # Load Kraken gridbot if it exists
                 kraken_gridbot = GRIDBot.from_json_file(f'app/bots/local/{gridbot_config.name}.json')
 
@@ -41,7 +46,8 @@ if __name__ == '__main__':
                 # Restart automated grid trading
                 kraken_gridbot.restart()
             elif strategy_config.strategy in ['LSTM', 'lstm']:
-                kraken_lstm_bot = Bot()
+                lstm_strategy = LSTMStrategy(strategy_config, kraken_exchange)
+                kraken_lstm_bot = Bot(bot_config, kraken_exchange, lstm_strategy, risk_manager)
         elif exchange_config.exchange_name == "Coinbase":
             pass
         elif exchange_config.exchange_name == "Binance_US":
