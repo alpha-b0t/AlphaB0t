@@ -24,7 +24,7 @@ X_prediction = np.array(X_prediction)
 
 # Load the trained model
 try:
-    model = load_model(f'app/strategies/LSTM/models/crypto_price_model_{model_uuid}.h5')
+    model = load_model(f'app/strategies/LSTM/models/model_{model_uuid}.h5')
 except FileNotFoundError:
     print(f"Error: Model file not found for UUID {model_uuid}")
     exit(1)

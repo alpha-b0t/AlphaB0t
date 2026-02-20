@@ -38,6 +38,8 @@ poetry run pytest
 
 ### Example .env file
 ```
+# Remember to change the file name to '.env'
+
 # Exchange Configuration
 EXCHANGE=Kraken
 API_KEY=
@@ -50,15 +52,11 @@ REQUEST=
 # CoinMarketCap API Key
 CMC_API_KEY=
 
-# GRID Bot Configuration
+# Bot Configuration
 NAME=
 PAIR=MOONUSD
 BASE_CURRENCY=ZUSD
 MODE=test
-UPPER_PRICE=8.10
-LOWER_PRICE=5.25
-LEVEL_NUM=4
-QUANTITY_PER_GRID=0
 TOTAL_INVESTMENT=1000
 STOP_LOSS=1.00
 TAKE_PROFIT=10.00
@@ -66,9 +64,20 @@ DAYS_TO_RUN=30
 LATENCY_IN_SEC=5.00
 MAX_ERROR_COUNT=5
 ERROR_LATENCY_IN_SEC=5
+CANCEL_ORDERS_UPON_EXIT=none
+
+# Strategy Configuration
+
+# LSTM Strategy Configuration (see app/strategies/LSTM/model_constants.py as well)
+LSTM_MODEL_UUID=
+
+# Grid Strategy Configuration
+UPPER_PRICE=8.10
+LOWER_PRICE=5.25
+LEVEL_NUM=4
+QUANTITY_PER_GRID=0
 INIT_BUY_ERROR_LATENCY_IN_SEC=5
 INIT_BUY_ERROR_MAX_COUNT=10
-CANCEL_ORDERS_UPON_EXIT=none
 ```
 
 ### Setting up Kraken account

@@ -19,5 +19,6 @@ CLASS_NAMES = [
     'Bot',
     'StrategyConfig',
     'Strategy',
-    'GridStrategy'
+    'GridStrategy',
+    'LSTMStrategy'
 ]

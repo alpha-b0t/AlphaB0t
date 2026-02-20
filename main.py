@@ -4,20 +4,20 @@ from app.bots.gridbot import GRIDBot
 from app.strategies.LSTM.get_data import fetch_data, fetch_fear_and_greed_data
 from app.strategies.LSTM.json_helper import export_json_to_csv
 from app.strategies.LSTM.clean_data import remove_duplicates_and_sort
+from app.strategies.LSTM.model_constants import INTERVAL
 
 if __name__ == '__main__':
     request_config = RequestConfig()
     
     if request_config.request in ['LSTM', 'lstm']:
         pair = input('Enter crypto pair: ')
-        interval = int(input('Enter interval in minutes (1, 5, 15, 30, 60, 240, 1440, 10080, 21600): '))
         since = 0
         json_filename = input("Enter JSON filename to store data (e.g. 'training_data.json'): ")
         csv_filename = input("Enter CSV filename to store data (e.g. 'crypto_training_data.csv'): ")
 
         fetch_data(
             pair=pair,
-            interval=interval,
+            interval=int(INTERVAL),
             since=since,
             filename=json_filename
         )

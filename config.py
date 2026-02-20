@@ -202,26 +202,8 @@ class StrategyConfig():
         self.classname = self.__class__.__name__
         env_config = dotenv_values(filepath)
 
-        self.exchange_name = env_config['EXCHANGE']
-        self.api_key = env_config['API_KEY']
-
-        if self.api_key is None:
-            self.api_key = ''
-
-        self.api_sec = env_config['API_SEC']
-
-        if self.api_sec is None:
-            self.api_sec = ''
-        
-        self.api_passphrase = env_config['API_PASSPHRASE']
-
-        if self.api_passphrase is None:
-            self.api_passphrase = ''
-        
-        self.mode = env_config['MODE']
-
-        if self.mode is None or self.mode == '':
-            self.mode = 'test'
+        self.lstm_model_uuid = env_config['LSTM_MODEL_UUID']
+        self.pair = env_config['PAIR']
     
     @classmethod
     def from_json(cls, json_data):

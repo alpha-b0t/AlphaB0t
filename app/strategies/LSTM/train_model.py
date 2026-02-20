@@ -5,7 +5,8 @@ from datetime import datetime
 from sklearn.preprocessing import StandardScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM, Dropout, Input
-from model_constants import EPOCHS, BATCH_SIZE, SEQUENCE_LENGTH, MA_SHORT, MA_LONG, EMA_SHORT, EMA_LONG, RSI_PERIOD, MACD_FAST, MACD_SLOW, MACD_SIGNAL
+from model_constants import EPOCHS, BATCH_SIZE, INTERVAL, SEQUENCE_LENGTH, MA_SHORT, MA_LONG, EMA_SHORT, EMA_LONG, RSI_PERIOD, MACD_FAST, MACD_SLOW, MACD_SIGNAL
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 # Load in the training data
 # Assumes the dataset has columns 'UNIX time', 'open', 'high', 'low', 'close', 'vwap', 'volume', 'count'
@@ -120,8 +121,6 @@ predictions_actual = scaler_close.inverse_transform(predictions_reshaped)
 print(predictions_actual)
 
 # Calculate evaluation metrics
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-
 mae = mean_absolute_error(y_test, predictions.flatten())
 rmse = np.sqrt(mean_squared_error(y_test, predictions.flatten()))
 r2 = r2_score(y_test, predictions.flatten())
@@ -136,6 +135,7 @@ metrics_data = {
     'r2_score': [float(r2)],
     'epochs': [EPOCHS],
     'batch_size': [BATCH_SIZE],
+    'interval': [INTERVAL],
     'sequence_length': [SEQUENCE_LENGTH],
     'ma_short': [MA_SHORT],
     'ma_long': [MA_LONG],
@@ -154,5 +154,5 @@ metrics_df.to_csv(f'app/strategies/LSTM/data/model_{model_uuid}_metrics.csv', in
 print(f"Metrics saved: app/strategies/LSTM/data/model_{model_uuid}_metrics.csv")
 
 # Save the trained model
-model.save(f'app/strategies/LSTM/models/crypto_price_model_{model_uuid}.h5')
-print(f'Model saved: app/strategies/LSTM/models/crypto_price_model_{model_uuid}.h5')
+model.save(f'app/strategies/LSTM/models/model_{model_uuid}.h5')
+print(f'Model saved: app/strategies/LSTM/models/model_{model_uuid}.h5')
