@@ -229,3 +229,37 @@ class StrategyConfig():
                 setattr(instance, key, value)
         
         return instance
+
+class RiskManagerConfig():
+    # TODO: Finish implementing
+    def __init__(self, filepath='.env'):
+        self.classname = self.__class__.__name__
+        env_config = dotenv_values(filepath)
+
+        self.risk_per_trade = env_config['RISK_PER_TRADE']
+        self.max_position_pct = env_config['MAX_POSITION_PCT']
+        self.max_drawdown_pct = env_config['MAX_DRAWDOWN_PCT']
+    
+    @classmethod
+    def from_json(cls, json_data):
+        # Get the parameters of the __init__ method
+        init_params = inspect.signature(cls.__init__).parameters
+
+        # Extract known attributes
+        known_attributes = {param for param in init_params if param != 'self'}
+        known_data = {k: v for k, v in json_data.items() if k in known_attributes}
+
+        # Extract additional attributes
+        additional_data = {k: v for k, v in json_data.items() if k not in known_attributes}
+
+        # Create instance with known attributes
+        instance = cls(**known_data)
+
+        # Set additional attributes
+        for key, value in additional_data.items():
+            if isinstance(value, dict) and 'classname' in value and value['classname'] in CLASS_NAMES:
+                exec(f'setattr(instance, key, {value["classname"]}.from_json(value))')
+            else:
+                setattr(instance, key, value)
+        
+        return instance

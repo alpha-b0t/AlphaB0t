@@ -20,5 +20,9 @@ CLASS_NAMES = [
     'StrategyConfig',
     'Strategy',
     'GridStrategy',
-    'LSTMStrategy'
+    'LSTMStrategy',
+    'RiskManager',
+    'RiskManagerConfig',
+    'Position',
+    'PositionManager'
 ]

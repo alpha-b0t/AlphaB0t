@@ -1,3 +1,6 @@
+import inspect
+from constants import CLASS_NAMES
+
 class RiskManager:
     def __init__(
         self,
@@ -6,6 +9,7 @@ class RiskManager:
         max_position_pct: float = 0.2,     # 20% of balance
         max_drawdown_pct: float = 0.15     # 15% max drawdown
     ):
+        self.classname = self.__class__.__name__
         self.risk_per_trade = risk_per_trade
         self.max_position_pct = max_position_pct
         self.max_drawdown_pct = max_drawdown_pct
@@ -65,3 +69,27 @@ class RiskManager:
         drawdown = (self.peak_balance - current_balance) / self.peak_balance if self.peak_balance > 0 else 0
 
         return drawdown <= self.max_drawdown_pct
+    
+    @classmethod
+    def from_json(cls, json_data):
+        # Get the parameters of the __init__ method
+        init_params = inspect.signature(cls.__init__).parameters
+
+        # Extract known attributes
+        known_attributes = {param for param in init_params if param != 'self'}
+        known_data = {k: v for k, v in json_data.items() if k in known_attributes}
+
+        # Extract additional attributes
+        additional_data = {k: v for k, v in json_data.items() if k not in known_attributes}
+
+        # Create instance with known attributes
+        instance = cls(**known_data)
+
+        # Set additional attributes
+        for key, value in additional_data.items():
+            if isinstance(value, dict) and 'classname' in value and value['classname'] in CLASS_NAMES:
+                exec(f'setattr(instance, key, {value["classname"]}.from_json(value))')
+            else:
+                setattr(instance, key, value)
+        
+        return instance

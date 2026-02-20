@@ -1,4 +1,4 @@
-from config import RequestConfig, GRIDBotConfig, ExchangeConfig, StrategyConfig
+from config import RequestConfig, GRIDBotConfig, ExchangeConfig, StrategyConfig, RiskManagerConfig
 from app.exchanges.exchange import KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange, RobinhoodOptionExchange
 from app.bots.bot import Bot
 from app.bots.gridbot import GRIDBot
@@ -6,11 +6,13 @@ from app.enums.enums import RequestType, BotMode, StrategyType, ExchangeType, Ex
 
 if __name__ == '__main__':
     request_config = RequestConfig()
-    
+
+    # TODO: Consider getting rid of request as it is essentially useless
     if request_config.request in ['RUN', 'run']:
         gridbot_config = GRIDBotConfig()
         exchange_config = ExchangeConfig()
         strategy_config = StrategyConfig()
+        riskmanager_config = RiskManagerConfig()
         
         if exchange_config.exchange_name == 'RobinhoodCrypto':
             pass

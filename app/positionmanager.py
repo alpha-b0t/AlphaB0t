@@ -1,3 +1,6 @@
+import inspect
+from constants import CLASS_NAMES
+
 class Position:
     def __init__(
         self,
@@ -27,6 +30,30 @@ class Position:
     
     def __repr__(self):
         return f"{{{self.classname} ticker: {self.ticker}, side: {self.side}, entry price: {self.entry_price}, quantity: {self.quantity}, status: {self.status}, stop loss: {self.stop_loss}, take profit: {self.take_profit}}}"
+    
+    @classmethod
+    def from_json(cls, json_data):
+        # Get the parameters of the __init__ method
+        init_params = inspect.signature(cls.__init__).parameters
+
+        # Extract known attributes
+        known_attributes = {param for param in init_params if param != 'self'}
+        known_data = {k: v for k, v in json_data.items() if k in known_attributes}
+
+        # Extract additional attributes
+        additional_data = {k: v for k, v in json_data.items() if k not in known_attributes}
+
+        # Create instance with known attributes
+        instance = cls(**known_data)
+
+        # Set additional attributes
+        for key, value in additional_data.items():
+            if isinstance(value, dict) and 'classname' in value and value['classname'] in CLASS_NAMES:
+                exec(f'setattr(instance, key, {value["classname"]}.from_json(value))')
+            else:
+                setattr(instance, key, value)
+        
+        return instance
 
 class PositionManager:
     def __init__(self):
@@ -57,9 +84,9 @@ class PositionManager:
             side=side,
             entry_price=entry_price,
             quantity=quantity,
-            status=status
+            status=status,
             stop_loss=stop_loss,
-            take_profit=take_profit,
+            take_profit=take_profit
         )
 
     def close_position(self, exit_price: float):
@@ -103,3 +130,27 @@ class PositionManager:
                 return True
 
         return False
+    
+    @classmethod
+    def from_json(cls, json_data):
+        # Get the parameters of the __init__ method
+        init_params = inspect.signature(cls.__init__).parameters
+
+        # Extract known attributes
+        known_attributes = {param for param in init_params if param != 'self'}
+        known_data = {k: v for k, v in json_data.items() if k in known_attributes}
+
+        # Extract additional attributes
+        additional_data = {k: v for k, v in json_data.items() if k not in known_attributes}
+
+        # Create instance with known attributes
+        instance = cls(**known_data)
+
+        # Set additional attributes
+        for key, value in additional_data.items():
+            if isinstance(value, dict) and 'classname' in value and value['classname'] in CLASS_NAMES:
+                exec(f'setattr(instance, key, {value["classname"]}.from_json(value))')
+            else:
+                setattr(instance, key, value)
+        
+        return instance
