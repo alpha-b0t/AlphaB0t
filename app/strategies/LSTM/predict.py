@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from tensorflow.keras.models import load_model
-from model_constants import SEQUENCE_LENGTH
+from app.strategies.LSTM.model_constants import SEQUENCE_LENGTH
 
 def predict_using_trained_model():
     # Ask user for the model UUID
