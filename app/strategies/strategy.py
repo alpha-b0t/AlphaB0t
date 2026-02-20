@@ -4,10 +4,8 @@ from constants import CLASS_NAMES
 
 class Strategy():
     # TODO: Finish implementing (along with StrategyConfig in config.py)
-    def __init__(self, exchange, params):
+    def __init__(self):
         self.classname = self.__class__.__name__
-        self.exchange = exchange
-        self.params = params
     
     def calculate_position_size(self, balance: float, price: float) -> float:
         """Calculate how much to buy/sell"""
@@ -48,3 +46,14 @@ class Strategy():
                 setattr(instance, key, value)
         
         return instance
+
+class GridStrategy(Strategy):
+    def __init__(self, strategy_config: StrategyConfig={}):
+        super().__init__()
+        self.classname = self.__class__.__name__
+        if type(strategy_config) == dict:
+            # Reloading
+            print(f"Reloading {self.classname}...")
+            return
+        
+        self.strategy_config = {}

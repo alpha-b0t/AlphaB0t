@@ -18,5 +18,6 @@ CLASS_NAMES = [
     'CoinMarketCapAPI',
     'Bot',
     'StrategyConfig',
-    'Strategy'
+    'Strategy',
+    'GridStrategy'
 ]
