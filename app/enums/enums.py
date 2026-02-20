@@ -16,6 +16,7 @@ class ExchangeType(Enum):
     COINBASE = 1
     BINANCE_US = 2
     ROBINHOOD_CRYPTO = 3
+    ROBINHOOD_OPTION = 4
 
 class ExitAction(Enum):
     NOTHING = 0
