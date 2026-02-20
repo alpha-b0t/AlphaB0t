@@ -9,7 +9,7 @@ import time
 from constants import CLASS_NAMES
 import pandas as pd
 from app.strategies.LSTM.get_data import fetch_data
-from app.strategies.LSTM.json_helper import export_data_to_json
+from app.strategies.LSTM.json_helper import export_json_to_csv
 from app.strategies.LSTM.clean_data import remove_duplicates_and_sort
 from sklearn.preprocessing import StandardScaler
 from app.strategies.LSTM.train_model import calculate_rsi
@@ -297,7 +297,7 @@ class LSTMStrategy(Strategy):
             filename='prediction_data.json'
         )
 
-        export_data_to_json('prediction_data.json', 'prediction_data.csv')
+        export_json_to_csv('prediction_data.json', 'prediction_data.csv')
 
         remove_duplicates_and_sort('prediction_data.csv')
 
