@@ -12,7 +12,7 @@ if __name__ == '__main__':
     request_config = RequestConfig()
 
     # TODO: Consider getting rid of request as it is essentially useless
-    if request_config.request in ['RUN', 'run']:
+    if request_config.request == "RUN":
         bot_config = BotConfig()
         exchange_config = ExchangeConfig()
         strategy_config = StrategyConfig()
@@ -34,7 +34,7 @@ if __name__ == '__main__':
             raise ValueError(f"Exchange name {exchange_config.exchange_name} not found")
         
         # Set strategy and bot
-        if strategy_config.strategy in ['GRID', 'grid']:
+        if strategy_config.strategy == "GRID":
             # Initialize Kraken gridbot
             kraken_gridbot = GRIDBot(
                 gridbot_config=GRIDBotConfig(),
@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
             # Start automated grid trading
             kraken_gridbot.start()
-        elif strategy_config.strategy in ['GRID_LOAD', 'grid_load']:
+        elif strategy_config.strategy == "GRID_LOAD":
             gridbot_config = GRIDBotConfig()
 
             # Load Kraken gridbot if it exists
@@ -54,7 +54,7 @@ if __name__ == '__main__':
 
             # Restart automated grid trading
             kraken_gridbot.restart()
-        elif strategy_config.strategy in ['LSTM', 'lstm']:
+        elif strategy_config.strategy == "LSTM":
             lstm_strategy = LSTMStrategy(strategy_config, exchange)
 
             kraken_lstm_bot = Bot(bot_config, exchange, lstm_strategy, risk_manager)
@@ -62,7 +62,7 @@ if __name__ == '__main__':
             kraken_lstm_bot.run()
         else:
             raise ValueError(f"Strategy {strategy_config.strategy} not valid")
-    elif request_config.request in ['LSTM_TRAIN', 'lstm_train']:
+    elif request_config.request == "LSTM_TRAIN":
         fetch_training_data()
 
         train_model()
