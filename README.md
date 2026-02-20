@@ -59,7 +59,7 @@ API_KEY=
 API_SEC=
 API_PASSPHRASE=
 
-# Request Configuration
+# Request Configuration (see main.py for valid values of REQUEST)
 REQUEST=
 
 # CoinMarketCap API Key
@@ -80,6 +80,7 @@ ERROR_LATENCY_IN_SEC=5
 CANCEL_ORDERS_UPON_EXIT=none
 
 # Strategy Configuration
+STRATEGY=LSTM
 
 # LSTM Strategy Configuration (see app/strategies/LSTM/model_constants.py as well)
 LSTM_MODEL_UUID=
@@ -91,6 +92,12 @@ LEVEL_NUM=4
 QUANTITY_PER_GRID=0
 INIT_BUY_ERROR_LATENCY_IN_SEC=5
 INIT_BUY_ERROR_MAX_COUNT=10
+
+# RiskManager Configuration
+RISK_PER_TRADE = 0.01 # 1%
+MAX_POSITION_PCT = 0.2 # 20%
+MAX_DRAWDOWN_PCT = 0.15 # 15%
+PORTFOLIO_BALANCE = 10000
 ```
 
 ### Setting up Kraken account
