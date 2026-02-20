@@ -1,5 +1,5 @@
 from config import RequestConfig, GRIDBotConfig, ExchangeConfig
-from app.exchanges.exchange import KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange
+from app.exchanges.exchange import KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange, RobinhoodOptionExchange
 from app.bots.gridbot import GRIDBot
 from app.strategies.LSTM.get_data import fetch_data, fetch_fear_and_greed_data
 from app.strategies.LSTM.json_helper import export_json_to_csv

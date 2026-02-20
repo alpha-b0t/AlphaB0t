@@ -1,5 +1,16 @@
 class Position:
-    def __init__(self, ticker: str, side: str, entry_price: float, quantity: float, status="Open", stop_loss=None, take_profit=None, risk_reward_ratio: float = 0.0, chance_of_success: float = 0.0):
+    def __init__(
+        self,
+        ticker: str,
+        side: str,
+        entry_price: float,
+        quantity: float,
+        status="Open",
+        stop_loss=None,
+        take_profit=None,
+        risk_reward_ratio: float = 0.0,
+        chance_of_success: float = 0.0
+    ):
         self.classname = self.__class__.__name__
         if side not in ("long", "short"):
             raise ValueError("side must be 'long' or 'short'")

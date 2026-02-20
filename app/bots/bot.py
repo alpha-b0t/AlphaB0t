@@ -5,7 +5,7 @@ from app.helpers.json_util import CustomEncoder
 
 # The following imports are needed for loading the objects from JSON
 from app.exchanges.cmc_api import CoinMarketCapAPI
-from app.exchanges.exchange import Exchange, KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange
+from app.exchanges.exchange import Exchange, KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange, RobinhoodOptionExchange
 from app.strategies.grid import Grid
 from app.strategies.ohlc import OHLC
 from app.strategies.order import Order, KrakenOrder
@@ -14,7 +14,7 @@ from config import AppConfig, RequestConfig, GRIDBotConfig, CoinMarketCapAPIConf
 # Don't need to import class inherited from Bot
 
 class Bot():
-    # Responsible for placing orders, executing strategy, managing risk, monitoring orders, and managing positions
+    # Responsible for placing orders, executing strategy, managing risk through RiskManager, and monitoring orders and positions through PositionManager
     def __init__(self):
         self.classname = self.__class__.__name__
     
