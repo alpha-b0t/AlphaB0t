@@ -8,7 +8,8 @@ import inspect
 import time
 from constants import CLASS_NAMES
 import pandas as pd
-from app.strategies.LSTM.get_data import fetch_data, export_data_to_json
+from app.strategies.LSTM.get_data import fetch_data
+from app.strategies.LSTM.json_helper import export_data_to_json
 from app.strategies.LSTM.clean_data import remove_duplicates_and_sort
 from sklearn.preprocessing import StandardScaler
 from app.strategies.LSTM.train_model import calculate_rsi
@@ -288,7 +289,7 @@ class LSTMStrategy(Strategy):
             raise FileNotFoundError(f"No metrics CSV found for model UUID: {self.model_uuid}")
     
     def get_prediction_data(self):
-        # TODO: Improve fetch_data, export_data_to_json, remove_duplicates_and_sort pipeline by removing unnecessary files and optimizing for speed
+        # TODO: Improve [fetch_data -> export_data_to_json -> remove_duplicates_and_sort] pipeline by removing unnecessary files and optimizing for speed
         fetch_data(
             pair=self.pair,
             interval=int(self.model_metrics['interval']),

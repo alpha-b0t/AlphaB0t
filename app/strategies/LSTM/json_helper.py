@@ -1,5 +1,20 @@
 import json
 import csv
+import os
+
+def export_data_to_json(data, filename):
+    # Ensure the 'data' folder exists
+    folder = 'app/strategies/LSTM/data'
+    os.makedirs(folder, exist_ok=True)
+
+    filename = f'{folder}/{filename}'
+    
+    try:
+        with open(filename, 'w') as json_file:
+            json.dump(data, json_file, indent=4)
+        print(f"Data successfully exported to {filename}")
+    except Exception as e:
+        print(f"Error exporting data to {filename}: {e}")
 
 def export_json_to_csv(json_file, csv_file):
     with open(f'app/strategies/LSTM/data/{json_file}', 'r') as f:

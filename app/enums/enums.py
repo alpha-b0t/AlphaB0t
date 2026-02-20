@@ -1,5 +1,9 @@
 from enum import Enum
 
+class RequestType(Enum):
+    LSTM_TRAIN = 0
+    RUN = 1
+
 class BotMode(Enum):
     TEST = 0
     LIVE = 1

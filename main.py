@@ -1,52 +1,26 @@
-from config import RequestConfig, GRIDBotConfig, ExchangeConfig
+from config import RequestConfig, GRIDBotConfig, ExchangeConfig, StrategyConfig
 from app.exchanges.exchange import KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange, RobinhoodOptionExchange
+from app.bots.bot import Bot
 from app.bots.gridbot import GRIDBot
-from app.strategies.LSTM.get_data import fetch_data, fetch_fear_and_greed_data
-from app.strategies.LSTM.json_helper import export_json_to_csv
-from app.strategies.LSTM.clean_data import remove_duplicates_and_sort
-from app.strategies.LSTM.model_constants import INTERVAL
+from app.enums.enums import RequestType, BotMode, StrategyType, ExchangeType, ExitAction
 
 if __name__ == '__main__':
     request_config = RequestConfig()
     
-    if request_config.request in ['LSTM', 'lstm']:
-        pair = input('Enter crypto pair: ')
-        since = 0
-        json_filename = input("Enter JSON filename to store data (e.g. 'training_data.json'): ")
-        csv_filename = input("Enter CSV filename to store data (e.g. 'crypto_training_data.csv'): ")
-
-        fetch_data(
-            pair=pair,
-            interval=int(INTERVAL),
-            since=since,
-            filename=json_filename
-        )
-
-        export_json_to_csv(json_filename, csv_filename)
-
-        remove_duplicates_and_sort(csv_filename)
-
-        if input("Fetch fear and greed index data? (y/n): ").lower() == 'y':
-            fg_json_filename = input("Enter JSON filename to store fear and greed data (e.g. 'fear_and_greed_data.json'): ")
-            fg_csv_filename = input("Enter CSV filename to store fear and greed data (e.g. 'fear_and_greed_data.csv'): ")
-            fetch_fear_and_greed_data(
-                start=since,
-                filename=fg_json_filename
-            )
-
-            export_json_to_csv(fg_json_filename, fg_csv_filename)
-
-    else:
+    if request_config.request in ['RUN', 'run']:
         gridbot_config = GRIDBotConfig()
         exchange_config = ExchangeConfig()
+        strategy_config = StrategyConfig()
         
         if exchange_config.exchange_name == 'RobinhoodCrypto':
             pass
+        elif exchange_config.exchange_name == 'RobinhoodOption':
+            pass
         elif exchange_config.exchange_name == 'Kraken':
+            kraken_exchange = KrakenExchange(exchange_config)
 
-            if request_config.request in ['start', 'START', '', None, 'None']:
+            if strategy_config.strategy in ['GRID', 'grid']:
                 # Initialize Kraken gridbot
-                kraken_exchange = KrakenExchange(exchange_config)
                 
                 kraken_gridbot = GRIDBot(
                     gridbot_config=gridbot_config,
@@ -56,7 +30,7 @@ if __name__ == '__main__':
 
                 # Start automated grid trading
                 kraken_gridbot.start()
-            elif request_config.request in ['load', 'LOAD']:
+            elif strategy_config.strategy in ['GRID_LOAD', 'grid_load']:
                 # Load Kraken gridbot if it exists
                 kraken_gridbot = GRIDBot.from_json_file(f'app/bots/local/{gridbot_config.name}.json')
 
@@ -64,5 +38,11 @@ if __name__ == '__main__':
 
                 # Restart automated grid trading
                 kraken_gridbot.restart()
+            elif strategy_config.strategy in ['LSTM', 'lstm']:
+                kraken_lstm_bot = Bot()
         elif exchange_config.exchange_name == "Coinbase":
             pass
+        else:
+            print(f"Exchange name {exchange_config.exchange_name} not found")
+    else:
+        print(f"Request {request_config.request} not valid")

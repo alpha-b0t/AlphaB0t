@@ -202,7 +202,8 @@ class StrategyConfig():
         self.classname = self.__class__.__name__
         env_config = dotenv_values(filepath)
 
-        self.lstm_model_uuid = env_config['LSTM_MODEL_UUID']
+        self.strategy = env_config['STRATEGY']
+        self.lstm_model_uuid = env_config['LSTM_MODEL_UUID'] # TODO: See what happens if nothing is provided for LSTM_MODEL_UUID in case strategy is not LSTM
         self.pair = env_config['PAIR']
     
     @classmethod
