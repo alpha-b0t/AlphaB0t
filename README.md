@@ -38,12 +38,6 @@ poetry run pytest
 
 ### Example .env file
 ```
-# Database Configuration
-DATABASE_USERNAME=
-DATABASE_PASSWORD=
-DATABASE_PORT=
-DATABASE_NAME=
-
 # Exchange Configuration
 EXCHANGE=Kraken
 API_KEY=

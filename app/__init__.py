@@ -1,7 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
 from config import AppConfig
-from app.database.data_access import *
 from app.api import api_bp
 
 def create_app(test_config=None):
@@ -15,17 +14,8 @@ def create_app(test_config=None):
 
     app_config = AppConfig()
 
-    # Connect to the database
-    app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{app_config.DATABASE_USERNAME}:{app_config.DATABASE_PASSWORD}@localhost:{app_config.DATABASE_PORT}/{app_config.DATABASE_NAME}"
-
     # Initialize CORS
     # https://flask-cors.corydolphin.com/en/latest/api.html#extension
     cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
-    
-    db.init_app(app)
-    migrate.init_app(app, db)
-
-    with app.app_context():
-        db.create_all()
 
     return app

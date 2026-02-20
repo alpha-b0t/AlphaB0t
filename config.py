@@ -6,11 +6,6 @@ class AppConfig():
     def __init__(self, filepath='.env'):
         self.classname = self.__class__.__name__
         env_config = dotenv_values(filepath)
-
-        self.DATABASE_USERNAME = env_config['DATABASE_USERNAME']
-        self.DATABASE_PASSWORD = env_config['DATABASE_PASSWORD']
-        self.DATABASE_PORT = env_config['DATABASE_PORT']
-        self.DATABASE_NAME = env_config['DATABASE_NAME']
     
     @classmethod
     def from_json(cls, json_data):

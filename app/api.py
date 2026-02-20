@@ -1,6 +1,5 @@
 from flask import request, Blueprint
 from app.models.result import Result
-from app.database.data_access import *
 
 api_bp = Blueprint("api", __name__, url_prefix="/")
 
