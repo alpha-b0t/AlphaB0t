@@ -50,7 +50,10 @@ if __name__ == '__main__':
                 kraken_gridbot.restart()
             elif strategy_config.strategy in ['LSTM', 'lstm']:
                 lstm_strategy = LSTMStrategy(strategy_config, kraken_exchange)
+
                 kraken_lstm_bot = Bot(bot_config, kraken_exchange, lstm_strategy, risk_manager)
+
+                kraken_lstm_bot.run()
         elif exchange_config.exchange_name == "Coinbase":
             pass
         elif exchange_config.exchange_name == "Binance_US":

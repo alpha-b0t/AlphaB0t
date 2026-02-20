@@ -22,6 +22,7 @@ class Bot():
         self.classname = self.__class__.__name__
     
     def run(self):
+        # TODO: Implement
         raise NotImplementedError("Not Implemented.")
     
     def get_runtime(self):
