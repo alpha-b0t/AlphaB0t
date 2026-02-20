@@ -7,9 +7,8 @@ class BotMode(Enum):
 
 class StrategyType(Enum):
     GRID = 0
-    SENTIMENT = 1
-    LSTM = 2
-    DCA = 3
+    LSTM = 1
+    DCA = 2
 
 class ExchangeType(Enum):
     KRAKEN = 0

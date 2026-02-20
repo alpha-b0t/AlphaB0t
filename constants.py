@@ -15,8 +15,6 @@ CLASS_NAMES = [
     'RequestConfig',
     'GRIDBotConfig',
     'ExchangeConfig',
-    'SentimentBot',
-    'SentimentBotConfig',
     'CoinMarketCapAPI',
     'Bot',
     'StrategyConfig',

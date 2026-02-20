@@ -10,7 +10,7 @@ from app.strategies.grid import Grid
 from app.strategies.ohlc import OHLC
 from app.strategies.order import Order, KrakenOrder
 from app.models.result import Result
-from config import AppConfig, RequestConfig, GRIDBotConfig, SentimentBotConfig, CoinMarketCapAPIConfig, ExchangeConfig
+from config import AppConfig, RequestConfig, GRIDBotConfig, CoinMarketCapAPIConfig, ExchangeConfig
 # Don't need to import class inherited from Bot
 
 class Bot():
