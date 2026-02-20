@@ -1,5 +1,5 @@
 class Position:
-    def __init__(self, ticker: str, side: str, entry_price: float, quantity: float, status="Open", stop_loss=None, take_profit=None):
+    def __init__(self, ticker: str, side: str, entry_price: float, quantity: float, status="Open", stop_loss=None, take_profit=None, risk_reward_ratio: float = 0.0, chance_of_success: float = 0.0):
         self.classname = "Position"
         if side not in ("long", "short"):
             raise ValueError("side must be 'long' or 'short'")
@@ -11,6 +11,8 @@ class Position:
         self.status = status
         self.stop_loss = stop_loss
         self.take_profit = take_profit
+        self.risk_reward_ratio = risk_reward_ratio
+        self.chance_of_success = chance_of_success
     
     def __repr__(self):
         return f"{{{self.classname} ticker: {self.ticker}, side: {self.side}, entry price: {self.entry_price}, quantity: {self.quantity}, status: {self.status}, stop loss: {self.stop_loss}, take profit: {self.take_profit}}}"
