@@ -43,6 +43,10 @@ To run the application locally, run the following command in your terminal:
 ```
 poetry run flask --app app run --debug
 ```
+or you can run
+```
+poetry run python3 main.py
+```
 
 To run the Python unit tests implemented in pytest, run the following command in your terminal:
 ```
