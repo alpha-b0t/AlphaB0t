@@ -22,7 +22,6 @@ class GRIDBot(Bot):
 
         self.name = gridbot_config.name
         self.pair = gridbot_config.pair
-        self.days_to_run = gridbot_config.days_to_run
         self.mode = gridbot_config.mode
         self.upper_price = gridbot_config.upper_price
         self.lower_price = gridbot_config.lower_price
@@ -155,7 +154,6 @@ class GRIDBot(Bot):
         assert self.stop_loss > 0
         assert self.take_profit > 0
         assert self.take_profit > self.stop_loss
-        assert self.days_to_run > 0
 
         if self.quantity_per_grid > 0:
             # Use self.quantity_per_grid to determine total investment, quantity per level

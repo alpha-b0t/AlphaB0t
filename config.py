@@ -42,7 +42,6 @@ class BotConfig():
         self.name = env_config['NAME']
         self.pair = env_config['PAIR']
         self.base_currency = env_config['BASE_CURRENCY']
-        self.days_to_run = int(env_config['DAYS_TO_RUN'])
         self.mode = env_config['MODE']
         self.total_investment = float(env_config['TOTAL_INVESTMENT'])
         self.stop_loss = float(env_config['STOP_LOSS'])
@@ -87,7 +86,6 @@ class GRIDBotConfig():
         self.name = env_config['NAME']
         self.pair = env_config['PAIR']
         self.base_currency = env_config['BASE_CURRENCY']
-        self.days_to_run = int(env_config['DAYS_TO_RUN'])
         self.mode = env_config['MODE']
 
         if self.mode is None or self.mode == '':

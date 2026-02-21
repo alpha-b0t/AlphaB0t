@@ -33,7 +33,6 @@ class Bot():
 
         self.name = bot_config.name
         self.pair = bot_config.pair
-        self.days_to_run = bot_config.days_to_run
         self.mode = bot_config.mode
         self.total_investment = bot_config.total_investment
         self.stop_loss = bot_config.stop_loss
@@ -43,14 +42,24 @@ class Bot():
         self.max_error_count = bot_config.max_error_count
         self.error_latency = bot_config.error_latency_in_sec
         self.cancel_orders_upon_exit = bot_config.cancel_orders_upon_exit
-
+        
         # Initialize the timer
         self.start_time = time.time()
 
         # Perform validation on the configuration
         self.check_config()
-
-        raise NotImplementedError
+    
+    def __repr__(self):
+        name_display = self.name if self.name else "''"
+        realized = round(self.position_manager.realized_pnl, 4) if hasattr(self, 'position_manager') else 0
+        unrealized = round(self.get_unrealized_gain(), 4)
+        return (
+            f"{{{self.__class__.__name__} name: {name_display}, pair: {self.pair}, "
+            f"mode: {self.mode}, strategy: {self.strategy.__class__.__name__}, "
+            f"runtime: {round(self.get_runtime())}s, "
+            f"realized_pnl: {realized} {self.base_currency}, "
+            f"unrealized_pnl: {unrealized} {self.base_currency}}}"
+        )
     
     def run(self):
         """
@@ -66,29 +75,162 @@ class Bot():
         ↓
         PositionManager → monitors stop/TP
         """
-        # TODO: Implement
-        # Generate signal
-        strategy_signal = self.strategy.generate_signal()
 
-        assert strategy_signal in ['BUY', 'SELL', 'HOLD']
+        print(f"\n{'='*50}")
+        print(f"Bot '{self.name}' starting. Mode: {self.mode}")
+        print(f"Pair: {self.pair} | Strategy: {self.strategy.__class__.__name__} | Exchange: {self.exchange.__class__.__name__}")
+        print(f"Pulling every {self.latency}s")
+        print(f"Stop loss: {self.stop_loss} | Take profit: {self.take_profit}")
+        print(f"{'='*50}\n")
 
-        if strategy_signal in ['BUY', 'SELL']:
-            # Request RiskManager to calculate position size
-            position_size = self.risk_manager.calculate_position_size()
+        try:
+            while True:
+                # TODO: Confirm this step is needed
+                # ── 1. Fetch latest price ──────────────────────────────────────
+                self.fetch_latest_ohlc()
+                print(f"Current price: {self.latest_ohlc.close}")
 
-            # Construct order
+                # ── 2. Check global stop-loss / take-profit ────────────────────
+                if self.latest_ohlc.close <= self.stop_loss or self.latest_ohlc.close >= self.take_profit:
+                    if self.latest_ohlc.close <= self.stop_loss:
+                        print(f"⚠ Stop-loss hit ({self.latest_ohlc.close} ≤ {self.stop_loss}). Closing any open position.")
+                    else:
+                        print(f"✓ Take-profit hit ({self.latest_ohlc.close} ≥ {self.take_profit}). Closing any open position.")
+                    
+                    if self.position_manager.position is not None:
+                        # TODO: Implement
+                        pnl = self.position_manager.close_position(self.latest_ohlc.close)
+                        # self.cancel_open_order()
+                        print(f"Position closed. PnL: {round(pnl, 4)} {self.base_currency}")
+                    break
+                
+                # ── 3. Monitor open position stop/TP via PositionManager ───────
+                if self.position_manager.position is not None:
+                    unrealized = self.position_manager.calculate_pnl(self.latest_ohlc.close)
+                    print(f"Open position unrealized PnL: {round(unrealized, 4)} {self.base_currency}")
 
-            if self.risk_manager.validate_order():
+                    if self.position_manager.check_exit_conditions(self.latest_ohlc.close):
+                        # TODO: Implement
+                        print(f"Position exit condition met at {self.latest_ohlc.close}. Closing.")
+                        pnl = self.position_manager.close_position(self.latest_ohlc.close)
+                        self.place_exit_order(self.latest_ohlc.close)
+                        print(f"Position closed. PnL: {round(pnl, 4)} {self.base_currency}")
+                        print(f"Total realized PnL: {round(self.position_manager.realized_pnl, 4)} {self.base_currency}")
+                        time.sleep(self.latency)
+                        continue
+                
+                # ── 4. Generate signal ─────────────────────────────────────────
+                strategy_signal = self.strategy.generate_signal()
+                print(f"Signal: {strategy_signal}")
+
+                assert strategy_signal in ['BUY', 'SELL', 'HOLD']
+
+                if strategy_signal == 'HOLD':
+                    time.sleep(self.latency)
+                    continue
+
+                # Skip if we already have an open position in the same direction
+                if self.position_manager.position is not None:
+                    existing_side = self.position_manager.position.side
+                    if (strategy_signal == 'BUY' and existing_side == 'long') or \
+                       (strategy_signal == 'SELL' and existing_side == 'short'):
+                        print(f"  Already have a {existing_side} position. Skipping signal.")
+                        time.sleep(self.latency)
+                        continue
+
+                    # Opposite signal: close existing position first
+                    print(f"  Opposite signal received. Closing existing {existing_side} position.")
+                    pnl = self.position_manager.close_position(self.latest_ohlc.close)
+                    self.place_exit_order(self.latest_ohlc.close)
+                    print(f"  Position closed. PnL: {round(pnl, 4)} {self.base_currency}")
+
+                
+                # ── 5. Fetch balance for sizing ────────────────────────────────
+                self.fetch_balances()
+                available_balance = self.account_trade_balances.get(self.base_currency, self.total_investment)
+
+
+                # ── 6. RiskManager: calculate position size ────────────────────
+                side = 'long' if strategy_signal == 'BUY' else 'short'
+                # TODO: Move line below into RiskManager
+                stop_price = self.stop_loss if side == 'long' else self.take_profit
+                
+                position_size = self.risk_manager.calculate_position_size(
+                    balance=available_balance,
+                    entry_price=self.latest_ohlc.close,
+                    stop_loss=stop_price
+                )
+
+                if position_size <= 0:
+                    print(f"RiskManager returned zero position size. Skipping.")
+                    time.sleep(self.latency)
+                    continue
+
+
+                # ── 7. RiskManager: validate order ─────────────────────────────
+                # Construct order
+                order_dict = {
+                    'price': self.latest_ohlc.close,
+                    'quantity': position_size,
+                    'stop_loss': stop_price
+                }
+
+                if not self.risk_manager.validate_order(order_dict, available_balance):
+                    print(f"RiskManager rejected order (drawdown / position size / risk limit). Skipping.")
+                    time.sleep(self.latency)
+                    continue
+
+                print(f"Placing {strategy_signal} order | qty: {round(position_size, 6)} @ ~{self.latest_ohlc.close}")
+
+                # ── 8. Execute order via Exchange ──────────────────────────────
+                order_type = 'buy' if strategy_signal == 'BUY' else 'sell'
+                txid = self.place_order_with_retry(order_type, position_size, self.latest_ohlc.close)
+
                 # Send order to exchange
                 order_response = self.exchange.add_order()
 
+
+                # ── 9. PositionManager: open position ──────────────────────────
                 # Add position to PositionManager
-                self.position_manager.open_position()
+                self.position_manager.open_position(
+                    ticker=self.pair,
+                    side=side,
+                    entry_price=self.latest_ohlc.close,
+                    quantity=position_size,
+                    stop_loss=self.stop_loss,
+                    take_profit=self.take_profit
+                )
+
+                if txid:
+                    self.open_order_txid = txid
+                    print(f"Order placed. txid: {txid}")
+                else:
+                    print(f"Order submitted (test mode — no txid returned).")
+
+                print(f"{self.position_manager}")
+
+                time.sleep(self.latency)
 
                 # PositionManager monitors stop/TP
                 # TODO: Should PositionManager be able to have several open positions at once?
+        except KeyboardInterrupt as e:
+            print(f"Unexpected error: {e}")
+            print("User ended execution of program.")
+            print(f"Exporting bot to database as {self.name}.json...")
+            self.stop()
+            print(f"Successfully exported bot.")
         
-        raise NotImplementedError("Not Implemented.")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            print(f"Bot: {self}")
+            print(f"Exporting bot to database as {self.name}.json...")
+            self.stop()
+            print(f"Successfully exported bot.")
+            raise e
+        
+        print(f"\nBot '{self.name}' finished.")
+        print(f"Total realized PnL: {round(self.position_manager.realized_pnl, 4)} {self.base_currency}")
+        print(f"Closed positions: {len(self.position_manager.closed_positions)}")
     
     def get_runtime(self):
         return time.time() - self.start_time
@@ -100,7 +242,6 @@ class Bot():
         assert self.stop_loss > 0
         assert self.take_profit > 0
         assert self.take_profit > self.stop_loss
-        assert self.days_to_run > 0
         assert self.total_investment > 0
         assert self.latency > 0
         assert self.max_error_count >= 1
@@ -116,10 +257,47 @@ class Bot():
         raise NotImplementedError("Not Implemented.")
     
     def fetch_latest_ohlc(self):
-        raise NotImplementedError("Not Implemented.")
-    
-    def fetch_latest_ohlc_pair(self):
-        raise NotImplementedError("Not Implemented.")
+        """Fetches latest OHLC data."""
+        if hasattr(self, "ohlc_asset_key"):
+            for attempt in range(self.max_error_count):
+                try:
+                    ohlc_response = self.exchange.get_ohlc_data(self.pair)
+                    break
+                except Exception as e:
+                    print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
+
+                    if attempt == self.max_error_count - 1:
+                        print(f"Failed to make API request after {self.max_error_count} attempts")
+                        raise e
+                    else:
+                        time.sleep(self.error_latency)
+        
+            ohlc = ohlc_response.get('result')
+            self.latest_ohlc = OHLC(ohlc[self.ohlc_asset_key][-1])
+        else:
+            for attempt in range(self.max_error_count):
+                try:
+                    ohlc_response = self.exchange.get_ohlc_data(self.pair)
+                    break
+                except Exception as e:
+                    print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
+
+                    if attempt == self.max_error_count - 1:
+                        print(f"Failed to make API request after {self.max_error_count} attempts")
+                        raise e
+                    else:
+                        time.sleep(self.error_latency)
+            
+            ohlc = ohlc_response.get('result')
+
+            for key in ohlc.keys():
+                if key != 'last':
+                    pair_key = key
+                    break
+            
+            self.ohlc_asset_key = pair_key
+
+            self.latest_ohlc = OHLC(ohlc[pair_key][-1])
     
     def get_realized_gain(self):
         raise NotImplementedError("Not Implemented.")
@@ -128,7 +306,7 @@ class Bot():
         raise NotImplementedError("Not Implemented.")
     
     def stop(self):
-        raise NotImplementedError("Not Implemented.")
+        self.to_json_file(f'app/bots/local/{self.name}.json')
     
     def pause(self):
         raise NotImplementedError("Not Implemented.")

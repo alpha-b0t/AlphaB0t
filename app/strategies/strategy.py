@@ -383,9 +383,7 @@ class LSTMStrategy(Strategy):
         # TODO: Edit buffer
         buffer = 0.02 # 2%
         
-        print(f"Current price: {latest_ohlc.close}")
-        print(f"Predicted close price: {price_predictions[-1][0]}")
-        print(f"Predicted change: {round(price_predictions[-1][0] - latest_ohlc.close, 2)}, ({round((price_predictions[-1][0] - latest_ohlc.close) * 100 / latest_ohlc.close, 2)}%")
+        print(f"Predicted change: {round(price_predictions[-1][0] - latest_ohlc.close, 2)}, ({round((price_predictions[-1][0] - latest_ohlc.close) * 100 / latest_ohlc.close, 2)}%)")
         if price_predictions[-1][0] > latest_ohlc.close * (1 + buffer):
             return 'BUY'
         elif price_predictions[-1][0] < latest_ohlc.close * (1 - buffer):
