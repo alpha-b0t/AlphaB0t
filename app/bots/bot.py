@@ -2,6 +2,7 @@ import inspect
 from constants import CLASS_NAMES
 import json
 from app.helpers.json_util import CustomEncoder
+import time
 
 # The following imports are needed for loading the objects from JSON
 from app.exchanges.cmc_api import CoinMarketCapAPI
@@ -20,16 +21,90 @@ class Bot():
     # Responsible for placing orders, executing strategy, managing risk through RiskManager, and monitoring orders and positions through PositionManager
     def __init__(self, bot_config: BotConfig={}, exchange: Exchange={}, strategy: Strategy={}, risk_manager: RiskManager={}):
         self.classname = self.__class__.__name__
+        if type(bot_config) == dict and type(exchange) == dict and type(strategy) == dict and type(risk_manager) == dict:
+            # Reloading
+            print(f"Reloading {self.classname}...")
+            return
+        
+        self.exchange = exchange
+        self.strategy = strategy
+        self.risk_manager = risk_manager
+        self.position_manager = PositionManager()
+
+        self.name = bot_config.name
+        self.pair = bot_config.pair
+        self.days_to_run = bot_config.days_to_run
+        self.mode = bot_config.mode
+        self.total_investment = bot_config.total_investment
+        self.stop_loss = bot_config.stop_loss
+        self.take_profit = bot_config.take_profit
+        self.base_currency = bot_config.base_currency
+        self.latency = bot_config.latency_in_sec
+        self.max_error_count = bot_config.max_error_count
+        self.error_latency = bot_config.error_latency_in_sec
+        self.cancel_orders_upon_exit = bot_config.cancel_orders_upon_exit
+
+        # Initialize the timer
+        self.start_time = time.time()
+
+        # Perform validation on the configuration
+        self.check_config()
+
+        raise NotImplementedError
     
     def run(self):
+        """
+        Strategy → generates signal
+        ↓
+        RiskManager → calculates position size
+        ↓
+        RiskManager → validates order
+        ↓
+        Exchange → executes order
+        ↓
+        PositionManager → tracks position
+        ↓
+        PositionManager → monitors stop/TP
+        """
         # TODO: Implement
+        # Generate signal
+        strategy_signal = self.strategy.generate_signal()
+
+        assert strategy_signal in ['BUY', 'SELL', 'HOLD']
+
+        if strategy_signal in ['BUY', 'SELL']:
+            # Request RiskManager to calculate position size
+            position_size = self.risk_manager.calculate_position_size()
+
+            # Construct order
+
+            if self.risk_manager.validate_order():
+                # Send order to exchange
+                order_response = self.exchange.add_order()
+
+                # Add position to PositionManager
+                self.position_manager.open_position()
+
+                # PositionManager monitors stop/TP
+                # TODO: Should PositionManager be able to have several open positions at once?
+        
         raise NotImplementedError("Not Implemented.")
     
     def get_runtime(self):
-        raise NotImplementedError("Not Implemented.")
+        return time.time() - self.start_time
     
     def check_config(self):
-        raise NotImplementedError("Not Implemented.")
+        """Throws an error if the configurations are not correct."""
+        # TODO: Implement
+        assert self.mode in ['live', 'test']
+        assert self.stop_loss > 0
+        assert self.take_profit > 0
+        assert self.take_profit > self.stop_loss
+        assert self.days_to_run > 0
+        assert self.total_investment > 0
+        assert self.latency > 0
+        assert self.max_error_count >= 1
+        assert self.error_latency > 0
     
     def get_account_asset_balance(self):
         raise NotImplementedError("Not Implemented.")

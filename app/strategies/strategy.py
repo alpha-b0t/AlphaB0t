@@ -20,6 +20,10 @@ class Strategy():
     def __init__(self):
         self.classname = self.__class__.__name__
     
+    def generate_signal(self):
+        """Returns signal 'BUY', 'SELL', or 'HOLD'."""
+        raise NotImplementedError
+    
     def get_required_data(self) -> list:
         """Return required data types (OHLCV, indicators, etc.)"""
         raise NotImplementedError
@@ -372,7 +376,7 @@ class LSTMStrategy(Strategy):
         lookback_seconds = int(self.model_metrics['interval']) * int(self.model_metrics['sequence_length']) * 60 + buffer_in_seconds
         return int(time.time() - lookback_seconds)
     
-    def get_signal(self) -> str:
+    def generate_signal(self) -> str:
         price_predictions = self.get_price_prediction()
         latest_ohlc = self.get_latest_ohlc()
         
