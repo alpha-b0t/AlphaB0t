@@ -18,17 +18,17 @@ class RiskManager:
         - position value does not exceed max_position_pct of balance
         - dollar risk on the trade does not exceed risk_per_trade of balance
 
-        order must contain: 'price', 'quantity', 'stop_price'
+        order must contain: 'price', 'volume', 'stop_price'
         """
         if not self.check_drawdown(balance):
             return False
 
-        position_value = order['price'] * order['quantity']
+        position_value = order['price'] * order['volume']
 
         if position_value > balance * self.max_position_pct:
             return False
 
-        risk_amount = abs(order['price'] - order['stop_price']) * order['quantity']
+        risk_amount = abs(order['price'] - order['stop_price']) * order['volume']
         if risk_amount > balance * self.risk_per_trade:
             return False
 

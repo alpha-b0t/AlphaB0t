@@ -123,12 +123,14 @@ class Bot():
                     # Opposite signal: close existing position first
                     print(f"  Opposite signal received. Closing existing {existing_side} position.")
                     pnl = self.position_manager.close_position(self.latest_ohlc.close)
+                    # TODO: IMPLEMENT
                     self.place_exit_order(self.latest_ohlc.close)
                     print(f"  Position closed. PnL: {round(pnl, 4)} {self.base_currency}")
 
                 
                 # ── 4. Fetch balance for sizing ────────────────────────────────
                 self.fetch_balances()
+                # TODO: Implement
                 available_balance = self.account_trade_balances(self.base_currency)
 
 
@@ -149,9 +151,11 @@ class Bot():
 
                 # ── 6. RiskManager: validate order ─────────────────────────────
                 # Construct order
+                order_type = strategy_signal.lower()
+
                 order_dict = {
                     'ordertype': 'limit',
-                    'type': strategy_signal,
+                    'type': order_type,
                     'side': side,
                     'volume': position_size,
                     'price': self.latest_ohlc.close,
@@ -165,12 +169,35 @@ class Bot():
 
                 print(f"Placing {strategy_signal} order | qty: {round(position_size, 6)} @ ~{self.latest_ohlc.close}")
 
-                # ── 7. Execute order via Exchange ──────────────────────────────
-                order_type = 'buy' if strategy_signal == 'BUY' else 'sell'
-                txid = self.place_order_with_retry(order_type, position_size, self.latest_ohlc.close)
 
-                # Send order to exchange
-                order_response = self.exchange.add_order()
+                # ── 7. Execute order via Exchange ──────────────────────────────
+                for attempt in range(self.max_error_count):
+                    try:
+                        order_response = self.exchange.add_order(
+                            order_type=order_dict['ordertype'],
+                            type=order_dict['type'],
+                            volume=order_dict['volume'],
+                            pair=self.pair,
+                            price=order_dict['price'],
+                            oflags='post'
+                        )
+                        break
+                    except Exception as e:
+                        print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
+
+                        if attempt == self.max_error_count - 1:
+                            print(f"Failed to make API request after {self.max_error_count} attempts")
+                            raise e
+                        else:
+                            time.sleep(self.error_latency)
+                
+                txid = order_response['result'].get('txid', [])
+                if txid == []:
+                    txid = ''
+                else:
+                    txid = txid[0]
+                
+                # TODO: Create an Order object
 
 
                 # ── 8. PositionManager: open position ──────────────────────────
