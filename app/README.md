@@ -71,7 +71,7 @@ That separation prevents catastrophic bugs.
 # How Everything Connects
 
 Here’s the correct execution flow in your Bot:
-
+```
 Strategy → generates signal
 ↓
 RiskManager → calculates position size
@@ -83,6 +83,7 @@ Exchange → executes order
 PositionManager → tracks position
 ↓
 PositionManager → monitors stop/TP
+```
 
 # Advanced Improvements (Professional Grade)
 
