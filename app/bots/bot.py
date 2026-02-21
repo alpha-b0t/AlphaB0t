@@ -370,6 +370,9 @@ class Bot():
         return self.position_manager.calculate_pnl(self.latest_ohlc.close)
     
     def stop(self):
+        # First remove LSTM model from LSTMStrategy due to not being able to export LSTM model
+        if self.strategy.classname == "LSTMStrategy" and hasattr(self.strategy, "model"):
+            del self.strategy.model
         self.to_json_file(f'app/bots/local/{self.name}.json')
     
     def pause(self):

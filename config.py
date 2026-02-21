@@ -216,7 +216,7 @@ class StrategyConfig():
         self.strategy = env_config['STRATEGY']
         self.lstm_model_uuid = env_config['LSTM_MODEL_UUID'] # TODO: See what happens if nothing is provided for LSTM_MODEL_UUID in case strategy is not LSTM
         self.pair = env_config['PAIR']
-        self.risk_to_reward_ratio = env_config['RISK_TO_REWARD_RATIO']
+        self.risk_to_reward_ratio = float(env_config['RISK_TO_REWARD_RATIO'])
     
     @classmethod
     def from_json(cls, json_data):

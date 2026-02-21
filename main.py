@@ -63,6 +63,15 @@ if __name__ == '__main__':
             lstm_bot.run()
         else:
             raise ValueError(f"Strategy {strategy_config.strategy} not valid")
+    elif request_config.request == "BOT_LOAD":
+            bot_config = BotConfig()
+
+            # Load bot if it exists
+            bot = Bot.from_json_file(f'app/bots/local/{bot_config.name}.json')
+
+            # Restart automated grid trading
+            # TODO: Implement
+            bot.restart()
     elif request_config.request == "LSTM_TRAIN":
         env_config = dotenv_values('.env')
         fetch_training_data(env_config['PAIR'])
