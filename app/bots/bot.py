@@ -130,8 +130,7 @@ class Bot():
                 
                 # ── 4. Fetch balance for sizing ────────────────────────────────
                 self.fetch_balances()
-                # TODO: Implement
-                available_balance = self.account_trade_balances(self.base_currency)
+                available_balance = self.account_trade_balances[self.base_currency]
 
 
                 # ── 5. RiskManager: calculate position size ────────────────────
@@ -222,7 +221,6 @@ class Bot():
                 time.sleep(self.latency)
 
                 # PositionManager monitors stop/TP
-                # TODO: Should PositionManager be able to have several open positions at once?
         except KeyboardInterrupt as e:
             print(f"Unexpected error: {e}")
             print("User ended execution of program.")
@@ -253,14 +251,69 @@ class Bot():
         assert self.max_error_count >= 1
         assert self.error_latency > 0
     
-    def get_account_asset_balance(self):
-        raise NotImplementedError("Not Implemented.")
+    def get_account_asset_balance(self, pair: str = 'ZUSD') -> float:
+        """Retrieves the cash balance of the asset (i.e. pair or currency), net of pending withdrawals."""
+        for attempt in range(self.max_error_count):
+            try:
+                account_balances_response = self.exchange.get_account_balance()
+
+                account_balances = account_balances_response.get('result')
+
+                return float(account_balances.get(pair, 0))
+            except Exception as e:
+                print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
+
+                if attempt == self.max_error_count - 1:
+                    print(f"Failed to make API request after {self.max_error_count} attempts")
+                    raise e
+                else:
+                    time.sleep(self.error_latency)
     
-    def get_available_trade_balance(self):
-        raise NotImplementedError("Not Implemented.")
+    def get_available_trade_balance(self) -> dict:
+        """Retrieves the balance(s) available for trading."""
+        for attempt in range(self.max_error_count):
+            try:
+                extended_balances_response = self.exchange.get_extended_balance()
+
+                extended_balance = extended_balances_response.get('result')
+
+                available_balances = {}
+
+                for asset in extended_balance.keys():
+                    available_balances[asset] = float(extended_balance[asset]['balance']) + float(extended_balance[asset].get('credit', 0)) - float(extended_balance[asset].get('credit_used', 0)) - float(extended_balance[asset]['hold_trade'])
+                
+                return available_balances
+            except Exception as e:
+                print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
+                
+                if attempt == self.max_error_count - 1:
+                    print(f"Failed to make API request after {self.max_error_count} attempts")
+                    raise e
+                else:
+                    time.sleep(self.error_latency)
     
     def fetch_balances(self):
-        raise NotImplementedError("Not Implemented.")
+        """Fetches latest account balances and account balances available for trading."""
+        for attempt in range(self.max_error_count):
+            try:
+                account_balances_response = self.exchange.get_account_balance()
+                break
+            except Exception as e:
+                print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
+                
+                if attempt == self.max_error_count - 1:
+                    print(f"Failed to make API request after {self.max_error_count} attempts")
+                    raise e
+                else:
+                    print("Fetching balances: ERROR WAIT")
+                    time.sleep(self.error_latency)
+        
+        self.account_balances = account_balances_response.get('result')
+
+        for asset in self.account_balances.keys():
+            self.account_balances[asset] = float(self.account_balances[asset])
+        
+        self.account_trade_balances = self.get_available_trade_balance()
     
     def fetch_latest_ohlc(self):
         """Fetches latest OHLC data."""
@@ -306,10 +359,11 @@ class Bot():
             self.latest_ohlc = OHLC(ohlc[pair_key][-1])
     
     def get_realized_gain(self):
-        raise NotImplementedError("Not Implemented.")
+        return self.position_manager.realized_pnl
     
     def get_unrealized_gain(self):
-        raise NotImplementedError("Not Implemented.")
+        self.fetch_latest_ohlc()
+        return self.position_manager.calculate_pnl(self.latest_ohlc.close)
     
     def stop(self):
         self.to_json_file(f'app/bots/local/{self.name}.json')

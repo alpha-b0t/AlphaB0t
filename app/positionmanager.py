@@ -15,8 +15,7 @@ class Position:
         chance_of_success: float = 0.0
     ):
         self.classname = self.__class__.__name__
-        if side not in ("long", "short"):
-            raise ValueError("side must be 'long' or 'short'")
+        assert side in ['long', 'short']
 
         self.ticker = ticker
         self.side = side
@@ -55,6 +54,7 @@ class Position:
         
         return instance
 
+# TODO: Should PositionManager be able to have several open positions at once?
 class PositionManager:
     def __init__(self):
         self.classname = self.__class__.__name__
