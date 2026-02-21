@@ -43,9 +43,6 @@ class BotConfig():
         self.pair = env_config['PAIR']
         self.base_currency = env_config['BASE_CURRENCY']
         self.mode = env_config['MODE']
-        self.total_investment = float(env_config['TOTAL_INVESTMENT'])
-        self.stop_loss = float(env_config['STOP_LOSS'])
-        self.take_profit = float(env_config['TAKE_PROFIT'])
         self.latency_in_sec = float(env_config['LATENCY_IN_SEC'])
         self.max_error_count = int(env_config['MAX_ERROR_COUNT'])
         self.error_latency_in_sec = float(env_config['ERROR_LATENCY_IN_SEC'])

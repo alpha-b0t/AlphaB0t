@@ -34,9 +34,6 @@ class Bot():
         self.name = bot_config.name
         self.pair = bot_config.pair
         self.mode = bot_config.mode
-        self.total_investment = bot_config.total_investment
-        self.stop_loss = bot_config.stop_loss
-        self.take_profit = bot_config.take_profit
         self.base_currency = bot_config.base_currency
         self.latency = bot_config.latency_in_sec
         self.max_error_count = bot_config.max_error_count
@@ -80,7 +77,6 @@ class Bot():
         print(f"Bot '{self.name}' starting. Mode: {self.mode}")
         print(f"Pair: {self.pair} | Strategy: {self.strategy.__class__.__name__} | Exchange: {self.exchange.__class__.__name__}")
         print(f"Pulling every {self.latency}s")
-        print(f"Stop loss: {self.stop_loss} | Take profit: {self.take_profit}")
         print(f"{'='*50}\n")
 
         try:
@@ -89,22 +85,8 @@ class Bot():
                 # ── 1. Fetch latest price ──────────────────────────────────────
                 self.fetch_latest_ohlc()
                 print(f"Current price: {self.latest_ohlc.close}")
-
-                # ── 2. Check global stop-loss / take-profit ────────────────────
-                if self.latest_ohlc.close <= self.stop_loss or self.latest_ohlc.close >= self.take_profit:
-                    if self.latest_ohlc.close <= self.stop_loss:
-                        print(f"⚠ Stop-loss hit ({self.latest_ohlc.close} ≤ {self.stop_loss}). Closing any open position.")
-                    else:
-                        print(f"✓ Take-profit hit ({self.latest_ohlc.close} ≥ {self.take_profit}). Closing any open position.")
-                    
-                    if self.position_manager.position is not None:
-                        # TODO: Implement
-                        pnl = self.position_manager.close_position(self.latest_ohlc.close)
-                        # self.cancel_open_order()
-                        print(f"Position closed. PnL: {round(pnl, 4)} {self.base_currency}")
-                    break
                 
-                # ── 3. Monitor open position stop/TP via PositionManager ───────
+                # ── 2. Monitor open position stop/TP via PositionManager ───────
                 if self.position_manager.position is not None:
                     unrealized = self.position_manager.calculate_pnl(self.latest_ohlc.close)
                     print(f"Open position unrealized PnL: {round(unrealized, 4)} {self.base_currency}")
@@ -119,7 +101,7 @@ class Bot():
                         time.sleep(self.latency)
                         continue
                 
-                # ── 4. Generate signal ─────────────────────────────────────────
+                # ── 3. Generate signal ─────────────────────────────────────────
                 strategy_signal = self.strategy.generate_signal()
                 print(f"Signal: {strategy_signal}")
 
@@ -145,20 +127,18 @@ class Bot():
                     print(f"  Position closed. PnL: {round(pnl, 4)} {self.base_currency}")
 
                 
-                # ── 5. Fetch balance for sizing ────────────────────────────────
+                # ── 4. Fetch balance for sizing ────────────────────────────────
                 self.fetch_balances()
-                available_balance = self.account_trade_balances.get(self.base_currency, self.total_investment)
+                available_balance = self.account_trade_balances(self.base_currency)
 
 
-                # ── 6. RiskManager: calculate position size ────────────────────
+                # ── 5. RiskManager: calculate position size ────────────────────
                 side = 'long' if strategy_signal == 'BUY' else 'short'
-                # TODO: Move line below into RiskManager
-                stop_price = self.stop_loss if side == 'long' else self.take_profit
                 
-                position_size = self.risk_manager.calculate_position_size(
+                position_size, stop_loss = self.risk_manager.calculate_position_size(
                     balance=available_balance,
                     entry_price=self.latest_ohlc.close,
-                    stop_loss=stop_price
+                    side=side
                 )
 
                 if position_size <= 0:
@@ -167,12 +147,15 @@ class Bot():
                     continue
 
 
-                # ── 7. RiskManager: validate order ─────────────────────────────
+                # ── 6. RiskManager: validate order ─────────────────────────────
                 # Construct order
                 order_dict = {
+                    'ordertype': 'limit',
+                    'type': strategy_signal,
+                    'side': side,
+                    'volume': position_size,
                     'price': self.latest_ohlc.close,
-                    'quantity': position_size,
-                    'stop_loss': stop_price
+                    'stop_loss': stop_loss
                 }
 
                 if not self.risk_manager.validate_order(order_dict, available_balance):
@@ -182,7 +165,7 @@ class Bot():
 
                 print(f"Placing {strategy_signal} order | qty: {round(position_size, 6)} @ ~{self.latest_ohlc.close}")
 
-                # ── 8. Execute order via Exchange ──────────────────────────────
+                # ── 7. Execute order via Exchange ──────────────────────────────
                 order_type = 'buy' if strategy_signal == 'BUY' else 'sell'
                 txid = self.place_order_with_retry(order_type, position_size, self.latest_ohlc.close)
 
@@ -190,7 +173,7 @@ class Bot():
                 order_response = self.exchange.add_order()
 
 
-                # ── 9. PositionManager: open position ──────────────────────────
+                # ── 8. PositionManager: open position ──────────────────────────
                 # Add position to PositionManager
                 self.position_manager.open_position(
                     ticker=self.pair,
@@ -239,10 +222,6 @@ class Bot():
         """Throws an error if the configurations are not correct."""
         # TODO: Implement
         assert self.mode in ['live', 'test']
-        assert self.stop_loss > 0
-        assert self.take_profit > 0
-        assert self.take_profit > self.stop_loss
-        assert self.total_investment > 0
         assert self.latency > 0
         assert self.max_error_count >= 1
         assert self.error_latency > 0
