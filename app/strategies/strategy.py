@@ -57,7 +57,7 @@ class Strategy():
         return instance
 
 class GridStrategy(Strategy):
-    def __init__(self, strategy_config: StrategyConfig={}):
+    def __init__(self, strategy_config: StrategyConfig={}, exchange: Exchange={}):
         super().__init__()
         self.classname = self.__class__.__name__
         if type(strategy_config) == dict:
@@ -66,6 +66,10 @@ class GridStrategy(Strategy):
             return
         
         self.strategy_config = {}
+        self.exchange = exchange
+        self.model_uuid = strategy_config.lstm_model_uuid
+        self.pair = strategy_config.pair
+        self.risk_to_reward_ratio = strategy_config.risk_to_reward_ratio
     
     def init_grid(self):
         """Initializes grids."""
@@ -268,6 +272,7 @@ class LSTMStrategy(Strategy):
         self.exchange = exchange
         self.model_uuid = strategy_config.lstm_model_uuid
         self.pair = strategy_config.pair
+        self.risk_to_reward_ratio = strategy_config.risk_to_reward_ratio
 
         # Load the trained model
         try:
@@ -381,12 +386,12 @@ class LSTMStrategy(Strategy):
         latest_ohlc = self.get_latest_ohlc()
         
         # TODO: Edit buffer
-        buffer = 0.02 # 2%
+        buffer = 0.0005 # 0.05%
         
-        print(f"Predicted change: {round(price_predictions[-1][0] - latest_ohlc.close, 2)}, ({round((price_predictions[-1][0] - latest_ohlc.close) * 100 / latest_ohlc.close, 2)}%)")
-        if price_predictions[-1][0] > latest_ohlc.close * (1 + buffer):
+        print(f"Predicted change: {round(price_predictions[-1][0] - latest_ohlc.close, 2)}, ({'+' if price_predictions[-1][0] > latest_ohlc.close else ''}{round((price_predictions[-1][0] - latest_ohlc.close) * 100 / latest_ohlc.close, 2)}%)")
+        if price_predictions[-1][0] >= latest_ohlc.close * (1 + buffer):
             return 'BUY'
-        elif price_predictions[-1][0] < latest_ohlc.close * (1 - buffer):
+        elif price_predictions[-1][0] <= latest_ohlc.close * (1 - buffer):
             return 'SELL'
         else:
             return 'HOLD'

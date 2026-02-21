@@ -81,7 +81,6 @@ class Bot():
 
         try:
             while True:
-                # TODO: Confirm this step is needed
                 # ── 1. Fetch latest price ──────────────────────────────────────
                 self.fetch_latest_ohlc()
                 print(f"Current price: {self.latest_ohlc.close}")
@@ -147,6 +146,9 @@ class Bot():
                     time.sleep(self.latency)
                     continue
 
+                # TODO: Implement
+                take_profit = (abs(self.latest_ohlc.close - stop_loss) * self.strategy.risk_to_reward_ratio) + self.latest_ohlc.close
+
 
                 # ── 6. RiskManager: validate order ─────────────────────────────
                 # Construct order
@@ -158,7 +160,8 @@ class Bot():
                     'side': side,
                     'volume': position_size,
                     'price': self.latest_ohlc.close,
-                    'stop_loss': stop_loss
+                    'stop_loss': stop_loss,
+                    'take_profit': take_profit
                 }
 
                 if not self.risk_manager.validate_order(order_dict, available_balance):
@@ -170,6 +173,7 @@ class Bot():
 
 
                 # ── 7. Execute order via Exchange ──────────────────────────────
+                # TODO: Implement https://support.kraken.com/articles/360038640052-conditional-close
                 for attempt in range(self.max_error_count):
                     try:
                         order_response = self.exchange.add_order(
