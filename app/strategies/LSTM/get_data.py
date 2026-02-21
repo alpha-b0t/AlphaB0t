@@ -104,12 +104,11 @@ def fetch_fear_and_greed_data(start: int = -1, filename: str = 'fear_and_greed_d
         print(f"Error fetching fear and greed data: {e}")
         raise e
 
-def fetch_training_data():
+def fetch_training_data(pair: str):
     # Fetch training data
-    pair = input('Enter crypto pair: ')
     since = 0
-    json_filename = input("Enter JSON filename to store data (e.g. 'training_data.json'): ")
-    csv_filename = input("Enter CSV filename to store data (e.g. 'crypto_training_data.csv'): ")
+    json_filename = "training_data.json"
+    csv_filename = "training_data.csv"
 
     fetch_data(
         pair=pair,
@@ -133,4 +132,4 @@ def fetch_training_data():
         export_json_to_csv(fg_json_filename, fg_csv_filename)
 
 if __name__ == "__main__":
-    fetch_training_data()
+    fetch_training_data("XBTUSD")

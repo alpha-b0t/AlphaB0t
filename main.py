@@ -7,6 +7,7 @@ from app.riskmanager import RiskManager
 from app.strategies.strategy import Strategy, GridStrategy, LSTMStrategy
 from app.strategies.LSTM.get_data import fetch_training_data
 from app.strategies.LSTM.train_model import train_model
+from dotenv import dotenv_values
 
 if __name__ == '__main__':
     request_config = RequestConfig()
@@ -57,13 +58,14 @@ if __name__ == '__main__':
         elif strategy_config.strategy == "LSTM":
             lstm_strategy = LSTMStrategy(strategy_config, exchange)
 
-            kraken_lstm_bot = Bot(bot_config, exchange, lstm_strategy, risk_manager)
+            lstm_bot = Bot(bot_config, exchange, lstm_strategy, risk_manager)
 
-            kraken_lstm_bot.run()
+            lstm_bot.run()
         else:
             raise ValueError(f"Strategy {strategy_config.strategy} not valid")
     elif request_config.request == "LSTM_TRAIN":
-        fetch_training_data()
+        env_config = dotenv_values('.env')
+        fetch_training_data(env_config['PAIR'])
 
         train_model()
     else:

@@ -2,7 +2,7 @@ EPOCHS = 50
 BATCH_SIZE = 32
 VALIDATION_SPLIT = 0.1
 
-INTERVAL = 1 # Interval in minutes (1, 5, 15, 30, 60, 240, 1440, 10080, 21600)
+INTERVAL = 5 # Interval in minutes (1, 5, 15, 30, 60, 240, 1440, 10080, 21600)
 
 # Define the sequence length (number of time steps) for LSTM
 # You can adjust this based on the nature of your data

@@ -30,6 +30,30 @@ PositionManager -------/
 Mode ----------------/
 ```
 
+```
+Strategy → direction only
+
+RiskManager → sizing + approval
+
+PositionManager → state + PnL
+
+Exchange → execution only
+```
+
+```
+Strategy → generates signal
+↓
+RiskManager → calculates position size
+↓
+RiskManager → validates order
+↓
+Exchange → executes order
+↓
+PositionManager → tracks position
+↓
+PositionManager → monitors stop/TP
+```
+
 ![High-Level Architecture](./images/AlphaB0t_Architecture.jpeg)
 
 ## Getting started

@@ -11,7 +11,6 @@ CLASS_NAMES = [
     'KrakenExchange',
     'CoinbaseExchange',
     'RobinhoodCryptoExchange',
-    'AppConfig',
     'RequestConfig',
     'GRIDBotConfig',
     'ExchangeConfig',

@@ -13,7 +13,7 @@ from app.models.result import Result
 from app.strategies.strategy import Strategy, GridStrategy, LSTMStrategy
 from app.riskmanager import RiskManager
 from app.positionmanager import PositionManager
-from config import AppConfig, RequestConfig, BotConfig, GRIDBotConfig, CoinMarketCapAPIConfig, ExchangeConfig, StrategyConfig, RiskManagerConfig
+from config import RequestConfig, BotConfig, GRIDBotConfig, CoinMarketCapAPIConfig, ExchangeConfig, StrategyConfig, RiskManagerConfig
 # Don't need to import class inherited from Bot
 
 class Bot():
