@@ -169,11 +169,10 @@ class Bot():
                     time.sleep(self.latency)
                     continue
 
-                print(f"Placing {strategy_signal} order | qty: {round(position_size, 6)} @ ~{self.latest_ohlc.close}")
-
 
                 # ── 7. Execute order via Exchange ──────────────────────────────
                 # TODO: Implement https://support.kraken.com/articles/360038640052-conditional-close
+                print(f"Placing {strategy_signal} order | qty: {round(position_size, 6)} @ ~{self.latest_ohlc.close}")
                 for attempt in range(self.max_error_count):
                     try:
                         order_response = self.exchange.add_order(
@@ -182,7 +181,10 @@ class Bot():
                             volume=order_dict['volume'],
                             pair=self.pair,
                             price=order_dict['price'],
-                            oflags='post'
+                            oflags='post',
+                            closeordertype='stop-loss-limit',
+                            closeprice=order_dict['price'], # Price to trigger stop loss
+                            closeprice2=order_dict['stop_loss'] # Stop loss limit price
                         )
                         break
                     except Exception as e:

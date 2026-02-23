@@ -341,7 +341,7 @@ class KrakenExchange(Exchange):
         """Returns nonce value as a string from a UNIX timestamp in milliseconds."""
         return str(int(1000*time.time()))
     
-    def add_order(self, ordertype, type, volume, pair, userref=0, price='', price2='', trigger='', oflags='', timeinforce='GTC', starttm='', expiretm='', deadline='', validate='false'):
+    def add_order(self, ordertype, type, volume, pair, userref=0, price='', price2='', trigger='', oflags='', timeinforce='GTC', starttm='', expiretm='', deadline='', validate='false', closeordertype='', closeprice='', closeprice2=''):
         """Add an order."""
         # https://docs.kraken.com/rest/#tag/Trading/operation/addOrder
         if self.mode == 'test':
@@ -381,6 +381,15 @@ class KrakenExchange(Exchange):
         
         if deadline != '':
             payload["deadline"] = deadline
+        
+        if closeordertype != '':
+            payload["close[ordertype]"] = closeordertype
+        
+        if closeprice != '':
+            payload["close[price]"] = closeprice
+        
+        if closeprice2 != '':
+            payload["close[price2]"] = closeprice2
         
         response = self.authenticated_request('/private/AddOrder', payload)
 
