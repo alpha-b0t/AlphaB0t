@@ -18,7 +18,7 @@ class RiskManager:
         - position value does not exceed max_position_pct of balance
         - dollar risk on the trade does not exceed risk_per_trade of balance
 
-        order must contain: 'price', 'volume', 'stop_price'
+        order must contain: 'price', 'volume', 'stop_loss'
         """
         if not self.check_drawdown(balance):
             print("RiskManager: order rejected due to drawdown being exceeded")
@@ -30,7 +30,7 @@ class RiskManager:
             print("RiskManager: order rejected due to position value exceeding max position pct of balance")
             return False
 
-        risk_amount = abs(order['price'] - order['stop_price']) * order['volume']
+        risk_amount = abs(order['price'] - order['stop_loss']) * order['volume']
         if risk_amount > balance * self.risk_per_trade:
             print("RiskManager: order rejected due to risk amount being exceeded")
             return False

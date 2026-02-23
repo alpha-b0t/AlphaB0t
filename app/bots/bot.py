@@ -256,7 +256,7 @@ class Bot():
                         if order_dict['type'] == 'buy':
                             # Add a stop loss limit OTC order for buy orders for downside protection
                             open_position_order_response = self.exchange.add_order(
-                                order_type=order_dict['ordertype'],
+                                ordertype=order_dict['ordertype'],
                                 type=order_dict['type'],
                                 volume=order_dict['volume'],
                                 pair=self.pair,
@@ -268,7 +268,7 @@ class Bot():
                             )
                         else:
                             open_position_order_response = self.exchange.add_order(
-                                order_type=order_dict['ordertype'],
+                                ordertype=order_dict['ordertype'],
                                 type=order_dict['type'],
                                 volume=order_dict['volume'],
                                 pair=self.pair,
@@ -298,12 +298,13 @@ class Bot():
                 # TODO: Place a separate order for TP
 
                 # TODO: Consider about the case of options trading and the case of buying to close, MVP = spot crypto
+                # TODO: Implement volume checking on all orders
                 if order_dict['type'] == 'buy':
                     for attempt in range(self.max_error_count):
                         try:
                             take_profit_type = 'sell' if order_dict['type'] == 'buy' else 'buy'
                             take_profit_order_response = self.exchange.add_order(
-                                order_type="take-profit-limit",
+                                ordertype="take-profit-limit",
                                 type=take_profit_type,
                                 volume=order_dict['volume'],
                                 pair=self.pair,
