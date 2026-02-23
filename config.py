@@ -248,10 +248,10 @@ class RiskManagerConfig():
         self.classname = self.__class__.__name__
         env_config = dotenv_values(filepath)
 
-        self.risk_per_trade = env_config['RISK_PER_TRADE']
-        self.max_position_pct = env_config['MAX_POSITION_PCT']
-        self.max_drawdown_pct = env_config['MAX_DRAWDOWN_PCT']
-        self.portfolio_balance = env_config['PORTFOLIO_BALANCE']
+        self.risk_per_trade = float(env_config['RISK_PER_TRADE'])
+        self.max_position_pct = float(env_config['MAX_POSITION_PCT'])
+        self.max_drawdown_pct = float(env_config['MAX_DRAWDOWN_PCT'])
+        self.portfolio_balance = float(env_config['PORTFOLIO_BALANCE'])
     
     @classmethod
     def from_json(cls, json_data):
