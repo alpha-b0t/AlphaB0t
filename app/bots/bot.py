@@ -288,36 +288,49 @@ class Bot():
                 # TODO: Fix txid since txid maybe be a list and associated with two orders (original and stop loss limit)
                 open_position_txid = open_position_order_response['result'].get('txid', [])
                 
+                for i in range(len(open_position_txid)):
+                    self.open_order_txids.append(open_position_txid[i])
+                
                 # TODO: Create an Order object
 
                 # TODO: Confirm order has been placed before adding TP order
                 
                 # TODO: Place a separate order for TP
-                for attempt in range(self.max_error_count):
-                    try:
-                        take_profit_type = 'sell' if order_dict['type'] == 'buy' else 'buy'
-                        take_profit_order_response = self.exchange.add_order(
-                            order_type="take-profit-limit",
-                            type=take_profit_type,
-                            volume=order_dict['volume'],
-                            pair=self.pair,
-                            price=order_dict['price'], # Trigger for take profit limit order
-                            price2=order_dict['take_profit'], # Take profit limit price
-                            oflags='post',
-                        )
-                        break
-                    except Exception as e:
-                        print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
 
-                        if attempt == self.max_error_count - 1:
-                            print(f"Failed to make API request after {self.max_error_count} attempts")
-                            raise e
-                        else:
-                            time.sleep(self.error_latency)
+                # TODO: Consider about the case of options trading and the case of buying to close, MVP = spot crypto
+                if order_dict['type'] == 'buy':
+                    for attempt in range(self.max_error_count):
+                        try:
+                            take_profit_type = 'sell' if order_dict['type'] == 'buy' else 'buy'
+                            take_profit_order_response = self.exchange.add_order(
+                                order_type="take-profit-limit",
+                                type=take_profit_type,
+                                volume=order_dict['volume'],
+                                pair=self.pair,
+                                price=order_dict['price'], # Trigger for take profit limit order
+                                price2=order_dict['take_profit'], # Take profit limit price
+                                oflags='post',
+                            )
+                            break
+                        except Exception as e:
+                            print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
 
-                take_profit_txid = take_profit_order_response['result'].get('txid', [])
-                if take_profit_txid != []:
-                    take_profit_txid = [take_profit_txid[0],]
+                            if attempt == self.max_error_count - 1:
+                                print(f"Failed to make API request after {self.max_error_count} attempts")
+                                raise e
+                            else:
+                                time.sleep(self.error_latency)
+
+                    take_profit_txid = take_profit_order_response['result'].get('txid', [])
+                    if take_profit_txid != []:
+                        take_profit_txid = [take_profit_txid[0],]
+                        self.open_order_txids.append(take_profit_txid[0])
+                
+                if len(self.open_order_txids) > 0:
+                    print(f"Order(s) placed. txids: {self.open_order_txids}")
+                else:
+                    print(f"Order submitted (test mode — no txid returned).")
+
 
                 # ── 8. PositionManager: open position ──────────────────────────
                 # Add position to PositionManager
@@ -330,17 +343,7 @@ class Bot():
                     take_profit=take_profit
                 )
 
-                # FIX ME
-                for i in range(len(open_position_txid)):
-                    self.open_order_txids.append(open_position_txid[i])
-                
-                if take_profit_txid != []:
-                    self.open_order_txids.append(take_profit_txid[0])
-                
-                if len(self.open_order_txids) > 0:
-                    print(f"Order(s) placed. txids: {self.open_order_txids}")
-                else:
-                    print(f"Order submitted (test mode — no txid returned).")
+                print("Position added")
 
                 print(f"{self.position_manager}")
 
