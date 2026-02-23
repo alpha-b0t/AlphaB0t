@@ -45,6 +45,82 @@ class Bot():
 
         # Perform validation on the configuration
         self.check_config()
+
+        # Fetch information related to the pair
+        for attempt in range(self.max_error_count):
+            try:
+                asset_info_response = self.exchange.get_tradable_asset_pairs(self.pair)
+                break
+            except Exception as e:
+                print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
+                
+                if attempt == self.max_error_count - 1:
+                    print(f"Failed to make API request after {self.max_error_count} attempts")
+                    raise e
+                else:
+                    time.sleep(self.error_latency)
+        
+        asset_info = asset_info_response.get('result')
+
+        for key in asset_info.keys():
+            pair_key = key
+        
+        pair_info = asset_info[pair_key]
+
+        # Price precision
+        self.pair_decimals = pair_info['pair_decimals']
+
+        # Volume precision in base currency
+        self.lot_decimals = pair_info['lot_decimals']
+
+        self.cost_decimals = pair_info['cost_decimals']
+        self.ordermin = float(pair_info['ordermin'])
+        self.costmin = float(pair_info['costmin'])
+        self.tick_size = pair_info['tick_size']
+        self.pair_status = pair_info['status']
+
+        # Fetch fee schedule and trade volume info
+        for attempt in range(self.max_error_count):
+            try:
+                trade_volume_fee_response = self.exchange.get_trade_volume(self.pair)
+                break
+            except Exception as e:
+                print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
+                
+                if attempt == self.max_error_count - 1:
+                    print(f"Failed to make API request after {self.max_error_count} attempts")
+                    raise e
+                else:
+                    time.sleep(self.error_latency)
+        
+        fee_info = trade_volume_fee_response.get('result')
+        self.trade_volume = fee_info['volume']
+
+        for key in fee_info['fees'].keys():
+            pair_key = key
+        
+        if fee_info.get('fees_maker') is None:
+            self.fee_taker = self.fee_maker = float(fee_info['fees'][pair_key]['fee'])
+        else:
+            self.fee_taker = float(fee_info['fees'][pair_key]['fee'])
+            self.fee_maker = float(fee_info['fees_maker'][pair_key]['fee'])
+        
+        self.open_orders = []
+        self.closed_orders = []
+        self.realized_gain = 0
+        self.realized_gain_percent = 0
+        self.unrealized_gain = 0
+        self.unrealized_gain_percent = 0
+        self.fee = 0
+        self.account_balances = {}
+
+        # Fetch balances
+        if self.exchange.api_key != '' and self.exchange.api_sec != '':
+            self.fetch_balances()
+
+        if self.mode != 'test':
+            if self.risk_manager.peak_balance > self.account_trade_balances[self.base_currency]:
+                raise Exception(f"Your stated portfolio balance, {self.risk_manager.peak_balance} {self.base_currency}, is greater than your balance of {self.base_currency} availabe for trading, {self.account_trade_balances[self.base_currency]}.")
     
     def __repr__(self):
         name_display = self.name if self.name else "''"
@@ -83,7 +159,7 @@ class Bot():
             while True:
                 # ── 1. Fetch latest price ──────────────────────────────────────
                 self.fetch_latest_ohlc()
-                print(f"Current price: {self.latest_ohlc.close}")
+                print(f"\nCurrent price: {self.latest_ohlc.close}")
                 
                 # ── 2. Monitor open position stop/TP via PositionManager ───────
                 if self.position_manager.position is not None:
@@ -204,6 +280,8 @@ class Bot():
                 
                 # TODO: Create an Order object
 
+                # TODO: Place a separate order for TP
+
 
                 # ── 8. PositionManager: open position ──────────────────────────
                 # Add position to PositionManager
@@ -212,8 +290,8 @@ class Bot():
                     side=side,
                     entry_price=self.latest_ohlc.close,
                     quantity=position_size,
-                    stop_loss=self.stop_loss,
-                    take_profit=self.take_profit
+                    stop_loss=stop_loss,
+                    take_profit=take_profit
                 )
 
                 if txid:
