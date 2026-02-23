@@ -105,6 +105,7 @@ class Bot():
             self.fee_taker = float(fee_info['fees'][pair_key]['fee'])
             self.fee_maker = float(fee_info['fees_maker'][pair_key]['fee'])
         
+        self.open_order_txids = []
         self.open_orders = []
         self.closed_orders = []
         self.realized_gain = 0
@@ -251,17 +252,29 @@ class Bot():
                 print(f"Placing {strategy_signal} order | qty: {round(position_size, 6)} @ ~{self.latest_ohlc.close}")
                 for attempt in range(self.max_error_count):
                     try:
-                        order_response = self.exchange.add_order(
-                            order_type=order_dict['ordertype'],
-                            type=order_dict['type'],
-                            volume=order_dict['volume'],
-                            pair=self.pair,
-                            price=order_dict['price'],
-                            oflags='post',
-                            closeordertype='stop-loss-limit',
-                            closeprice=order_dict['price'], # Price to trigger stop loss
-                            closeprice2=order_dict['stop_loss'] # Stop loss limit price
-                        )
+                        # TODO: Consider about the case of options trading and the case of buying to close, MVP = spot crypto
+                        if order_dict['type'] == 'buy':
+                            # Add a stop loss limit OTC order for buy orders for downside protection
+                            open_position_order_response = self.exchange.add_order(
+                                order_type=order_dict['ordertype'],
+                                type=order_dict['type'],
+                                volume=order_dict['volume'],
+                                pair=self.pair,
+                                price=order_dict['price'],
+                                oflags='post',
+                                closeordertype='stop-loss-limit',
+                                closeprice=order_dict['price'], # Price to trigger stop loss
+                                closeprice2=order_dict['stop_loss'] # Stop loss limit price
+                            )
+                        else:
+                            open_position_order_response = self.exchange.add_order(
+                                order_type=order_dict['ordertype'],
+                                type=order_dict['type'],
+                                volume=order_dict['volume'],
+                                pair=self.pair,
+                                price=order_dict['price'],
+                                oflags='post',
+                            )
                         break
                     except Exception as e:
                         print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
@@ -272,16 +285,39 @@ class Bot():
                         else:
                             time.sleep(self.error_latency)
                 
-                txid = order_response['result'].get('txid', [])
-                if txid == []:
-                    txid = ''
-                else:
-                    txid = txid[0]
+                # TODO: Fix txid since txid maybe be a list and associated with two orders (original and stop loss limit)
+                open_position_txid = open_position_order_response['result'].get('txid', [])
                 
                 # TODO: Create an Order object
 
+                # TODO: Confirm order has been placed before adding TP order
+                
                 # TODO: Place a separate order for TP
+                for attempt in range(self.max_error_count):
+                    try:
+                        take_profit_type = 'sell' if order_dict['type'] == 'buy' else 'buy'
+                        take_profit_order_response = self.exchange.add_order(
+                            order_type="take-profit-limit",
+                            type=take_profit_type,
+                            volume=order_dict['volume'],
+                            pair=self.pair,
+                            price=order_dict['price'], # Trigger for take profit limit order
+                            price2=order_dict['take_profit'], # Take profit limit price
+                            oflags='post',
+                        )
+                        break
+                    except Exception as e:
+                        print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
 
+                        if attempt == self.max_error_count - 1:
+                            print(f"Failed to make API request after {self.max_error_count} attempts")
+                            raise e
+                        else:
+                            time.sleep(self.error_latency)
+
+                take_profit_txid = take_profit_order_response['result'].get('txid', [])
+                if take_profit_txid != []:
+                    take_profit_txid = [take_profit_txid[0],]
 
                 # ── 8. PositionManager: open position ──────────────────────────
                 # Add position to PositionManager
@@ -294,9 +330,15 @@ class Bot():
                     take_profit=take_profit
                 )
 
-                if txid:
-                    self.open_order_txid = txid
-                    print(f"Order placed. txid: {txid}")
+                # FIX ME
+                for i in range(len(open_position_txid)):
+                    self.open_order_txids.append(open_position_txid[i])
+                
+                if take_profit_txid != []:
+                    self.open_order_txids.append(take_profit_txid[0])
+                
+                if len(self.open_order_txids) > 0:
+                    print(f"Order(s) placed. txids: {self.open_order_txids}")
                 else:
                     print(f"Order submitted (test mode — no txid returned).")
 
