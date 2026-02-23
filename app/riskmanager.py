@@ -21,17 +21,21 @@ class RiskManager:
         order must contain: 'price', 'volume', 'stop_price'
         """
         if not self.check_drawdown(balance):
+            print("RiskManager: order rejected due to drawdown being exceeded")
             return False
 
         position_value = order['price'] * order['volume']
 
         if position_value > balance * self.max_position_pct:
+            print("RiskManager: order rejected due to position value exceeding max position pct of balance")
             return False
 
         risk_amount = abs(order['price'] - order['stop_price']) * order['volume']
         if risk_amount > balance * self.risk_per_trade:
+            print("RiskManager: order rejected due to risk amount being exceeded")
             return False
 
+        print("RiskManager: order approved")
         return True
 
     def calculate_max_position(self, balance: float) -> float:

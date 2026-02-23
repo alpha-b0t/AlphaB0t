@@ -165,7 +165,7 @@ class Bot():
                 }
 
                 if not self.risk_manager.validate_order(order_dict, available_balance):
-                    print(f"RiskManager rejected order (drawdown / position size / risk limit). Skipping.")
+                    # RiskManager rejected order (drawdown / position size / risk limit). Skipping.
                     time.sleep(self.latency)
                     continue
 
