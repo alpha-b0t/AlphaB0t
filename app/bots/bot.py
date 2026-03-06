@@ -6,7 +6,8 @@ import time
 
 # The following imports are needed for loading the objects from JSON
 from app.exchanges.cmc_api import CoinMarketCapAPI
-from app.exchanges.exchange import Exchange, KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange, RobinhoodOptionExchange
+from app.exchanges.exchange import Exchange, CoinbaseExchange, RobinhoodCryptoExchange
+from app.exchanges.optionexchange import OptionExchange, RobinhoodOptionExchange
 from app.strategies.grid import Grid
 from app.strategies.ohlc import OHLC
 from app.strategies.order import Order, KrakenOrder
@@ -277,29 +278,50 @@ class Bot():
                 print(f"Placing {strategy_signal} order | qty: {round(position_size, 6)} @ ~{self.latest_ohlc.close}")
                 for attempt in range(self.max_error_count):
                     try:
-                        # NOTE: Options and buy-to-close flows are not yet implemented; MVP is spot crypto only.
-                        if order_dict['type'] == 'buy':
-                            # Add a stop loss limit OTC order for buy orders for downside protection
+                        # Spot / crypto flow (any Exchange subclass)
+                        if isinstance(self.exchange, Exchange):
+                            if order_dict['type'] == 'buy':
+                                # Add a stop loss limit conditional close for downside protection
+                                open_position_order_response = self.exchange.add_order(
+                                    ordertype=order_dict['ordertype'],
+                                    type=order_dict['type'],
+                                    volume=order_dict['volume'],
+                                    pair=self.pair,
+                                    price=order_dict['price'],
+                                    oflags='post',
+                                    closeordertype='stop-loss-limit',
+                                    closeprice=order_dict['price'],  # trigger price
+                                    closeprice2=order_dict['stop_loss'],  # stop-loss limit
+                                )
+                            else:
+                                open_position_order_response = self.exchange.add_order(
+                                    ordertype=order_dict['ordertype'],
+                                    type=order_dict['type'],
+                                    volume=order_dict['volume'],
+                                    pair=self.pair,
+                                    price=order_dict['price'],
+                                    oflags='post',
+                                )
+                        # Basic options flow (any OptionExchange subclass)
+                        elif isinstance(self.exchange, OptionExchange):
+                            # NOTE: This is a minimal starting implementation.
+                            # It assumes `self.pair` is an option symbol understood by Robinhood
+                            # and treats BUY as opening / increasing exposure and SELL as reducing it.
+                            action = 'buy' if strategy_signal == 'BUY' else 'sell'
+                            # Quantity must be an int for most options APIs
+                            quantity = max(1, int(round(position_size)))
+                            option_type = getattr(self, "option_type", "call")
+
                             open_position_order_response = self.exchange.add_order(
-                                ordertype=order_dict['ordertype'],
-                                type=order_dict['type'],
-                                volume=order_dict['volume'],
-                                pair=self.pair,
-                                price=order_dict['price'],
-                                oflags='post',
-                                closeordertype='stop-loss-limit',
-                                closeprice=order_dict['price'], # Price to trigger stop loss
-                                closeprice2=order_dict['stop_loss'] # Stop loss limit price
+                                symbol=self.pair,
+                                quantity=quantity,
+                                option_type=option_type,
+                                price=self.latest_ohlc.close,
+                                action=action,
                             )
                         else:
-                            open_position_order_response = self.exchange.add_order(
-                                ordertype=order_dict['ordertype'],
-                                type=order_dict['type'],
-                                volume=order_dict['volume'],
-                                pair=self.pair,
-                                price=order_dict['price'],
-                                oflags='post',
-                            )
+                            raise Exception("Invalid Exchange: Exchange is not spot / crypto or option exchange")
+
                         break
                     except Exception as e:
                         print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
@@ -348,30 +370,32 @@ class Bot():
 
                 # Place a separate order for TP once the main order is acknowledged
                 if order_dict['type'] == 'buy':
-                    if not order_confirmed:
-                        print("Skipping separate TP order because base order could not be confirmed.")
-                    else:
-                        for attempt in range(self.max_error_count):
-                            try:
-                                take_profit_type = 'sell' if order_dict['type'] == 'buy' else 'buy'
-                                take_profit_order_response = self.exchange.add_order(
-                                    ordertype="take-profit-limit",
-                                    type=take_profit_type,
-                                    volume=order_dict['volume'],
-                                    pair=self.pair,
-                                    price=order_dict['price'], # Trigger for take profit limit order
-                                    price2=order_dict['take_profit'], # Take profit limit price
-                                    oflags='post',
-                                )
-                                break
-                            except Exception as e:
-                                print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
+                    # Only Exchange-style spot orders currently support a separate TP order.
+                    if isinstance(self.exchange, Exchange):
+                        if not order_confirmed:
+                            print("Skipping separate TP order because base order could not be confirmed.")
+                        else:
+                            for attempt in range(self.max_error_count):
+                                try:
+                                    take_profit_type = 'sell'
+                                    take_profit_order_response = self.exchange.add_order(
+                                        ordertype="take-profit-limit",
+                                        type=take_profit_type,
+                                        volume=order_dict['volume'],
+                                        pair=self.pair,
+                                        price=order_dict['price'],  # trigger
+                                        price2=order_dict['take_profit'],  # TP limit
+                                        oflags='post',
+                                    )
+                                    break
+                                except Exception as e:
+                                    print(f"Error making TP API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
 
-                                if attempt == self.max_error_count - 1:
-                                    print(f"Failed to make API request after {self.max_error_count} attempts")
-                                    raise e
-                                else:
-                                    time.sleep(self.error_latency)
+                                    if attempt == self.max_error_count - 1:
+                                        print(f"Failed to make TP order after {self.max_error_count} attempts")
+                                        raise e
+                                    else:
+                                        time.sleep(self.error_latency)
 
                             take_profit_txid = take_profit_order_response.get('result', {}).get('txid', [])
                             if isinstance(take_profit_txid, str):
@@ -434,13 +458,29 @@ class Bot():
 
         for attempt in range(self.max_error_count):
             try:
-                exit_order_response = self.exchange.add_order(
-                    ordertype='market',
-                    type=order_type,
-                    volume=quantity,
-                    pair=self.pair,
-                    price=price,
-                )
+                # Spot / crypto flow (any Exchange subclass)
+                if isinstance(self.exchange, Exchange):
+                    exit_order_response = self.exchange.add_order(
+                        ordertype='market',
+                        type=order_type,
+                        volume=quantity,
+                        pair=self.pair,
+                        price=price,
+                    )
+                # Basic options flow (any OptionExchange subclass)
+                elif isinstance(self.exchange, OptionExchange):
+                    action = order_type
+                    qty_int = max(1, int(round(quantity)))
+                    option_type = getattr(self, "option_type", "call")
+                    exit_order_response = self.exchange.add_order(
+                        symbol=self.pair,
+                        quantity=qty_int,
+                        option_type=option_type,
+                        price=price,
+                        action=action,
+                    )
+                else:
+                    raise Exception("Invalid Exchange: Exchange is not spot / crypto or option exchange")
 
                 txids = exit_order_response.get('result', {}).get('txid', [])
                 if isinstance(txids, list):

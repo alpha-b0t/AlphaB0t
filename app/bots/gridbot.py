@@ -1,5 +1,6 @@
 from app.bots.bot import Bot
-from app.exchanges.exchange import Exchange, KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange, RobinhoodOptionExchange
+from app.exchanges.exchange import Exchange, KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange
+from app.exchanges.optionexchange import OptionExchange, RobinhoodOptionExchange
 from app.strategies.strategy import Strategy
 from app.strategies.grid import Grid
 from app.strategies.ohlc import OHLC

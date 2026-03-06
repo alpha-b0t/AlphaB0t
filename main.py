@@ -1,5 +1,6 @@
 from config import RequestConfig, GRIDBotConfig, ExchangeConfig, StrategyConfig, RiskManagerConfig, BotConfig
-from app.exchanges.exchange import KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange, RobinhoodOptionExchange
+from app.exchanges.exchange import KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange
+from app.exchanges.optionexchange import RobinhoodOptionExchange
 from app.bots.bot import Bot
 from app.bots.gridbot import GRIDBot
 from app.enums import RequestType, BotMode, StrategyType, ExchangeType, ExitAction

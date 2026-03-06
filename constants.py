@@ -24,5 +24,7 @@ CLASS_NAMES = [
     'RiskManagerConfig',
     'Position',
     'PositionManager',
-    'BotConfig'
+    'BotConfig',
+    'OptionExchange',
+    'RobinhoodOptionExchange'
 ]
