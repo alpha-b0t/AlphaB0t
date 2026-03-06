@@ -3,6 +3,8 @@ from constants import CLASS_NAMES
 import json
 from app.helpers.json_util import CustomEncoder
 import time
+import uuid
+import os
 
 # The following imports are needed for loading the objects from JSON
 from app.exchanges.cmc_api import CoinMarketCapAPI
@@ -40,6 +42,10 @@ class Bot():
         self.max_error_count = bot_config.max_error_count
         self.error_latency = bot_config.error_latency_in_sec
         self.cancel_orders_upon_exit = bot_config.cancel_orders_upon_exit
+
+        # Generate a unique UUID for this bot
+        self.uuid = str(uuid.uuid4())
+        print(f"Generated Bot UUID: {self.uuid}")
         
         # Initialize the timer
         self.start_time = time.time()
@@ -643,6 +649,9 @@ class Bot():
         raise NotImplementedError("Not Implemented.")
     
     def to_json_file(self, filename):
+        # Ensure the folder exists
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+
         data = vars(self)
         with open(filename, 'w') as f:
             json.dump(data, f, indent=4, cls=CustomEncoder)
