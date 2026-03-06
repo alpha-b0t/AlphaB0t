@@ -1,6 +1,7 @@
 EPOCHS = 50
 BATCH_SIZE = 32
 VALIDATION_SPLIT = 0.1
+SINCE=1385827200 # UNIX time to fetch training data from
 
 INTERVAL = 5 # Interval in minutes (1, 5, 15, 30, 60, 240, 1440, 10080, 21600)
 

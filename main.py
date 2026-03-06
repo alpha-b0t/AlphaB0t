@@ -74,9 +74,8 @@ if __name__ == '__main__':
             # TODO: Implement
             bot.restart()
     elif request_config.request == "LSTM_TRAIN":
-        env_config = dotenv_values('.env')
-        fetch_training_data(env_config['PAIR'])
-
         train_model()
+    elif request_config.request == "LSTM_TRAIN_FETCH":
+        fetch_training_data()
     else:
         raise ValueError(f"Request {request_config.request} not valid")

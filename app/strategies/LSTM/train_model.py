@@ -5,7 +5,7 @@ from datetime import datetime
 from sklearn.preprocessing import StandardScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM, Dropout, Input
-from app.strategies.LSTM.model_constants import EPOCHS, BATCH_SIZE, VALIDATION_SPLIT, INTERVAL, SEQUENCE_LENGTH, MA_SHORT, MA_LONG, EMA_SHORT, EMA_LONG, RSI_PERIOD, MACD_FAST, MACD_SLOW, MACD_SIGNAL
+from app.strategies.LSTM.model_constants import EPOCHS, BATCH_SIZE, VALIDATION_SPLIT, SINCE, INTERVAL, SEQUENCE_LENGTH, MA_SHORT, MA_LONG, EMA_SHORT, EMA_LONG, RSI_PERIOD, MACD_FAST, MACD_SLOW, MACD_SIGNAL
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 def calculate_rsi(data, period=RSI_PERIOD):
@@ -137,6 +137,7 @@ def train_model():
         'epochs': [EPOCHS],
         'batch_size': [BATCH_SIZE],
         'validation_split': [VALIDATION_SPLIT],
+        'since': [SINCE],
         'interval': [INTERVAL],
         'sequence_length': [SEQUENCE_LENGTH],
         'ma_short': [MA_SHORT],

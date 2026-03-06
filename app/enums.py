@@ -1,8 +1,10 @@
 from enum import Enum
 
 class RequestType(Enum):
-    LSTM_TRAIN = 0
-    RUN = 1
+    RUN = 0
+    BOT_LOAD = 1
+    LSTM_TRAIN = 2
+    LSTM_TRAIN_FETCH = 3
 
 class BotMode(Enum):
     TEST = 0
