@@ -54,8 +54,6 @@ PositionManager → tracks position
 PositionManager → monitors stop/TP
 ```
 
-![High-Level Architecture](./images/AlphaB0t_Architecture.jpeg)
-
 ## Getting started
 
 ```
