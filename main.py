@@ -2,7 +2,7 @@ from config import RequestConfig, GRIDBotConfig, ExchangeConfig, StrategyConfig,
 from app.exchanges.exchange import KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange, RobinhoodOptionExchange
 from app.bots.bot import Bot
 from app.bots.gridbot import GRIDBot
-from app.enums.enums import RequestType, BotMode, StrategyType, ExchangeType, ExitAction
+from app.enums import RequestType, BotMode, StrategyType, ExchangeType, ExitAction
 from app.riskmanager import RiskManager
 from app.strategies.strategy import Strategy, GridStrategy, LSTMStrategy
 from app.strategies.LSTM.get_data import fetch_training_data
