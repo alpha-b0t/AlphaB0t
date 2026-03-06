@@ -239,6 +239,16 @@ class Bot():
                     time.sleep(self.latency)
                     continue
 
+                # Enforce exchange minimum volume / notional constraints where possible
+                notional = position_size * self.latest_ohlc.close
+                if position_size < self.ordermin or round(notional, self.pair_decimals) < self.costmin:
+                    print(
+                        "Position size below exchange minimums "
+                        f"(ordermin={self.ordermin}, costmin={self.costmin}). Skipping."
+                    )
+                    time.sleep(self.latency)
+                    continue
+
                 take_profit = (abs(self.latest_ohlc.close - stop_loss) * self.strategy.risk_to_reward_ratio) + self.latest_ohlc.close
 
 
@@ -263,11 +273,11 @@ class Bot():
 
 
                 # ── 7. Execute order via Exchange ──────────────────────────────
-                # TODO: Implement https://support.kraken.com/articles/360038640052-conditional-close
+                # Uses conditional close (stop-loss-limit) for downside protection on buys.
                 print(f"Placing {strategy_signal} order | qty: {round(position_size, 6)} @ ~{self.latest_ohlc.close}")
                 for attempt in range(self.max_error_count):
                     try:
-                        # TODO: Consider about the case of options trading and the case of buying to close, MVP = spot crypto
+                        # NOTE: Options and buy-to-close flows are not yet implemented; MVP is spot crypto only.
                         if order_dict['type'] == 'buy':
                             # Add a stop loss limit OTC order for buy orders for downside protection
                             open_position_order_response = self.exchange.add_order(
@@ -300,47 +310,77 @@ class Bot():
                         else:
                             time.sleep(self.error_latency)
                 
-                # TODO: Fix txid since txid maybe be a list and associated with two orders (original and stop loss limit)
-                open_position_txid = open_position_order_response['result'].get('txid', [])
-                
-                for i in range(len(open_position_txid)):
-                    self.open_order_txids.append(open_position_txid[i])
-                
-                # TODO: Create an Order object
+                # Normalize txid(s) and store them
+                raw_txids = open_position_order_response.get('result', {}).get('txid', [])
+                if isinstance(raw_txids, str):
+                    open_position_txids = [raw_txids]
+                else:
+                    open_position_txids = list(raw_txids or [])
 
-                # TODO: Confirm order has been placed before adding TP order
-                
-                # TODO: Place a separate order for TP
+                self.open_order_txids.extend(open_position_txids)
 
-                # TODO: Consider about the case of options trading and the case of buying to close, MVP = spot crypto
-                # TODO: Implement volume checking on all orders
-                if order_dict['type'] == 'buy':
+                # Track the open order objects for introspection / debugging
+                if open_position_txids:
+                    # TODO: Abstract KrakenOrder into Order class
+                    from app.strategies.order import KrakenOrder
+
+                    for txid in open_position_txids:
+                        self.open_orders.append(
+                            KrakenOrder(txid=txid, order_data=open_position_order_response.get('result', {}))
+                        )
+
+                # Confirm order exists on the exchange before placing a separate TP order
+                order_confirmed = False
+                if open_position_txids:
+                    txid_query = ",".join(open_position_txids)
                     for attempt in range(self.max_error_count):
                         try:
-                            take_profit_type = 'sell' if order_dict['type'] == 'buy' else 'buy'
-                            take_profit_order_response = self.exchange.add_order(
-                                ordertype="take-profit-limit",
-                                type=take_profit_type,
-                                volume=order_dict['volume'],
-                                pair=self.pair,
-                                price=order_dict['price'], # Trigger for take profit limit order
-                                price2=order_dict['take_profit'], # Take profit limit price
-                                oflags='post',
-                            )
+                            order_info = self.exchange.get_orders_info(txid_query, trades=False)
+                            if order_info.get("result"):
+                                order_confirmed = True
                             break
                         except Exception as e:
-                            print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
-
+                            print(f"Error confirming open order (attempt {attempt + 1}/{self.max_error_count}): {e}")
                             if attempt == self.max_error_count - 1:
-                                print(f"Failed to make API request after {self.max_error_count} attempts")
-                                raise e
+                                print("Proceeding without explicit confirmation of open order.")
                             else:
                                 time.sleep(self.error_latency)
 
-                    take_profit_txid = take_profit_order_response['result'].get('txid', [])
-                    if take_profit_txid != []:
-                        take_profit_txid = [take_profit_txid[0],]
-                        self.open_order_txids.append(take_profit_txid[0])
+                # Place a separate order for TP once the main order is acknowledged
+                if order_dict['type'] == 'buy':
+                    if not order_confirmed:
+                        print("Skipping separate TP order because base order could not be confirmed.")
+                    else:
+                        for attempt in range(self.max_error_count):
+                            try:
+                                take_profit_type = 'sell' if order_dict['type'] == 'buy' else 'buy'
+                                take_profit_order_response = self.exchange.add_order(
+                                    ordertype="take-profit-limit",
+                                    type=take_profit_type,
+                                    volume=order_dict['volume'],
+                                    pair=self.pair,
+                                    price=order_dict['price'], # Trigger for take profit limit order
+                                    price2=order_dict['take_profit'], # Take profit limit price
+                                    oflags='post',
+                                )
+                                break
+                            except Exception as e:
+                                print(f"Error making API request (attempt {attempt + 1}/{self.max_error_count}): {e}")
+
+                                if attempt == self.max_error_count - 1:
+                                    print(f"Failed to make API request after {self.max_error_count} attempts")
+                                    raise e
+                                else:
+                                    time.sleep(self.error_latency)
+
+                            take_profit_txid = take_profit_order_response.get('result', {}).get('txid', [])
+                            if isinstance(take_profit_txid, str):
+                                take_profit_txids = [take_profit_txid]
+                            else:
+                                take_profit_txids = list(take_profit_txid or [])
+
+                            if take_profit_txids:
+                                self.open_order_txids.extend(take_profit_txids)
                 
                 if len(self.open_order_txids) > 0:
                     print(f"Order(s) placed. txids: {self.open_order_txids}")
