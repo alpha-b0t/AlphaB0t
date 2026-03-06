@@ -135,7 +135,7 @@ class Bot():
             f"unrealized_pnl: {unrealized} {self.base_currency}}}"
         )
     
-    def run(self):
+    def run(self, max_iterations: int | None = None):
         """
         Strategy → generates signal
         ↓
@@ -157,7 +157,11 @@ class Bot():
         print(f"{'='*50}\n")
 
         try:
+            iteration = 0
             while True:
+                if max_iterations is not None and iteration >= max_iterations:
+                    break
+
                 # ── 1. Fetch latest price ──────────────────────────────────────
                 self.fetch_latest_ohlc()
                 print(f"\nCurrent price: {self.latest_ohlc.close}")
@@ -168,10 +172,16 @@ class Bot():
                     print(f"Open position unrealized PnL: {round(unrealized, 4)} {self.base_currency}")
 
                     if self.position_manager.check_exit_conditions(self.latest_ohlc.close):
-                        # TODO: Implement
                         print(f"Position exit condition met at {self.latest_ohlc.close}. Closing.")
+                        pos = self.position_manager.position
+                        order_type = 'sell' if pos.side == 'long' else 'buy'
+                        quantity = pos.quantity
+                        self.place_exit_order(
+                            price=self.latest_ohlc.close,
+                            order_type=order_type,
+                            quantity=quantity,
+                        )
                         pnl = self.position_manager.close_position(self.latest_ohlc.close)
-                        self.place_exit_order(self.latest_ohlc.close)
                         print(f"Position closed. PnL: {round(pnl, 4)} {self.base_currency}")
                         print(f"Total realized PnL: {round(self.position_manager.realized_pnl, 4)} {self.base_currency}")
                         time.sleep(self.latency)
@@ -198,9 +208,15 @@ class Bot():
 
                     # Opposite signal: close existing position first
                     print(f"  Opposite signal received. Closing existing {existing_side} position.")
+                    pos = self.position_manager.position
+                    order_type = 'sell' if pos.side == 'long' else 'buy'
+                    quantity = pos.quantity
+                    self.place_exit_order(
+                        price=self.latest_ohlc.close,
+                        order_type=order_type,
+                        quantity=quantity,
+                    )
                     pnl = self.position_manager.close_position(self.latest_ohlc.close)
-                    # TODO: IMPLEMENT
-                    self.place_exit_order(self.latest_ohlc.close)
                     print(f"  Position closed. PnL: {round(pnl, 4)} {self.base_currency}")
 
                 
@@ -223,7 +239,6 @@ class Bot():
                     time.sleep(self.latency)
                     continue
 
-                # TODO: Implement
                 take_profit = (abs(self.latest_ohlc.close - stop_loss) * self.strategy.risk_to_reward_ratio) + self.latest_ohlc.close
 
 
@@ -351,6 +366,7 @@ class Bot():
                 time.sleep(self.latency)
 
                 # PositionManager monitors stop/TP
+                iteration += 1
         except KeyboardInterrupt as e:
             print(f"Unexpected error: {e}")
             print("User ended execution of program.")
@@ -369,7 +385,43 @@ class Bot():
         print(f"\nBot '{self.name}' finished.")
         print(f"Total realized PnL: {round(self.position_manager.realized_pnl, 4)} {self.base_currency}")
         print(f"Closed positions: {len(self.position_manager.closed_positions)}")
-    
+
+    def place_exit_order(self, price: float, order_type: str, quantity: float):
+        """
+        Place a market exit order on the exchange to close an existing position.
+        """
+        print(f"Placing exit {order_type.upper()} order | qty: {round(quantity, 6)} @ ~{price}")
+
+        for attempt in range(self.max_error_count):
+            try:
+                exit_order_response = self.exchange.add_order(
+                    ordertype='market',
+                    type=order_type,
+                    volume=quantity,
+                    pair=self.pair,
+                    price=price,
+                )
+
+                txids = exit_order_response.get('result', {}).get('txid', [])
+                if isinstance(txids, list):
+                    self.open_order_txids.extend(txids)
+                elif txids:
+                    self.open_order_txids.append(txids)
+
+                if txids:
+                    print(f"Exit order placed. txids: {txids}")
+                else:
+                    print("Exit order submitted (test mode — no txid returned).")
+                break
+            except Exception as e:
+                print(f"Error placing exit order (attempt {attempt + 1}/{self.max_error_count}): {e}")
+
+                if attempt == self.max_error_count - 1:
+                    print(f"Failed to place exit order after {self.max_error_count} attempts")
+                    raise e
+                else:
+                    time.sleep(self.error_latency)
+
     def get_runtime(self):
         return time.time() - self.start_time
     
