@@ -9,7 +9,7 @@ import json
 import requests
 from typing import Optional, Dict, Any, List
 
-def fetch_data(pair, interval, since):
+def fetch_data(pair, interval, since, filename):
     # Kraken OHLC API's settings
     # intervals is in minutes
     intervals = [1, 5, 15, 30, 60, 240, 1440, 10080, 21600]
@@ -48,7 +48,7 @@ def fetch_data(pair, interval, since):
         except:
             break
         time.sleep(5)
-    export_data_to_json(data[0], "training_data.json")
+    export_data_to_json(data[0], filename)
 
 
 def fetch_historical_data_http(
