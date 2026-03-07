@@ -26,5 +26,7 @@ CLASS_NAMES = [
     'PositionManager',
     'BotConfig',
     'OptionExchange',
-    'RobinhoodOptionExchange'
+    'RobinhoodOptionExchange',
+    'TestExchange',
+    'TestStrategy',
 ]

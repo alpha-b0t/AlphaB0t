@@ -5,15 +5,18 @@ from app.riskmanager import RiskManager
 from app.positionmanager import PositionManager
 from app.strategies.strategy import Strategy
 from app.strategies.ohlc import OHLC
+from app.exchanges.exchange import Exchange
 from config import BotConfig, ExchangeConfig, RiskManagerConfig, StrategyConfig
 
 
-class DummyExchange:
+class TestExchange(Exchange):
     def __init__(self):
         # Use non-empty keys so Bot.fetch_balances() is exercised,
-        # but all calls stay inside this dummy class.
-        self.api_key = "dummy"
-        self.api_sec = "dummy"
+        # but all calls stay inside this test class.
+        super().__init__()
+        self.classname = self.__class__.__name__
+        self.api_key = "xxxxx"
+        self.api_sec = "xxxxx"
         self.mode = "test"
         self.add_order_calls = []
 
@@ -97,9 +100,10 @@ class DummyExchange:
         return {"result": {"txid": ["ABC123"]}}
 
 
-class DummyStrategy(Strategy):
+class TestStrategy(Strategy):
     def __init__(self):
         super().__init__()
+        self.classname = self.__class__.__name__
         self.risk_to_reward_ratio = 2.0
         self._next_signal = "HOLD"
 
@@ -123,8 +127,8 @@ def make_bot(signal: str = "HOLD") -> Bot:
     # Force test mode to avoid real-trading assertions.
     bot_config.mode = "test"
 
-    exchange = DummyExchange()
-    strategy = DummyStrategy()
+    exchange = TestExchange()
+    strategy = TestStrategy()
     strategy.set_signal(signal)
     risk_manager = RiskManager(risk_config)
 
