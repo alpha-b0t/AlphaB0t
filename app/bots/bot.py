@@ -8,7 +8,7 @@ import os
 
 # The following imports are needed for loading the objects from JSON
 from app.exchanges.cmc_api import CoinMarketCapAPI
-from app.exchanges.exchange import Exchange, KrakenExchange, BinanceExchange, CoinbaseExchange, RobinhoodCryptoExchange
+from app.exchanges.exchange import Exchange, KrakenExchange, BinanceExchange, BinanceUSExchange, CoinbaseExchange, RobinhoodCryptoExchange
 from app.exchanges.optionexchange import OptionExchange, RobinhoodOptionExchange
 from app.strategies.grid import Grid
 from app.strategies.ohlc import OHLC

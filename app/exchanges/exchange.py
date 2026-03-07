@@ -666,6 +666,25 @@ class BinanceExchange(Exchange):
         self.api_key = exchange_config.api_key
         self.api_sec = exchange_config.api_sec
         self.mode = exchange_config.mode.lower()
+        # TODO: Implement
+        self.api_base_url = ''
+
+class BinanceUSExchange(Exchange):
+    def __init__(self, exchange_config: ExchangeConfig={}):
+        super().__init__()
+        self.classname = self.__class__.__name__
+        if type(exchange_config) == dict:
+            # Reloading
+            print(f"Reloading {self.classname}...")
+            return
+        
+        self.exchange_config = {}
+
+        assert exchange_config.mode.lower() in ['live', 'test']
+        self.api_key = exchange_config.api_key
+        self.api_sec = exchange_config.api_sec
+        self.mode = exchange_config.mode.lower()
+        # TODO: Implement
         self.api_base_url = ''
 
 class CoinbaseExchange(Exchange):

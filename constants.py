@@ -30,4 +30,5 @@ CLASS_NAMES = [
     'TestExchange',
     'TestStrategy',
     'BinanceExchange',
+    'BinanceUSExchange',
 ]
