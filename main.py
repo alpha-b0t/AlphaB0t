@@ -70,7 +70,7 @@ if __name__ == '__main__':
             # Load bot if it exists
             bot = Bot.from_json_file(f'app/bots/local/{bot_config.name}.json')
 
-            # Restart automated grid trading
+            # Restart trading
             # TODO: Implement
             bot.restart()
     elif request_config.request == "LSTM_TRAIN":

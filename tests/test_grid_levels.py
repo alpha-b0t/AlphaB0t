@@ -10,7 +10,7 @@ import pytest
     (100, 25, 125, 3, 2, 2.0),
     (100, 25, 100, 4, 2, 2.0)
 ])
-def test_kraken_calculate_max_quantity_per_grid(total_investment: float, lower_price, upper_price, level_num, pair_decimals, expected_quantity: float):
+def test_calculate_max_quantity_per_grid(total_investment: float, lower_price, upper_price, level_num, pair_decimals, expected_quantity: float):
     # Arrange
     # Set up an ExchangeConfig and a GRIDBotConfig
     exchange_config = ExchangeConfig("tests/test.env")
@@ -40,7 +40,7 @@ def test_kraken_calculate_max_quantity_per_grid(total_investment: float, lower_p
     (1.0, 10, 50, 5, 2, 100),
     (1.0, 5, 15, 3, 2, 15)
 ])
-def test_kraken_calculate_total_investment(quantity_per_grid: float, lower_price, upper_price, level_num, pair_decimals, expected_investment: float):
+def test_calculate_total_investment(quantity_per_grid: float, lower_price, upper_price, level_num, pair_decimals, expected_investment: float):
     # Arrange
     # Set up an ExchangeConfig and a GRIDBotConfig
     exchange_config = ExchangeConfig("tests/test.env")
