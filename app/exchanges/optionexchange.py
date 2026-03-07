@@ -3,6 +3,7 @@ import inspect
 from constants import CLASS_NAMES
 import robin_stocks.robinhood as rh
 from app.strategies.helpers import round_down_to_cents
+from typing import Optional
 
 class OptionExchange:
     def __init__(self):
@@ -155,85 +156,176 @@ class RobinhoodOptionExchange(OptionExchange):
             print("already logged out")
             raise e
     
-    def get_exchange_time(self):
-        """Returns the current exchange time (as string)."""
-        return rh.stocks.get_market_hours()
+    def get_exchange_time(self, market: str = "XNYS"):
+        """
+        Return today's market hours for the given market.
 
-    def get_exchange_status(self):
-        """Check if the exchange is open or closed."""
-        market_hours = rh.markets.get_market_hours()
-        if market_hours['is_open']:
-            return "Open"
-        else:
-            return "Closed"
+        Uses robin_stocks.robinhood.markets.get_market_today_hours, which is
+        documented in the Robinhood "Getting Market Information" section
+        (`get_market_today_hours` in [Robinhood Functions](https://robin-stocks.readthedocs.io/en/latest/robinhood.html)).
+        """
+        return rh.markets.get_market_today_hours(market)
 
-    def get_asset_info(self, pair):
-        """Fetch asset information for a given option."""
-        return rh.options.get_option_instrument_data(pair)
+    def get_exchange_status(self, market: str = "XNYS") -> str:
+        """
+        Check if the specified market is open or closed today.
 
-    def get_tradable_asset_pairs(self, pair, info):
-        """Get tradable asset pairs."""
-        return rh.options.find_tradable_options(symbol=pair)
+        Wraps robin_stocks.robinhood.markets.get_market_today_hours and inspects
+        the documented `is_open` field
+        (`get_market_today_hours` in [Robinhood Functions](https://robin-stocks.readthedocs.io/en/latest/robinhood.html)).
+        """
+        hours = rh.markets.get_market_today_hours(market)
+        return "Open" if hours.get("is_open") else "Closed"
+
+    def get_asset_info(
+        self,
+        asset: str,
+        aclass: Optional[str] = None,
+        expirationDate: Optional[str] = None,
+        strikePrice: Optional[str] = None,
+        optionType: Optional[str] = None,
+        info: Optional[str] = None,
+    ):
+        """Fetch option information for a given underlying symbol."""
+        symbol = asset
+
+        if expirationDate is None and strikePrice is None and optionType is None:
+            return rh.options.get_chains(symbol, info=info)
+
+        return rh.options.find_tradable_options(
+            symbol=symbol,
+            expirationDate=expirationDate,
+            strikePrice=strikePrice,
+            optionType=optionType,
+            info=info,
+        )
+
+    def get_tradable_asset_pairs(
+        self,
+        pair: str,
+        info: Optional[str] = None,
+        expirationDate: Optional[str] = None,
+        strikePrice: Optional[str] = None,
+        optionType: Optional[str] = None,
+    ):
+        """Get tradable option contracts for an underlying symbol."""
+        return rh.options.find_tradable_options(
+            symbol=pair,
+            expirationDate=expirationDate,
+            strikePrice=strikePrice,
+            optionType=optionType,
+            info=info,
+        )
     
-    def get_ticker_info(self, pair):
-        """Get ticker info for a given asset pair."""
-        return rh.options.get_option_instrument_data(pair)
+    def get_ticker_info(self, symbol: str, info: Optional[str] = None):
+        """Get quote information for the underlying stock ticker."""
+        return rh.stocks.get_quotes(symbol, info=info)
 
-    def get_ohlc_data(self, pair, expirationDate, strikePrice, optionType):
-        """Fetch OHLC (Open, High, Low, Close) data."""
-        return rh.options.get_option_market_data(pair, expirationDate, strikePrice, optionType)
+    def get_ohlc_data(
+        self,
+        symbol: str,
+        expirationDate: str,
+        strikePrice: str,
+        optionType: str,
+        interval: str = "hour",
+        span: str = "week",
+        bounds: str = "regular",
+        info: Optional[str] = None,
+    ):
+        """Fetch OHLC-style historical data for a specific option contract."""
+        return rh.options.get_option_historicals(
+            symbol=symbol,
+            expirationDate=expirationDate,
+            strikePrice=strikePrice,
+            optionType=optionType,
+            interval=interval,
+            span=span,
+            bounds=bounds,
+            info=info,
+        )
 
-    def get_order_book(self, pair, count):
-        """Fetch order book for an asset pair."""
-        # Robinhood API does not support direct order books, you could adapt this method.
-        return rh.options.get_option_instrument_data(pair)  # Placeholder for now.
+    def get_order_book(self, symbol: str, info: Optional[str] = None):
+        """Fetch a level-II style order book for the underlying stock."""
+        return rh.stocks.get_pricebook_by_symbol(symbol, info=info)
 
-    def get_recent_trades(self, pair, since, count):
-        """Fetch recent trades."""
-        return rh.stocks.get_recent_trades(pair, count)
+    def get_recent_trades(
+        self,
+        symbol: str,
+        interval: str = "5minute",
+        span: str = "day",
+        bounds: str = "trading",
+        info: Optional[str] = None,
+    ):
+        """Approximate recent trades via short-interval stock historical data."""
+        return rh.stocks.get_stock_historicals(
+            symbol, interval=interval, span=span, bounds=bounds, info=info
+        )
 
-    def get_recent_spreads(self, pair, since):
-        """Fetch recent spreads."""
-        # Robinhood API does not directly provide spread data, needs alternative calculation
-        return rh.options.get_option_instrument(pair)  # Placeholder for now.
+    def get_recent_spreads(self, symbol: str):
+        """Compute the current bid/ask spread for a stock from the pricebook."""
+        book = rh.stocks.get_pricebook_by_symbol(symbol)
+        bids = book.get("bids", []) or []
+        asks = book.get("asks", []) or []
 
-    def add_order(self, symbol, quantity, option_type, price, action):
-        """Place an order for options trading."""
-        """
-        robin_stocks.robinhood.orders.order_buy_option_limit(positionEffect, creditOrDebit, price, symbol, quantity, expirationDate, strike, optionType='both', account_number=None, timeInForce='gtc', jsonify=True)[source]
-        Submits a limit order for an option. i.e. place a long call or a long put.
+        best_bid = max((float(b["price"]) for b in bids), default=0.0)
+        best_ask = min((float(a["price"]) for a in asks), default=0.0)
 
-        Parameters:
-        positionEffect (str) – Either ‘open’ for a buy to open effect or ‘close’ for a buy to close effect.
+        return {
+            "best_bid": best_bid,
+            "best_ask": best_ask,
+            "spread": best_ask - best_bid if best_ask and best_bid else 0.0,
+        }
 
-        creditOrDebit (str) – Either ‘debit’ or ‘credit’.
+    def add_order(
+        self,
+        symbol: str,
+        quantity: int,
+        expirationDate: str,
+        strike: float,
+        optionType: str,
+        price: float,
+        side: str = "buy",
+        positionEffect: str = "open",
+        timeInForce: str = "gtc",
+        creditOrDebit: Optional[str] = None,
+        account_number: Optional[str] = None,
+        jsonify: bool = True,
+    ):
+        """Place a limit order for an options contract."""
+        if creditOrDebit is None:
+            creditOrDebit = "debit" if side.lower() == "buy" else "credit"
 
-        price (float) – The limit price to trigger a buy of the option.
-
-        symbol (str) – The stock ticker of the stock to trade.
-
-        quantity (int) – The number of options to buy.
-
-        expirationDate (str) – The expiration date of the option in ‘YYYY-MM-DD’ format.
-
-        strike (float) – The strike price of the option.
-
-        optionType (str) – This should be ‘call’ or ‘put’
-
-        account_number (Optional[str]) – the robinhood account number.
-
-        timeInForce (Optional[str]) – Changes how long the order will be in effect for. ‘gtc’ = good until cancelled. ‘gfd’ = good for the day. ‘ioc’ = immediate or cancel. ‘opg’ execute at opening.
-
-        jsonify (Optional[str]) – If set to False, function will return the request object which contains status code and headers.
-
-        Returns:
-        Dictionary that contains information regarding the buying of options, such as the order id, the state of order (queued, confired, filled, failed, canceled, etc.), the price, and the quantity.
-        """
-        if action == "buy":
-            return rh.options.order_buy_option_limit(symbol, quantity, price)
-        elif action == "sell":
-            return rh.options.order_sell_option_limit(symbol, quantity, price)
-        return None
+        side_lower = side.lower()
+        if side_lower == "buy":
+            return rh.orders.order_buy_option_limit(
+                positionEffect,
+                creditOrDebit,
+                price,
+                symbol,
+                quantity,
+                expirationDate,
+                strike,
+                optionType=optionType,
+                account_number=account_number,
+                timeInForce=timeInForce,
+                jsonify=jsonify,
+            )
+        elif side_lower == "sell":
+            return rh.orders.order_sell_option_limit(
+                positionEffect,
+                creditOrDebit,
+                price,
+                symbol,
+                quantity,
+                expirationDate,
+                strike,
+                optionType=optionType,
+                account_number=account_number,
+                timeInForce=timeInForce,
+                jsonify=jsonify,
+            )
+        else:
+            raise ValueError("side must be either 'buy' or 'sell'")
 
     def add_order_batch(self, orders):
         """Add multiple orders at once."""
@@ -244,9 +336,15 @@ class RobinhoodOptionExchange(OptionExchange):
             results.append(result)
         return results
 
-    def edit_order(self, order_id, new_price):
-        """Edit an existing order."""
-        return rh.orders.update_option_order(order_id, price=new_price)
+    def edit_order(self, order_id: str, new_order_params: dict):
+        """
+        Edit an existing option order by cancelling it and submitting a new one.
+
+        Robinhood does not support in-place option order edits; the recommended
+        pattern is cancel + re-create.
+        """
+        rh.orders.cancel_option_order(order_id)
+        return self.add_order(**new_order_params)
 
     def cancel_order(self, order_id):
         """Cancel an order."""
@@ -261,62 +359,83 @@ class RobinhoodOptionExchange(OptionExchange):
         return results
 
     def get_account_balance(self):
-        """Fetch account balance."""
-        return rh.account.get_account()
+        """Fetch high-level account balance information."""
+        return rh.account.build_user_profile()
 
     def get_extended_balance(self):
-        """Fetch extended balance (cash, buying power, margin)."""
-        return rh.account.get_margin()
+        """Fetch extended balance/profile information (e.g. portfolio cash)."""
+        return rh.profiles.load_account_profile(dataType="indexzero")
     
     def get_trade_balance(self, asset):
-        """Fetch trade balance for a given asset."""
-        return rh.stocks.get_balance(asset)
+        """Fetch available cash that can be deployed for trading."""
+        profile = rh.account.build_user_profile()
+        return profile.get("cash")
     
     def get_open_orders(self):
-        """Fetch all open orders."""
+        """Fetch all open option orders."""
         return rh.orders.get_all_open_option_orders()
 
     def get_closed_orders(self):
-        """Fetch all closed orders."""
-        return rh.orders.get_all_closed_orders()
+        """Fetch all closed option orders."""
+        all_orders = rh.orders.get_all_option_orders()
+        return [order for order in all_orders if order.get("state") != "open"]
 
-    def get_orders_info(self):
-        """Fetch detailed information for all orders."""
-        return rh.orders.get_all_option_positions()
+    def get_orders_info(self, info: Optional[str] = None):
+        """Fetch detailed information for all option orders."""
+        return rh.orders.get_all_option_orders(info=info)
 
-    def get_trades_info(self):
-        """Fetch detailed trade information."""
-        return rh.stocks.get_all_trades()
+    def get_trades_info(self, info: Optional[str] = None):
+        """Fetch detailed trade information for option orders."""
+        return rh.orders.get_all_option_orders(info=info)
 
-    def get_trades_history(self):
-        """Fetch historical trade data."""
-        return rh.stocks.get_trade_history()
+    def get_trades_history(self, info: Optional[str] = None):
+        """Fetch historical option trade data."""
+        return rh.orders.get_all_option_orders(info=info)
 
     def get_trade_volume(self):
-        """Fetch the total volume of trades."""
-        # No direct Robinhood method, but could be calculated from trade history.
-        raise NotImplementedError
+        """Fetch the total volume of filled option contracts."""
+        orders = rh.orders.get_all_option_orders()
+        volume = 0.0
+        for order in orders:
+            if order.get("state") == "filled":
+                try:
+                    volume += float(order.get("quantity", 0))
+                except (TypeError, ValueError):
+                    continue
+        return volume
 
     def get_holdings_and_bought_price(self):
-        """Fetch all holdings and the average bought price."""
-        holdings = rh.stocks.get_all_positions()
-        return [{"symbol": position['instrument']['symbol'], 
-                 "quantity": position['quantity'], 
-                 "avg_price": position['average_buy_price']} for position in holdings]
+        """Fetch all stock holdings and the average bought price."""
+        positions = rh.account.get_all_positions()
+        results = []
+        for position in positions:
+            instrument_url = position.get("instrument")
+            symbol = rh.stocks.get_symbol_by_url(instrument_url) if instrument_url else None
+            results.append(
+                {
+                    "symbol": symbol,
+                    "quantity": position.get("quantity"),
+                    "avg_price": position.get("average_buy_price"),
+                }
+            )
+        return results
 
     def get_cash_and_equity(self):
         """Fetch cash and equity balances."""
-        account_info = rh.account.get_account()
+        account_info = rh.account.build_user_profile()
         return {
-            "cash": account_info['cash'],
-            "equity": account_info['equity']
+            "cash": account_info.get("cash"),
+            "equity": account_info.get("equity"),
         }
 
     def get_holdings_capital(self):
         """Fetch holdings balance using the market price."""
-        capital = 0.00
-        
-        for asset_name, amount in self.holdings.items():
-            capital += amount * float(self.get_latest_quote(asset_name)['mark_price'])
-        
-        return round_down_to_cents(capital)
+        holdings = rh.account.build_holdings()
+        total_equity = 0.0
+        for info in holdings.values():
+            try:
+                total_equity += float(info.get("equity", 0))
+            except (TypeError, ValueError):
+                continue
+
+        return round_down_to_cents(total_equity)
