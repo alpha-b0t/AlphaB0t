@@ -5,6 +5,13 @@ from config import RiskManagerConfig
 class RiskManager:
     def __init__(self, riskmanager_config: RiskManagerConfig = {}):
         self.classname = self.__class__.__name__
+        if type(riskmanager_config) == dict:
+            # Reloading
+            print(f"Reloading {self.classname}...")
+            return
+        
+        self.riskmanager_config = {}
+
         self.risk_per_trade = riskmanager_config.risk_per_trade
         self.max_position_pct = riskmanager_config.max_position_pct
         self.max_drawdown_pct = riskmanager_config.max_drawdown_pct

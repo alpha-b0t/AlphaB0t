@@ -18,8 +18,7 @@ if __name__ == '__main__':
         bot_config = BotConfig()
         exchange_config = ExchangeConfig()
         strategy_config = StrategyConfig()
-        riskmanager_config = RiskManagerConfig()
-        risk_manager = RiskManager(riskmanager_config)
+        risk_manager = RiskManager(RiskManagerConfig())
         
         # Set exchange
         if exchange_config.exchange_name == 'RobinhoodCrypto':
@@ -71,7 +70,6 @@ if __name__ == '__main__':
             bot = Bot.from_json_file(f'app/bots/local/{bot_config.name}.json')
 
             # Restart trading
-            # TODO: Implement
             bot.restart()
     elif request_config.request == "LSTM_TRAIN":
         train_model()

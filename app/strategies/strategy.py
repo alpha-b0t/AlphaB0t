@@ -31,6 +31,10 @@ class Strategy():
     def update_indicators(self, new_data: dict):
         """Update internal indicators with new data"""
         raise NotImplementedError
+
+    def prepare_for_restart(self) -> None:
+        """Override to reload non-serialized state (e.g. Keras model). No-op by default."""
+        raise NotImplementedError
     
     @classmethod
     def from_json(cls, json_data):
@@ -275,11 +279,7 @@ class LSTMStrategy(Strategy):
         self.risk_to_reward_ratio = strategy_config.risk_to_reward_ratio
 
         # Load the trained model
-        try:
-            self.model = load_model(f'app/strategies/LSTM/models/model_{self.model_uuid}.h5')
-        except FileNotFoundError:
-            print(f"Error: Model file not found for UUID {self.model_uuid}")
-            exit(1)
+        self.load_model()
         
         # Load the model metrics
         self.model_metrics = self.get_model_metrics()
@@ -296,6 +296,23 @@ class LSTMStrategy(Strategy):
             return df.iloc[0].to_dict()
         except FileNotFoundError:
             raise FileNotFoundError(f"No metrics CSV found for model UUID: {self.model_uuid}")
+
+    def prepare_for_restart(self) -> None:
+        """Reload LSTM model and metrics after loading bot from JSON (model is not serialized)."""
+        if getattr(self, "model", None) is not None:
+            return
+        
+        # Load the trained model
+        self.load_model()
+        
+        self.model_metrics = self.get_model_metrics()
+    
+    def load_model(self):
+        # Load the trained model
+        try:
+            self.model = load_model(f'app/strategies/LSTM/models/model_{self.model_uuid}.h5')
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Error: Model file not found for UUID {self.model_uuid}")
     
     def get_prediction_data(self):
         # TODO: Improve [fetch_data -> export_data_to_json -> remove_duplicates_and_sort] pipeline by removing unnecessary files and optimizing for speed

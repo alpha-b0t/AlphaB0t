@@ -8,7 +8,7 @@ import os
 
 # The following imports are needed for loading the objects from JSON
 from app.exchanges.cmc_api import CoinMarketCapAPI
-from app.exchanges.exchange import Exchange, CoinbaseExchange, RobinhoodCryptoExchange
+from app.exchanges.exchange import Exchange, KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange
 from app.exchanges.optionexchange import OptionExchange, RobinhoodOptionExchange
 from app.strategies.grid import Grid
 from app.strategies.ohlc import OHLC
@@ -638,7 +638,18 @@ class Bot():
         if self.strategy.classname == "LSTMStrategy" and hasattr(self.strategy, "model"):
             del self.strategy.model
         self.to_json_file(f'app/bots/local/{self.name}.json')
-    
+
+    def _prepare_strategy_for_restart(self) -> None:
+        """Reload any strategy state not persisted in JSON (e.g. LSTM model)."""
+        if self.strategy is not None and hasattr(self.strategy, "prepare_for_restart"):
+            self.strategy.prepare_for_restart()
+
+    def restart(self) -> None:
+        """Resume from saved state and continue the trading loop."""
+        print(f"Resuming bot '{self.name}' from saved state...")
+        self._prepare_strategy_for_restart()
+        self.run()
+
     def pause(self):
         raise NotImplementedError("Not Implemented.")
     
