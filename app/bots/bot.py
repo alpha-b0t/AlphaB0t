@@ -250,7 +250,7 @@ class Bot():
                 notional = position_size * self.latest_ohlc.close
                 if position_size < self.ordermin or round(notional, self.pair_decimals) < self.costmin:
                     print(
-                        "Position size below exchange minimums "
+                        f"Position size {position_size} and/or notional {round(notional, self.pair_decimals)} below exchange minimums "
                         f"(ordermin={self.ordermin}, costmin={self.costmin}). Skipping."
                     )
                     time.sleep(self.latency)
