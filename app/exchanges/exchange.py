@@ -651,6 +651,23 @@ class KrakenExchange(Exchange):
         self.handle_response_errors(result)
         return result
 
+class BinanceExchange(Exchange):
+    def __init__(self, exchange_config: ExchangeConfig={}):
+        super().__init__()
+        self.classname = self.__class__.__name__
+        if type(exchange_config) == dict:
+            # Reloading
+            print(f"Reloading {self.classname}...")
+            return
+        
+        self.exchange_config = {}
+
+        assert exchange_config.mode.lower() in ['live', 'test']
+        self.api_key = exchange_config.api_key
+        self.api_sec = exchange_config.api_sec
+        self.mode = exchange_config.mode.lower()
+        self.api_base_url = ''
+
 class CoinbaseExchange(Exchange):
     def __init__(self, api_key='', api_sec='', api_passphrase=''):
         super().__init__()

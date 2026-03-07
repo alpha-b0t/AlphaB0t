@@ -29,4 +29,5 @@ CLASS_NAMES = [
     'RobinhoodOptionExchange',
     'TestExchange',
     'TestStrategy',
+    'BinanceExchange',
 ]

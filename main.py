@@ -1,5 +1,5 @@
 from config import RequestConfig, GRIDBotConfig, ExchangeConfig, StrategyConfig, RiskManagerConfig, BotConfig
-from app.exchanges.exchange import KrakenExchange, CoinbaseExchange, RobinhoodCryptoExchange
+from app.exchanges.exchange import KrakenExchange, BinanceExchange, CoinbaseExchange, RobinhoodCryptoExchange
 from app.exchanges.optionexchange import RobinhoodOptionExchange
 from app.bots.bot import Bot
 from app.bots.gridbot import GRIDBot
@@ -30,6 +30,8 @@ if __name__ == '__main__':
         elif exchange_config.exchange_name == "Coinbase":
             raise NotImplementedError
         elif exchange_config.exchange_name == "Binance_US":
+            raise NotImplementedError
+        elif exchange_config.exchange_name == "Binance":
             raise NotImplementedError
         else:
             raise ValueError(f"Exchange name {exchange_config.exchange_name} not found")
