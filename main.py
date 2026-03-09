@@ -1,6 +1,6 @@
 from config import RequestConfig, GRIDBotConfig, ExchangeConfig, StrategyConfig, RiskManagerConfig, BotConfig
 from app.exchanges.exchange import KrakenExchange, BinanceExchange, BinanceUSExchange, CoinbaseExchange, RobinhoodCryptoExchange
-from app.exchanges.optionexchange import RobinhoodOptionExchange
+from app.exchanges.futuresexchange import KrakenFuturesExchange
 from app.bots.bot import Bot
 from app.bots.gridbot import GRIDBot
 from app.enums import RequestType, BotMode, StrategyType, ExchangeType, ExitAction
@@ -23,7 +23,7 @@ if __name__ == '__main__':
         # Set exchange
         if exchange_config.exchange_name == 'RobinhoodCrypto':
             raise NotImplementedError
-        elif exchange_config.exchange_name == 'RobinhoodOption':
+        elif exchange_config.exchange_name == 'KrakenFutures':
             raise NotImplementedError
         elif exchange_config.exchange_name == 'Kraken':
             exchange = KrakenExchange(exchange_config)

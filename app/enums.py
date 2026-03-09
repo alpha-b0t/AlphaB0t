@@ -18,10 +18,11 @@ class StrategyType(Enum):
 
 class ExchangeType(Enum):
     KRAKEN = 0
-    COINBASE = 1
-    BINANCE_US = 2
-    ROBINHOOD_CRYPTO = 3
-    ROBINHOOD_OPTION = 4
+    KRAKENFUTURES = 1
+    COINBASE = 2
+    BINANCE = 3
+    BINANCE_US = 4
+    ROBINHOOD_CRYPTO = 5
 
 class ExitAction(Enum):
     NOTHING = 0

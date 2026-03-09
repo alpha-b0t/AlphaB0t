@@ -9,7 +9,7 @@ import os
 # The following imports are needed for loading the objects from JSON
 from app.exchanges.cmc_api import CoinMarketCapAPI
 from app.exchanges.exchange import Exchange, KrakenExchange, BinanceExchange, BinanceUSExchange, CoinbaseExchange, RobinhoodCryptoExchange
-from app.exchanges.optionexchange import OptionExchange, RobinhoodOptionExchange
+from app.exchanges.futuresexchange import FuturesExchange, KrakenFuturesExchange
 from app.strategies.grid import Grid
 from app.strategies.ohlc import OHLC
 from app.strategies.order import Order, KrakenOrder
@@ -308,25 +308,25 @@ class Bot():
                                     price=order_dict['price'],
                                     oflags='post',
                                 )
-                        # Basic options flow (any OptionExchange subclass)
-                        elif isinstance(self.exchange, OptionExchange):
+                        # Basic futures flow (any FuturesExchange subclass)
+                        elif isinstance(self.exchange, FuturesExchange):
                             # NOTE: This is a minimal starting implementation.
-                            # It assumes `self.pair` is an option symbol understood by Robinhood
+                            # It assumes `self.pair` is an futures symbol understood by Robinhood
                             # and treats BUY as opening / increasing exposure and SELL as reducing it.
                             action = 'buy' if strategy_signal == 'BUY' else 'sell'
-                            # Quantity must be an int for most options APIs
+                            # Quantity must be an int for most futures APIs
                             quantity = max(1, int(round(position_size)))
-                            option_type = getattr(self, "option_type", "call")
+                            futures_type = getattr(self, "futures_type", "call")
 
                             open_position_order_response = self.exchange.add_order(
                                 symbol=self.pair,
                                 quantity=quantity,
-                                option_type=option_type,
+                                futures_type=futures_type,
                                 price=self.latest_ohlc.close,
                                 action=action,
                             )
                         else:
-                            raise Exception("Invalid Exchange: Exchange is not spot / crypto or option exchange")
+                            raise Exception("Invalid Exchange: Exchange is not spot / crypto or futures exchange")
 
                         break
                     except Exception as e:
@@ -473,20 +473,20 @@ class Bot():
                         pair=self.pair,
                         price=price,
                     )
-                # Basic options flow (any OptionExchange subclass)
-                elif isinstance(self.exchange, OptionExchange):
+                # Basic futures flow (any FuturesExchange subclass)
+                elif isinstance(self.exchange, FuturesExchange):
                     action = order_type
                     qty_int = max(1, int(round(quantity)))
-                    option_type = getattr(self, "option_type", "call")
+                    futures_type = getattr(self, "futures_type", "call")
                     exit_order_response = self.exchange.add_order(
                         symbol=self.pair,
                         quantity=qty_int,
-                        option_type=option_type,
+                        futures_type=futures_type,
                         price=price,
                         action=action,
                     )
                 else:
-                    raise Exception("Invalid Exchange: Exchange is not spot / crypto or option exchange")
+                    raise Exception("Invalid Exchange: Exchange is not spot / crypto or futures exchange")
 
                 txids = exit_order_response.get('result', {}).get('txid', [])
                 if isinstance(txids, list):
