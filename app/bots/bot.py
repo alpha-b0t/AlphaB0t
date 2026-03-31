@@ -10,14 +10,13 @@ import os
 from app.exchanges.cmc_api import CoinMarketCapAPI
 from app.exchanges.exchange import Exchange, KrakenExchange, BinanceExchange, BinanceUSExchange, CoinbaseExchange, RobinhoodCryptoExchange
 from app.exchanges.futuresexchange import FuturesExchange, KrakenFuturesExchange
-from app.strategies.grid import Grid
 from app.strategies.ohlc import OHLC
 from app.strategies.order import Order, KrakenOrder
 from app.models.result import Result
-from app.strategies.strategy import Strategy, GridStrategy, LSTMStrategy
+from app.strategies.strategy import Strategy, LSTMStrategy
 from app.riskmanager import RiskManager
 from app.positionmanager import PositionManager
-from config import RequestConfig, BotConfig, GRIDBotConfig, CoinMarketCapAPIConfig, ExchangeConfig, StrategyConfig, RiskManagerConfig
+from config import RequestConfig, BotConfig, CoinMarketCapAPIConfig, ExchangeConfig, StrategyConfig, RiskManagerConfig
 # Don't need to import class inherited from Bot
 
 class Bot():

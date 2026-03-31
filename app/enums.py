@@ -12,9 +12,7 @@ class BotMode(Enum):
     PAPER = 2
 
 class StrategyType(Enum):
-    GRID = 0
     LSTM = 1
-    DCA = 2
 
 class ExchangeType(Enum):
     KRAKEN = 0

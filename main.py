@@ -1,11 +1,10 @@
-from config import RequestConfig, GRIDBotConfig, ExchangeConfig, StrategyConfig, RiskManagerConfig, BotConfig
+from config import RequestConfig, ExchangeConfig, StrategyConfig, RiskManagerConfig, BotConfig
 from app.exchanges.exchange import KrakenExchange, BinanceExchange, BinanceUSExchange, CoinbaseExchange, RobinhoodCryptoExchange
 from app.exchanges.futuresexchange import KrakenFuturesExchange
 from app.bots.bot import Bot
-from app.bots.gridbot import GRIDBot
 from app.enums import RequestType, BotMode, StrategyType, ExchangeType, ExitAction
 from app.riskmanager import RiskManager
-from app.strategies.strategy import Strategy, GridStrategy, LSTMStrategy
+from app.strategies.strategy import Strategy, LSTMStrategy
 from app.strategies.LSTM.get_data import fetch_training_data
 from app.strategies.LSTM.train_model import train_model
 from dotenv import dotenv_values
@@ -37,27 +36,7 @@ if __name__ == '__main__':
             raise ValueError(f"Exchange name {exchange_config.exchange_name} not found")
         
         # Set strategy and bot
-        if strategy_config.strategy == "GRID":
-            # Initialize Kraken gridbot
-            kraken_gridbot = GRIDBot(
-                gridbot_config=GRIDBotConfig(),
-                exchange=exchange
-            )
-            print(kraken_gridbot)
-
-            # Start automated grid trading
-            kraken_gridbot.start()
-        elif strategy_config.strategy == "GRID_LOAD":
-            gridbot_config = GRIDBotConfig()
-
-            # Load Kraken gridbot if it exists
-            kraken_gridbot = GRIDBot.from_json_file(f'app/bots/local/{gridbot_config.name}.json')
-
-            print(kraken_gridbot)
-
-            # Restart automated grid trading
-            kraken_gridbot.restart()
-        elif strategy_config.strategy == "LSTM":
+        if strategy_config.strategy == "LSTM":
             lstm_strategy = LSTMStrategy(strategy_config, exchange)
 
             lstm_bot = Bot(bot_config, exchange, lstm_strategy, risk_manager)
