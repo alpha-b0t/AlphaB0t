@@ -23,7 +23,7 @@ if __name__ == '__main__':
         if exchange_config.exchange_name == 'RobinhoodCrypto':
             raise NotImplementedError
         elif exchange_config.exchange_name == 'KrakenFutures':
-            raise NotImplementedError
+            exchange = KrakenFuturesExchange(exchange_config)
         elif exchange_config.exchange_name == 'Kraken':
             exchange = KrakenExchange(exchange_config)
         elif exchange_config.exchange_name == "Coinbase":
