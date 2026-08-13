@@ -42,6 +42,8 @@ if __name__ == '__main__':
             lstm_bot = Bot(bot_config, exchange, lstm_strategy, risk_manager)
 
             lstm_bot.run()
+        elif strategy_config.strategy == "RSI_MOMENTUM":
+            raise NotImplementedError()
         else:
             raise ValueError(f"Strategy {strategy_config.strategy} not valid")
     elif request_config.request == "BOT_LOAD":
