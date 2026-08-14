@@ -4,7 +4,7 @@ from app.exchanges.futuresexchange import KrakenFuturesExchange
 from app.bots.bot import Bot
 from app.enums import RequestType, BotMode, StrategyType, ExchangeType, ExitAction
 from app.riskmanager import RiskManager
-from app.strategies.strategy import Strategy, LSTMStrategy
+from app.strategies.strategy import Strategy, LSTMStrategy, RSIMomentumStrategy
 from app.strategies.LSTM.get_data import fetch_training_data
 from app.strategies.LSTM.train_model import train_model
 from dotenv import dotenv_values
@@ -43,7 +43,11 @@ if __name__ == '__main__':
 
             lstm_bot.run()
         elif strategy_config.strategy == "RSI_MOMENTUM":
-            raise NotImplementedError()
+            rsi_momentum_strategy = RSIMomentumStrategy(strategy_config, exchange)
+
+            rsi_momentum_bot = Bot(bot_config, exchange, rsi_momentum_strategy, risk_manager)
+
+            rsi_momentum_bot.run()
         else:
             raise ValueError(f"Strategy {strategy_config.strategy} not valid")
     elif request_config.request == "BOT_LOAD":

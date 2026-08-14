@@ -233,3 +233,66 @@ class LSTMStrategy(Strategy):
                 break
         
         return OHLC(ohlc[self.ohlc_asset_key][-1])
+
+class RSIMomentumStrategy(Strategy):
+    def __init__(self, strategy_config: StrategyConfig={}, exchange: Exchange={}):
+        super().__init__()
+        self.classname = self.__class__.__name__
+        if type(strategy_config) == dict:
+            # Reloading
+            print(f"Reloading {self.classname}...")
+            return
+        
+        self.strategy_config = {}
+        self.exchange = exchange
+        self.pair = strategy_config.pair
+        self.risk_to_reward_ratio = strategy_config.risk_to_reward_ratio
+    
+    def get_required_data(self):
+        raise NotImplementedError
+    
+    def get_lookback_unix(self, buffer_in_seconds: int = 5) -> int:
+        # Interval is in minutes
+        lookback_seconds = int(self.model_metrics['interval']) * int(self.model_metrics['sequence_length']) * 60 + buffer_in_seconds
+        return int(time.time() - lookback_seconds)
+    
+    def generate_signal(self) -> str:
+        raise NotImplementedError
+        price_predictions = self.get_price_prediction()
+        latest_ohlc = self.get_latest_ohlc()
+        
+        oversold_limit = 10
+        overbought_limit = 90
+        
+        print(f"Predicted change: {round(price_predictions[-1][0] - latest_ohlc.close, 2)}, ({'+' if price_predictions[-1][0] > latest_ohlc.close else ''}{round((price_predictions[-1][0] - latest_ohlc.close) * 100 / latest_ohlc.close, 2)}%)")
+        if price_predictions[-1][0] >= latest_ohlc.close * (1 + buffer):
+            return 'BUY'
+        elif price_predictions[-1][0] <= latest_ohlc.close * (1 - buffer):
+            return 'SELL'
+        else:
+            return 'HOLD'
+    
+    def get_latest_ohlc(self):
+        """Get latest OHLC data."""
+        # TODO: Add changeable number of attempts and error latency
+        for attempt in range(5):
+            try:
+                ohlc_response = self.exchange.get_ohlc_data(self.pair)
+                break
+            except Exception as e:
+                print(f"Error making API request (attempt {attempt + 1}/{5}): {e}")
+
+                if attempt == 5 - 1:
+                    print(f"Failed to make API request after {5} attempts")
+                    raise e
+                else:
+                    time.sleep(5)
+        
+        ohlc = ohlc_response.get('result')
+
+        for key in ohlc.keys():
+            if key != 'last':
+                self.ohlc_asset_key = key
+                break
+        
+        return OHLC(ohlc[self.ohlc_asset_key][-1])
